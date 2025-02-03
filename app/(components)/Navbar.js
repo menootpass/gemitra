@@ -25,7 +25,7 @@ export default function Navbar() {
           <Link href="/destinasi">Destinasi</Link>
         </li>
         <li>
-          <Link href="/tentang-kami">Tentang Kami</Link>
+          <Link href="/about-us">Tentang Kami</Link>
         </li>
         <li>
           <Link href="/kontak">Kontak</Link>
