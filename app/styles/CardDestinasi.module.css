@@ -1,0 +1,84 @@
+/* Card utama */
+.card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 6px 12px rgba(68, 0, 255, 0.15);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 1rem;
+  max-width: 300px;
+  width: 100%;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(68, 0, 255, 0.15);
+}
+
+/* Container gambar */
+.imageContainer {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  border-radius: 20px;
+}
+
+.card:hover .image {
+  transform: scale(1.1);
+}
+
+/* Konten teks */
+.content {
+  padding: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 0.5rem;
+}
+
+.location {
+  font-size: 0.875rem;
+  color: #666666;
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: #444444;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* Tombol Lihat Detail */
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #0070f3;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #005bb5;
+}
+
+/* Responsif: tampilkan 2 card per baris di tablet, 1 card per baris di mobile */
+@media (max-width: 768px) {
+  .card {
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+}

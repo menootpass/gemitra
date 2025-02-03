@@ -1,0 +1,251 @@
+/* Container utama */
+.container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+.tujuan {
+  text-decoration: underline;
+}
+
+/* Judul */
+.title {
+  font-size: 2rem;
+  color: #333333;
+  margin-bottom: 0.5rem;
+}
+
+/* Deskripsi */
+.description {
+  font-size: 1rem;
+  color: #666666;
+  margin-bottom: 2rem;
+}
+
+/* Form */
+.form {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Grup Input */
+.inputGroup {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  color: #444444;
+  margin-bottom: 0.5rem;
+}
+
+/* Date Picker */
+.datePickerWrapper {
+  width: 100%;
+}
+
+.datePicker {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: #333333;
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.datePicker:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+}
+
+/* Tombol */
+.button {
+  width: 100%;
+  padding: 1rem;
+  background-color: #0070f3;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #005bb5;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  .form {
+    padding: 1rem;
+  }
+}
+
+/* ... (tambahkan di bawah CSS sebelumnya) ... */
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #f9f9f9;
+  appearance: none;
+}
+
+.paketContainer {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.paketCard {
+  padding: 1.5rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.paketCard:hover {
+  border-color: #0070f3;
+  background-color: #f5f9ff;
+}
+
+.paketCard.selected {
+  border-color: #0070f3;
+  background-color: #e6f0ff;
+}
+
+.paketTitle {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.paketHarga {
+  color: #0070f3;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.paketIncludes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.paketIncludes li {
+  margin-bottom: 0.3rem;
+}
+
+.totalHarga {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  font-size: 1.1rem;
+}
+
+.harga {
+  color: #0070f3;
+  font-weight: bold;
+}
+
+.button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Responsif */
+@media (max-width: 768px) {
+  .paketContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.destinasiCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.destinasiImage {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+}
+
+.destinasiInfo {
+  padding: 1.5rem;
+}
+
+.destinasiInfo h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.destinasiInfo p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.harga {
+  color: #0070f3;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+}
+
+.numberInput {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+}
+
+.submitButton {
+  background: #0070f3;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease;
+}
+
+.submitButton:hover {
+  background: #0051a2;
+}
