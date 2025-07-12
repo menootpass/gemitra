@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary-green: #16A86E;
+  --primary-blue: #213DFF;
 }
 
 @theme inline {
@@ -22,5 +24,109 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+.font-sans {
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+.font-extrabold {
+  font-weight: 800;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 32px 0 rgba(33,61,255,0.08);
+}
+
+.drop-shadow-lg {
+  filter: drop-shadow(0 4px 32px rgba(33,61,255,0.12));
+}
+
+.glow-green {
+  box-shadow: 0 0 24px 4px #16A86E44, 0 2px 8px 0 #16A86E22;
+}
+.glow-blue {
+  box-shadow: 0 0 24px 4px #213DFF44, 0 2px 8px 0 #213DFF22;
+}
+.glow-mixed {
+  box-shadow: 0 0 32px 8px #16A86E33, 0 0 64px 16px #213DFF22;
+}
+.bg-glass {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px) saturate(1.2);
+}
+.bg-gradient-indie {
+  background: linear-gradient(120deg, #16A86E11 0%, #213DFF11 100%);
+}
+.rounded-3xl {
+  border-radius: 2rem;
+}
+.rounded-2xl {
+  border-radius: 1.5rem;
+}
+.rounded-xl {
+  border-radius: 1rem;
+}
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Leaflet map custom styles */
+.leaflet-container {
+  z-index: 1;
+}
+
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
+
+/* Leaflet CSS styles */
+.leaflet-container {
+  font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+}
+
+.leaflet-popup-tip {
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+
+.leaflet-control-zoom a {
+  background: #fff;
+  border: 2px solid rgba(0,0,0,0.2);
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #f4f4f4;
 }
