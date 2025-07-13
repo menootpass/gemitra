@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { Destination } from "../types";
 
 // Dynamic import to avoid SSR issues
 const MapContainer = dynamic(
@@ -23,27 +24,13 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-type Destination = {
-  id: number;
-  nama: string;
-  lokasi: string;
-  rating: number;
-  kategori: string;
-  img: string;
-  deskripsi: string;
-  fasilitas: string[];
-  komentar: any[];
-  lat?: number;
-  lng?: number;
-};
-
 type GemitraMapProps = {
   destinations: Destination[];
   onDestinationClick: (destination: Destination) => void;
   selectedDestination?: Destination | null;
 };
 
-export default function GemitraMap({ destinations, onDestinationClick, selectedDestination }: GemitraMapProps) {
+export default function GemitraMap({ destinations, onDestinationClick }: GemitraMapProps) {
   const [isClient, setIsClient] = useState(false);
   const [L, setL] = useState<any>(null);
   const [gemitraIcon, setGemitraIcon] = useState<any>(null);

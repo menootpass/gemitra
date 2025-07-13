@@ -1,18 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-
-type Destination = {
-  id: number;
-  nama: string;
-  lokasi: string;
-  rating: number;
-  kategori: string;
-  img: string;
-  deskripsi: string;
-  fasilitas: string[];
-  komentar: any[];
-};
+import { Destination } from "../types";
 
 type DestinationDetailProps = {
   destination: Destination | null;

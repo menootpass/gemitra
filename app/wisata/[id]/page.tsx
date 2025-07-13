@@ -3,15 +3,14 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import SidebarCart from "../../components/SidebarCart";
-
-const kendaraanList = ["Mobilio", "Innova Reborn", "HIACE"];
+import { Destination, CartItem } from "../../types";
 
 export default function WisataDetail() {
   const params = useParams();
   const id = params.id;
 
   // Cart state
-  const [cart, setCart] = useState<{ id: number; nama: string }[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [kendaraan, setKendaraan] = useState("Mobilio");
   const [visibleSidebar, setVisibleSidebar] = useState(true);
   const [hydrated, setHydrated] = useState(false);
@@ -22,7 +21,7 @@ export default function WisataDetail() {
   const [jumlahPenumpang, setJumlahPenumpang] = useState(1);
 
   // Data state
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Destination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -166,7 +165,7 @@ export default function WisataDetail() {
             <div>
               <h2 className="font-bold text-[#16A86E] mb-1">Komentar</h2>
               <ul className="flex flex-col gap-2">
-                {data.komentar.map((k: any, i: number) => (
+                {data.komentar.map((k, i: number) => (
                   <li key={i} className="bg-[#16A86E11] rounded-xl px-3 py-2 text-sm">
                     <span className="font-bold text-[#16A86E]">{k.nama}:</span> {k.komentar || k.isi}
                   </li>

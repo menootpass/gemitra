@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import GemitraMap from "./components/GemitraMap";
 import DestinationDetail from "./components/DestinationDetail";
+import { Destination } from "./types";
 
 export default function Home() {
   const router = useRouter();
-  const [destinations, setDestinations] = useState<any[]>([]);
-  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function Home() {
               return [];
             }
           })() : []
-        }));
+        })) as Destination[];
         setDestinations(processedData);
         setLoading(false);
       })
@@ -36,7 +37,7 @@ export default function Home() {
       });
   }, []);
 
-  function handleDestinationClick(destination: any) {
+  function handleDestinationClick(destination: Destination) {
     setSelectedDestination(destination);
   }
 

@@ -5,12 +5,11 @@ import { useState, useEffect } from "react";
 import SidebarCart from "../components/SidebarCart";
 import GemitraMap from "../components/GemitraMap";
 import DestinationDetail from "../components/DestinationDetail";
-
-const kendaraanList = ["Mobilio", "Innova Reborn", "HIACE"];
+import { Destination, CartItem } from "../types";
 
 export default function WisataList() {
   // Cart state
-  const [cart, setCart] = useState<{ id: number; nama: string }[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [kendaraan, setKendaraan] = useState("Mobilio");
   const [visibleSidebar, setVisibleSidebar] = useState(true);
   const [hydrated, setHydrated] = useState(false);
@@ -21,14 +20,14 @@ export default function WisataList() {
   const [jumlahPenumpang, setJumlahPenumpang] = useState(1);
 
   // Data state
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Destination[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
   // Map state
-  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export default function WisataList() {
               return [];
             }
           })() : []
-        }));
+        })) as Destination[];
         setData(processedData);
         setLoading(false);
       })
@@ -96,7 +95,7 @@ export default function WisataList() {
     setCart(cart.filter(item => item.id !== id));
   }
 
-  function handleDestinationClick(destination: any) {
+  function handleDestinationClick(destination: Destination) {
     setSelectedDestination(destination);
   }
 
