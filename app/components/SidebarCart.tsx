@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { ShoppingCartSimple } from "phosphor-react";
+import { ShoppingCartSimple, XSquare } from "phosphor-react";
 
 const kendaraanList = ["Mobilio", "Innova Reborn", "HIACE"];
 
@@ -71,13 +71,13 @@ export default function SidebarCart({
   return (
     <aside className="fixed md:fixed top-auto md:top-0 right-0 w-full md:w-80 h-auto md:h-screen min-h-0 md:min-h-screen bg-glass md:bg-white/90 md:border-l md:border-[#213DFF11] flex flex-col gap-4 p-5 md:p-8 z-40 md:mt-0 md:ml-0 shadow-xl md:rounded-none rounded-t-2xl md:rounded-none transition-all" style={{ bottom: 0 }}>
       <button
-        className="absolute top-2 right-2 text-[#213DFF] text-xs font-bold px-2 py-1 rounded hover:bg-[#213DFF11] transition"
+        className="absolute top-4 left-4 text-[#213DFF] hover:text-[#16A86E] p-2 rounded-lg hover:bg-[#213DFF11] transition"
         onClick={() => setVisible(false)}
         aria-label="Sembunyikan Cart"
       >
-        Sembunyikan
+        <XSquare size={24} weight="bold" />
       </button>
-      <h2 className="font-bold text-[#213DFF] mb-3 text-lg">Cart Destinasi (max 3)</h2>
+      <h2 className="font-bold text-[#213DFF] mt-8 mb-3 text-lg">Cart Destinasi (max 3)</h2>
       {cart.length === 0 ? (
         <div className="text-black/50 text-sm">Belum ada destinasi.</div>
       ) : (

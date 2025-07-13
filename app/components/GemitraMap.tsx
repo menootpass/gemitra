@@ -70,7 +70,7 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
   const destinationCoordinates: { [key: number]: [number, number] } = {
     1: [-7.7971, 110.3708], // Yogyakarta City
     2: [-7.8021, 110.3788], // Near Malioboro
-    3: [-7.7921, 110.3628], // Near Kraton
+    3: [-7.636703, 110.397306], // Near Kraton
     4: [-7.8121, 110.3908], // Near Prambanan
     5: [-7.7821, 110.3508], // Near Parangtritis
     6: [-7.8221, 110.4008], // Near Borobudur area

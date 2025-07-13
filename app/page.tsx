@@ -2,40 +2,21 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import GemitraMap from "./components/GemitraMap";
 import DestinationDetail from "./components/DestinationDetail";
+import LoadingSkeleton from "./components/LoadingSkeleton";
+import { useDestinations } from "./hooks/useDestinations";
 import { Destination } from "./types";
 
 export default function Home() {
   const router = useRouter();
-  const [destinations, setDestinations] = useState<Destination[]>([]);
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("https://sheetdb.io/api/v1/7ske65b4rjfi4")
-      .then(res => res.json())
-      .then(res => {
-        // Process data for map - take first 6 destinations
-        const processedData = res.slice(0, 6).map((item: any) => ({
-          ...item,
-          fasilitas: item.fasilitas ? item.fasilitas.split(",") : [],
-          komentar: item.komentar ? (() => {
-            try {
-              return JSON.parse(item.komentar);
-            } catch {
-              return [];
-            }
-          })() : []
-        })) as Destination[];
-        setDestinations(processedData);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, []);
+  const { destinations, loading } = useDestinations({
+    limit: 6,
+    enableCache: true
+  });
 
   function handleDestinationClick(destination: Destination) {
     setSelectedDestination(destination);
@@ -54,7 +35,10 @@ export default function Home() {
           <a href="#projects" className="hover:text-[#16A86E] transition">Destinasi</a>
           <a href="#contact" className="hover:text-[#16A86E] transition">Kontak</a>
         </nav>
-        <button onClick={() => router.push("/wisata")} className="bg-[#16A86E] text-white font-bold px-6 py-2 rounded-full shadow-lg hover:bg-[#213DFF] hover:glow-blue transition border-2 border-[#16A86E] w-full sm:w-auto">Mulai Jelajah</button>
+        <div className="flex gap-2">
+          <button onClick={() => router.push("/wisata")} className="bg-[#16A86E] text-white font-bold px-6 py-2 rounded-full shadow-lg hover:bg-[#213DFF] hover:glow-blue transition border-2 border-[#16A86E] w-full sm:w-auto">Mulai Jelajah</button>
+          
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -169,11 +153,12 @@ export default function Home() {
             Temukan hidden gems tersembunyi di Yogyakarta. Klik pin di peta untuk melihat detail destinasi wisata yang menarik.
           </p>
         </div>
+        
+        
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {loading ? (
-            <div className="w-full h-96 bg-gray-200 rounded-xl animate-pulse flex items-center justify-center">
-              <div className="text-gray-500">Loading peta...</div>
-            </div>
+            <LoadingSkeleton type="map" />
           ) : (
             <GemitraMap
               destinations={destinations}
