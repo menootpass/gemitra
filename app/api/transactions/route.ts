@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCAQWWkb6L86pffPllUQgacS8JPnLSkqmrr7ypFVA3dqT1ndYTk5YXLtUlu-HKrCsfLQ/exec';
+const SCRIPT_URL = process.env.GEMITRA_TRANSACTIONS_URL!;
 
 // Fungsi untuk generate kode unik
 function generateUniqueCode(): string {

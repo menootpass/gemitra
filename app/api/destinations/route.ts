@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // URL Google Apps Script Anda
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3lxP14J__OOKLIiTQL1PLh0e2CMPAFzGbvKP8BiNT6LdfZ7EWmCIQSPx-JC9Ajl7ThQ/exec';
+const SCRIPT_URL = process.env.GEMITRA_DESTINATIONS_URL!;
 
 export async function GET() {
   try {
