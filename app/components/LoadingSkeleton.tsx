@@ -59,19 +59,34 @@ export default function LoadingSkeleton({ type = 'card', count = 6, className = 
   );
 
   const renderDetailSkeleton = () => (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-200">
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-8 bg-gray-200 rounded animate-pulse w-1/2"></div>
-        <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+    <div className="rounded-3xl overflow-hidden shadow-xl bg-glass">
+      <div className="w-full h-60 sm:h-80 bg-gray-200 animate-pulse"></div>
+      <div className="p-4 border-b border-[#213DFF11] flex justify-end">
+        <div className="h-10 w-48 bg-gray-200 rounded-full animate-pulse"></div>
       </div>
-      <div className="space-y-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+      <div className="p-6 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <div className="h-8 bg-gray-200 rounded animate-pulse flex-1"></div>
+          <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
+        </div>
         <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-      </div>
-      <div className="mt-4 flex gap-2">
-        <div className="h-10 bg-gray-200 rounded-full animate-pulse flex-1"></div>
-        <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+        <div className="mb-2">
+          <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="flex flex-wrap gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-6 w-16 bg-gray-200 rounded-full animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="flex flex-col gap-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

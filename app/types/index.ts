@@ -8,8 +8,7 @@ export interface Destination {
   deskripsi: string;
   fasilitas: string[];
   komentar: Comment[];
-  lat?: number;
-  lng?: number;
+  posisi?: [number, number];
 }
 
 export interface Comment {

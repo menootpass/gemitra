@@ -35,7 +35,19 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
         } catch {
           return [];
         }
-      })() : []
+      })() : [],
+      posisi: item.posisi ? (() => {
+        try {
+          // Asumsi item.posisi adalah string seperti "[-7.711445, 110.286139]"
+          const match = item.posisi.match(/-?\d+\.\d+/g);
+          if (match && match.length === 2) {
+            return [parseFloat(match[0]), parseFloat(match[1])];
+          }
+          return undefined;
+        } catch {
+          return undefined;
+        }
+      })() : undefined
     })) as Destination[];
   }, []);
 
@@ -111,7 +123,18 @@ export function useDestinationDetail(id: number | null) {
             } catch {
               return [];
             }
-          })() : []
+          })() : [],
+          posisi: rawData.posisi ? (() => {
+            try {
+              const match = rawData.posisi.match(/-?\d+\.\d+/g);
+              if (match && match.length === 2) {
+                return [parseFloat(match[0]), parseFloat(match[1])];
+              }
+              return undefined;
+            } catch {
+              return undefined;
+            }
+          })() : undefined
         } as Destination;
         
         setDestination(processedData);

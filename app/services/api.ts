@@ -11,7 +11,7 @@ class ApiService {
 
   constructor() {
     this.config = {
-      baseUrl: 'https://sheetdb.io/api/v1/7ske65b4rjfi4',
+      baseUrl: '/api/destinations',
       username: process.env.NEXT_PUBLIC_SHEETDB_USERNAME || '',
       password: process.env.NEXT_PUBLIC_SHEETDB_PASSWORD || '',
       cacheDuration: 5 * 60 * 1000, // 5 menit cache
@@ -26,15 +26,7 @@ class ApiService {
   }
 
   private getAuthHeaders(): HeadersInit {
-    if (this.config.username && this.config.password) {
-      const credentials = btoa(`${this.config.username}:${this.config.password}`);
-      console.log('Using Basic Auth with credentials');
-      return {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/json',
-      };
-    }
-    console.log('No auth credentials found, using public access');
+    // Menghapus logika otentikasi karena sekarang ditangani di backend (jika diperlukan)
     return {
       'Content-Type': 'application/json',
     };
@@ -66,34 +58,24 @@ class ApiService {
     try {
       console.log('Fetching destinations from API...');
       
-      // Try with auth first
-      let response = await fetch(this.config.baseUrl, {
+      const response = await fetch(this.config.baseUrl, {
         headers: this.getAuthHeaders(),
       });
-
-      // If auth fails, try without auth
-      if (response.status === 401) {
-        console.log('Auth failed, trying public access...');
-        response = await fetch(this.config.baseUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      }
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      const result = data && Array.isArray(data.data) ? data.data : data;
       
       // Cache the result
       this.cache.set(cacheKey, {
-        data,
+        data: result,
         timestamp: Date.now(),
       });
 
-      return data;
+      return result;
     } catch (error) {
       console.error('Error fetching destinations:', error);
       
@@ -109,22 +91,11 @@ class ApiService {
   }
 
   async purgeCache(): Promise<void> {
-    try {
-      const purgeUrl = `${this.config.baseUrl}/cache/purge/3dd6b48b`;
-      const response = await fetch(purgeUrl, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-      });
-
-      if (response.ok) {
-        console.log('Cache purged successfully');
-        this.cache.clear(); // Clear local cache too
-      } else {
-        console.warn('Failed to purge cache:', response.status);
-      }
-    } catch (error) {
-      console.error('Error purging cache:', error);
-    }
+    // Fungsi ini mungkin perlu diubah atau dihapus jika tidak lagi relevan
+    // dengan API handler yang baru. Untuk saat ini, kita akan menonaktifkannya
+    // dengan mengosongkan isinya agar tidak menyebabkan error.
+    console.log('Fungsi purgeCache dinonaktifkan untuk API handler lokal.');
+    this.cache.clear();
   }
 
   // Method untuk mendapatkan data dengan limit
@@ -167,6 +138,28 @@ class ApiService {
   clearCache(): void {
     this.cache.clear();
     console.log('Local cache cleared');
+  }
+
+  async postTransaction(transactionData: any): Promise<any> {
+    try {
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transactionData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal mengirim transaksi');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error in postTransaction:', error);
+      throw error;
+    }
   }
 }
 

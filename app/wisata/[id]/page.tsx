@@ -3,7 +3,9 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import SidebarCart from "../../components/SidebarCart";
-import { Destination, CartItem } from "../../types";
+import LoadingSkeleton from "../../components/LoadingSkeleton";
+import { CartItem } from "../../types";
+import { useDestinationDetail } from "../../hooks/useDestinations";
 
 export default function WisataDetail() {
   const params = useParams();
@@ -21,35 +23,8 @@ export default function WisataDetail() {
   const [jumlahPenumpang, setJumlahPenumpang] = useState(1);
 
   // Data state
-  const [data, setData] = useState<Destination | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`https://sheetdb.io/api/v1/7ske65b4rjfi4/search?id=${id}`)
-      .then(res => res.json())
-      .then(res => {
-        if (res && res.length > 0) {
-          // Mapping: fasilitas dan komentar dari string ke array
-          const d = res[0];
-          d.fasilitas = d.fasilitas ? d.fasilitas.split(",") : [];
-          try {
-            d.komentar = d.komentar ? JSON.parse(d.komentar) : [];
-          } catch {
-            d.komentar = [];
-          }
-          setData(d);
-        } else {
-          setData(null);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Gagal mengambil data destinasi");
-        setLoading(false);
-      });
-  }, [id]);
+  const destinationId = typeof id === 'string' ? parseInt(id) : null;
+  const { destination: data, loading, error } = useDestinationDetail(destinationId);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("gemitra_cart");
@@ -93,36 +68,7 @@ export default function WisataDetail() {
   if (!hydrated || loading) return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
       <div className="w-full max-w-3xl mx-auto mt-8 mb-6 flex-1">
-        <div className="rounded-3xl overflow-hidden shadow-xl bg-glass">
-          <div className="w-full h-60 sm:h-80 bg-gray-200 animate-pulse"></div>
-          <div className="p-4 border-b border-[#213DFF11] flex justify-end">
-            <div className="h-10 w-48 bg-gray-200 rounded-full animate-pulse"></div>
-          </div>
-          <div className="p-6 flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <div className="h-8 bg-gray-200 rounded animate-pulse flex-1"></div>
-              <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="mb-2">
-              <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="flex flex-wrap gap-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-6 w-16 bg-gray-200 rounded-full animate-pulse"></div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="flex flex-col gap-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <LoadingSkeleton type="detail" />
       </div>
     </div>
   );
@@ -132,7 +78,7 @@ export default function WisataDetail() {
   return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
       {/* Main Content */}
-      <div className="w-full max-w-3xl mx-auto mt-8 mb-6 flex-1">
+      <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
         <div className="rounded-3xl overflow-hidden shadow-xl bg-glass">
           <div className="relative w-full h-60 sm:h-80">
             <Image src={data.img} alt={data.nama} fill className="object-cover w-full h-full" />
@@ -178,18 +124,18 @@ export default function WisataDetail() {
       {/* Sidebar Cart */}
       <SidebarCart
         cart={cart}
-        onRemove={handleRemoveFromCart}
         kendaraan={kendaraan}
-        setKendaraan={setKendaraan}
-        onCheckout={() => alert('Transaksi lanjut!')}
-        visible={visibleSidebar}
-        setVisible={setVisibleSidebar}
         tanggalBooking={tanggalBooking}
-        setTanggalBooking={setTanggalBooking}
         waktuBooking={waktuBooking}
-        setWaktuBooking={setWaktuBooking}
         jumlahPenumpang={jumlahPenumpang}
-        setJumlahPenumpang={setJumlahPenumpang}
+        visible={visibleSidebar}
+        onClose={() => setVisibleSidebar(false)}
+        onRemoveFromCart={handleRemoveFromCart}
+        onKendaraanChange={setKendaraan}
+        onTanggalChange={setTanggalBooking}
+        onWaktuChange={setWaktuBooking}
+        onPenumpangChange={setJumlahPenumpang}
+        onCartUpdate={setCart}
       />
     </div>
   );

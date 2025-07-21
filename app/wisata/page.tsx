@@ -204,21 +204,22 @@ export default function WisataList() {
           </div>
         )}
       </div>
+      
       {/* Sidebar Cart */}
       <SidebarCart
         cart={cart}
-        onRemove={handleRemoveFromCart}
         kendaraan={kendaraan}
-        setKendaraan={setKendaraan}
-        onCheckout={() => alert('Transaksi lanjut!')}
-        visible={visibleSidebar}
-        setVisible={setVisibleSidebar}
         tanggalBooking={tanggalBooking}
-        setTanggalBooking={setTanggalBooking}
         waktuBooking={waktuBooking}
-        setWaktuBooking={setWaktuBooking}
         jumlahPenumpang={jumlahPenumpang}
-        setJumlahPenumpang={setJumlahPenumpang}
+        visible={visibleSidebar}
+        onClose={() => setVisibleSidebar(false)}
+        onRemoveFromCart={handleRemoveFromCart}
+        onKendaraanChange={setKendaraan}
+        onTanggalChange={setTanggalBooking}
+        onWaktuChange={setWaktuBooking}
+        onPenumpangChange={setJumlahPenumpang}
+        onCartUpdate={setCart}
       />
     </div>
   );

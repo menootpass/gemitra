@@ -66,17 +66,6 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
   // Yogyakarta center coordinates
   const yogyakartaCenter: [number, number] = [-7.7971, 110.3708];
 
-  // Sample coordinates for destinations (you can update these based on your data)
-  const destinationCoordinates: { [key: number]: [number, number] } = {
-    1: [-7.7971, 110.3708], // Yogyakarta City
-    2: [-7.8021, 110.3788], // Near Malioboro
-    3: [-7.636703, 110.397306], // Near Kraton
-    4: [-7.8121, 110.3908], // Near Prambanan
-    5: [-7.7821, 110.3508], // Near Parangtritis
-    6: [-7.8221, 110.4008], // Near Borobudur area
-    7: [-7.636703, 110.397306], // New location
-  };
-
   if (!isClient || !L || !gemitraIcon) {
     return (
       <div className="w-full h-96 bg-gray-200 rounded-xl animate-pulse flex items-center justify-center">
@@ -98,13 +87,12 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {destinations.map((destination) => {
-          const coords = destinationCoordinates[destination.id];
-          if (!coords) return null;
+          if (!destination.posisi) return null;
 
           return (
             <Marker
               key={destination.id}
-              position={coords}
+              position={destination.posisi}
               icon={gemitraIcon}
               eventHandlers={{
                 click: () => onDestinationClick(destination),
