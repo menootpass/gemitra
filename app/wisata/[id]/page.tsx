@@ -6,6 +6,7 @@ import SidebarCart from "../../components/SidebarCart";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
 import { CartItem } from "../../types";
 import { useDestinationDetail } from "../../hooks/useDestinations";
+import { ShoppingCartSimple } from "phosphor-react";
 
 export default function WisataDetail() {
   const params = useParams();
@@ -14,7 +15,7 @@ export default function WisataDetail() {
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [kendaraan, setKendaraan] = useState("Mobilio");
-  const [visibleSidebar, setVisibleSidebar] = useState(true);
+  const [visibleSidebar, setVisibleSidebar] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   // Booking state
@@ -121,6 +122,22 @@ export default function WisataDetail() {
           </div>
         </div>
       </div>
+      {/* Sidebar Cart Trigger Button */}
+      {!visibleSidebar && (
+        <button
+          className="fixed right-4 bottom-4 z-40 bg-[#213DFF] text-white p-4 rounded-full shadow-lg hover:bg-[#16A86E] transition flex items-center justify-center cursor-pointer"
+          style={{ boxShadow: "0 4px 24px 0 #213DFF22" }}
+          onClick={() => setVisibleSidebar(true)}
+          aria-label="Tampilkan Cart"
+        >
+          <ShoppingCartSimple size={28} weight="bold" />
+          {cart.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {cart.length}
+            </span>
+          )}
+        </button>
+      )}
       {/* Sidebar Cart */}
       <SidebarCart
         cart={cart}

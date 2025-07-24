@@ -7,13 +7,13 @@ import GemitraMap from "../components/GemitraMap";
 import DestinationDetail from "../components/DestinationDetail";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { Destination, CartItem } from "../types";
-import { useDestinations } from "../hooks/useDestinations";
+import { ShoppingCartSimple } from "phosphor-react";
 
 export default function WisataList() {
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [kendaraan, setKendaraan] = useState("Mobilio");
-  const [visibleSidebar, setVisibleSidebar] = useState(true);
+  const [visibleSidebar, setVisibleSidebar] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   // Booking state
@@ -24,15 +24,44 @@ export default function WisataList() {
   // Data state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Map state
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
-  // Use custom hook for data fetching
-  const { destinations: data, loading, error, refresh } = useDestinations({
-    enableCache: true
-  });
+  // Polling fetch destinasi
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDestinations = async () => {
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec");
+        const data = await res.json();
+        const parsed = data.data.map((d: any) => ({
+          ...d,
+          posisi: d.posisi ? JSON.parse(d.posisi) : null,
+        }));
+        if (isMounted) {
+          setDestinations(parsed);
+          setLoading(false);
+          setError(null);
+        }
+      } catch {
+        if (isMounted) {
+          setLoading(false);
+          setError("Gagal mengambil data destinasi");
+        }
+      }
+    };
+    fetchDestinations();
+    const interval = setInterval(fetchDestinations, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("gemitra_cart");
@@ -77,14 +106,14 @@ export default function WisataList() {
     setSelectedDestination(destination);
   }
 
-  const filteredData = data.filter(item => {
+  // Ganti data/filtering dari custom hook ke state polling
+  const filteredData = destinations.filter(item => {
     const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.lokasi.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || item.kategori === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  const categories = [...new Set(data.map(item => item.kategori))];
+  const categories = [...new Set(destinations.map(item => item.kategori))];
 
   if (!hydrated || loading) return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
@@ -150,7 +179,25 @@ export default function WisataList() {
             <p className="font-bold">Error:</p>
             <p>{error}</p>
             <button 
-              onClick={refresh}
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec")
+                  .then(res => res.json())
+                  .then(data => {
+                    const parsed = data.data.map((d: any) => ({
+                      ...d,
+                      posisi: d.posisi ? JSON.parse(d.posisi) : null,
+                    }));
+                    setDestinations(parsed);
+                    setLoading(false);
+                    setError(null);
+                  })
+                  .catch(() => {
+                    setLoading(false);
+                    setError("Gagal mengambil data destinasi");
+                  });
+              }}
               className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
             >
               Coba Lagi
@@ -205,6 +252,22 @@ export default function WisataList() {
         )}
       </div>
       
+      {/* Sidebar Cart Trigger Button */}
+      {!visibleSidebar && (
+        <button
+          className="fixed right-4 bottom-4 z-40 bg-[#213DFF] text-white p-4 rounded-full shadow-lg hover:bg-[#16A86E] transition flex items-center justify-center cursor-pointer"
+          style={{ boxShadow: "0 4px 24px 0 #213DFF22" }}
+          onClick={() => setVisibleSidebar(true)}
+          aria-label="Tampilkan Cart"
+        >
+          <ShoppingCartSimple size={28} weight="bold" />
+          {cart.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {cart.length}
+            </span>
+          )}
+        </button>
+      )}
       {/* Sidebar Cart */}
       <SidebarCart
         cart={cart}

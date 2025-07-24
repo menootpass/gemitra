@@ -1,16 +1,33 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ShoppingCartSimple, XSquare } from "phosphor-react";
+import { XSquare } from "phosphor-react";
 import { CartItem } from "../types";
 import { apiService } from "../services/api";
 
-const kendaraanList = ["Mobilio", "Innova Reborn", "HIACE"];
 
-const maxPassengersPerVehicle: { [key: string]: number } = {
-  "Mobilio": 6,
-  "Innova Reborn": 6,
-  "HIACE": 11
-};
+const packageOptions = [
+  {
+    key: "Paket Basic",
+    label: "Paket Basic",
+    harga: 920000,
+    fasilitas: ["6 penumpang", "AC", "Driver"],
+    maxPassengers: 6,
+  },
+  {
+    key: "Paket Lite",
+    label: "Paket Lite",
+    harga: 1320000,
+    fasilitas: ["6 penumpang", "AC", "Driver", "Lebih nyaman"],
+    maxPassengers: 6,
+  },
+  {
+    key: "Paket Premium",
+    label: "Paket Premium",
+    harga: 1720000,
+    fasilitas: ["11 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 11,
+  },
+];
 
 type SidebarCartProps = {
   cart: CartItem[];
@@ -28,9 +45,9 @@ type SidebarCartProps = {
   onCartUpdate: (cart: CartItem[]) => void;
 };
 
-export default function SidebarCart({
-  cart,
-  kendaraan,
+export default function SidebarCart({ 
+  cart, 
+  kendaraan, 
   tanggalBooking,
   waktuBooking,
   jumlahPenumpang,
@@ -48,9 +65,10 @@ export default function SidebarCart({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
-  const totalDestinasi = cart.length;
-  const HARGA_PER_DESTINASI = 800000;
-  const totalBiaya = totalDestinasi * HARGA_PER_DESTINASI;
+  // Cari paket yang dipilih
+  const selectedPackage = packageOptions.find(p => p.key === kendaraan) || packageOptions[0];
+  const totalBiaya = selectedPackage.harga;
+  const maxPassengers = selectedPackage.maxPassengers;
 
   async function handlePesan() {
     if (!nama || cart.length === 0 || !tanggalBooking || !waktuBooking || !kendaraan) {
@@ -85,7 +103,6 @@ export default function SidebarCart({
   }
 
   const today = new Date().toISOString().split('T')[0];
-  const maxPassengers = maxPassengersPerVehicle[kendaraan] || 6;
 
   useEffect(() => {
     if (jumlahPenumpang > maxPassengers) {
@@ -94,21 +111,7 @@ export default function SidebarCart({
   }, [kendaraan, jumlahPenumpang, maxPassengers, onPenumpangChange]);
 
   if (!visible) {
-    return (
-      <button
-        className="fixed right-4 bottom-4 z-40 bg-[#213DFF] text-white p-4 rounded-full shadow-lg hover:bg-[#16A86E] transition flex items-center justify-center"
-        style={{ boxShadow: "0 4px 24px 0 #213DFF22" }}
-        onClick={onClose}
-        aria-label="Tampilkan Cart"
-      >
-        <ShoppingCartSimple size={32} />
-        {cart.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-            {cart.length}
-          </span>
-        )}
-      </button>
-    );
+    return null;
   }
 
   return (
@@ -143,31 +146,45 @@ export default function SidebarCart({
 
         <div className="space-y-4">
           <h3 className="font-bold text-lg text-gray-800">Detail Pemesanan</h3>
-           <div>
-             <label htmlFor="nama-pemesan" className="block text-black/70 mb-1 font-medium">Nama Pemesan</label>
-             <input
-               type="text"
-               id="nama-pemesan"
-               value={nama}
-               onChange={(e) => setNama(e.target.value)}
-               className="w-full rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base focus:ring-2 focus:ring-[#213DFF]"
-               placeholder="Masukkan nama lengkap Anda"
-             />
-           </div>
-
           <div>
-            <label htmlFor="kendaraan" className="block text-black/70 mb-1 font-medium">Pilih Kendaraan</label>
-            <select
-              id="kendaraan"
-              className="w-full rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base"
-              value={kendaraan}
-              onChange={e => onKendaraanChange(e.target.value)}
-            >
-              {kendaraanList.map(k => (
-                <option key={k} value={k}>{k}</option>
-              ))}
-            </select>
+            <label htmlFor="nama-pemesan" className="block text-black/70 mb-1 font-medium">Nama Pemesan</label>
+            <input
+              type="text"
+              id="nama-pemesan"
+              value={nama}
+              onChange={(e) => setNama(e.target.value)}
+              className="w-full rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base focus:ring-2 focus:ring-[#213DFF]"
+              placeholder="Masukkan nama lengkap Anda"
+            />
           </div>
+
+          {/* Pilihan Paket (Card) */}
+          <div>
+            <label className="block text-black/70 mb-1 font-medium">Pilih Paket</label>
+            <div className="flex flex-col gap-3">
+              {packageOptions.map(pkg => (
+                <button
+                  key={pkg.key}
+                  type="button"
+                  onClick={() => onKendaraanChange(pkg.key)}
+                  className={`w-full text-left rounded-2xl border-2 p-4 transition flex flex-col gap-2 shadow-sm
+                    ${kendaraan === pkg.key ? 'border-[#213DFF] bg-[#213DFF08]' : 'border-[#16A86E22] bg-white'}
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-base md:text-lg text-[#213DFF]">{pkg.label}</span>
+                    <span className="font-bold text-base md:text-lg text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
+                  </div>
+                  <ul className="flex flex-wrap gap-2 mt-1">
+                    {pkg.fasilitas.map(f => (
+                      <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
+                    ))}
+                  </ul>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="tanggal" className="block text-black/70 mb-1 font-medium">Tanggal</label>

@@ -40,14 +40,22 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
         <span className="text-black/60 text-sm">{destination.lokasi} &middot; {destination.kategori}</span>
         <p className="text-black/80 text-sm line-clamp-3">{destination.deskripsi}</p>
         <div className="flex flex-wrap gap-1">
-          {destination.fasilitas.slice(0, 3).map((f: string) => (
-            <span key={f} className="px-2 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">
+          {(
+            Array.isArray(destination.fasilitas)
+              ? destination.fasilitas
+              : String(destination.fasilitas || "").split(",")
+          ).slice(0, 3).map((f: string, idx: number) => (
+            <span key={f + idx} className="px-2 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">
               {f}
             </span>
           ))}
-          {destination.fasilitas.length > 3 && (
+          {((Array.isArray(destination.fasilitas)
+              ? destination.fasilitas.length
+              : String(destination.fasilitas || "").split(",").length) > 3) && (
             <span className="px-2 py-1 rounded-full bg-[#16A86E11] text-[#16A86E] text-xs font-semibold">
-              +{destination.fasilitas.length - 3} lagi
+              +{(Array.isArray(destination.fasilitas)
+                  ? destination.fasilitas.length
+                  : String(destination.fasilitas || "").split(",").length) - 3} lagi
             </span>
           )}
         </div>

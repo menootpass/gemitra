@@ -2,21 +2,44 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GemitraMap from "./components/GemitraMap";
 import DestinationDetail from "./components/DestinationDetail";
 import LoadingSkeleton from "./components/LoadingSkeleton";
-import { useDestinations } from "./hooks/useDestinations";
 import { Destination } from "./types";
 
 export default function Home() {
   const router = useRouter();
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { destinations, loading } = useDestinations({
-    limit: 6,
-    enableCache: true
-  });
+  // Polling fetch destinasi
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDestinations = async () => {
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec");
+        const data = await res.json();
+        const parsed = data.data.map((d: any) => ({
+          ...d,
+          posisi: d.posisi ? JSON.parse(d.posisi) : null,
+        }));
+        if (isMounted) {
+          setDestinations(parsed);
+          setLoading(false);
+        }
+      } catch {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchDestinations();
+    const interval = setInterval(fetchDestinations, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   function handleDestinationClick(destination: Destination) {
     setSelectedDestination(destination);
