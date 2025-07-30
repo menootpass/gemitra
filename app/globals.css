@@ -98,6 +98,31 @@ body {
   font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
 }
 
+/* Fix for _leaflet_pos error */
+.leaflet-marker-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+.leaflet-marker-shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+/* Ensure map container has proper positioning */
+.leaflet-container {
+  position: relative;
+  overflow: hidden;
+}
+
 .leaflet-popup-content-wrapper {
   background: #fff;
   border-radius: 8px;

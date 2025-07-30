@@ -28,6 +28,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
   const processData = useCallback((rawData: any[]): Destination[] => {
     return rawData.map((item: any) => ({
       ...item,
+      img: item.img || null, // Ensure img is not empty string
       fasilitas: item.fasilitas ? item.fasilitas.split(",") : [],
       komentar: item.komentar ? (() => {
         try {
@@ -116,11 +117,15 @@ export function useDestinationDetail(id: number | null) {
       if (rawData) {
         const processedData = {
           ...rawData,
+          img: rawData.img || null, // Ensure img is not empty string
           fasilitas: rawData.fasilitas ? rawData.fasilitas.split(",") : [],
           komentar: rawData.komentar ? (() => {
             try {
-              return JSON.parse(rawData.komentar);
-            } catch {
+              const parsed = JSON.parse(rawData.komentar);
+              console.log('Parsed comments in hook:', parsed);
+              return parsed;
+            } catch (error) {
+              console.error('Error parsing comments in hook:', error);
               return [];
             }
           })() : [],

@@ -9,11 +9,13 @@ export interface Destination {
   fasilitas: string[];
   komentar: Comment[];
   posisi?: [number, number];
+  pengunjung?: number;
+  harga?: number; // Added field for destination pricing
 }
 
 export interface Comment {
   nama: string;
-  rating: number;
+  rating?: number;
   komentar?: string;
   isi?: string;
   tanggal?: string;
@@ -22,6 +24,7 @@ export interface Comment {
 export interface CartItem {
   id: number;
   nama: string;
+  harga?: number; // Added harga field for destination pricing
 }
 
 export interface LeafletInstance {

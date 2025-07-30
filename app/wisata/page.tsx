@@ -41,7 +41,21 @@ export default function WisataList() {
         const data = await res.json();
         const parsed = data.data.map((d: any) => ({
           ...d,
-          posisi: d.posisi ? JSON.parse(d.posisi) : null,
+          img: d.img || null, // Ensure img is not empty string
+          posisi: d.posisi ? (() => {
+            try {
+              const parsed = JSON.parse(d.posisi);
+              // Validate that parsed data is an array with 2 numbers
+              if (Array.isArray(parsed) && parsed.length === 2 && 
+                  typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
+                return parsed;
+              }
+              return null;
+            } catch {
+              console.warn('Invalid position data for destination:', d.nama, d.posisi);
+              return null;
+            }
+          })() : null,
         }));
         if (isMounted) {
           setDestinations(parsed);
@@ -64,8 +78,24 @@ export default function WisataList() {
   }, []);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("gemitra_cart");
-    if (savedCart) setCart(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem("gemitra_cart");
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        if (Array.isArray(parsedCart)) {
+          setCart(parsedCart);
+        } else {
+          console.warn('Invalid cart data in localStorage, resetting to empty array');
+          localStorage.removeItem("gemitra_cart"); // Clean up invalid data
+          setCart([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing cart from localStorage:', error);
+      localStorage.removeItem("gemitra_cart"); // Clean up invalid data
+      setCart([]);
+    }
+    
     const savedKendaraan = localStorage.getItem("gemitra_kendaraan");
     if (savedKendaraan) setKendaraan(savedKendaraan);
     const savedTanggal = localStorage.getItem("gemitra_tanggal");
@@ -78,7 +108,13 @@ export default function WisataList() {
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem("gemitra_cart", JSON.stringify(cart));
+    if (hydrated && Array.isArray(cart)) {
+      try {
+        localStorage.setItem("gemitra_cart", JSON.stringify(cart));
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error);
+      }
+    }
   }, [cart, hydrated]);
   useEffect(() => {
     if (hydrated) localStorage.setItem("gemitra_kendaraan", kendaraan);
@@ -93,14 +129,16 @@ export default function WisataList() {
     if (hydrated) localStorage.setItem("gemitra_penumpang", jumlahPenumpang.toString());
   }, [jumlahPenumpang, hydrated]);
 
-  function handleAddToCart(id: number, nama: string) {
+  function handleAddToCart(id: number, nama: string, harga?: number) {
     if (cart.find(item => item.id == id)) return;
     if (cart.length >= 3) return;
-    setCart([...cart, { id, nama }]);
+    setCart([...cart, { id, nama, harga }]);
   }
   function handleRemoveFromCart(id: number) {
     setCart(cart.filter(item => item.id !== id));
   }
+
+
 
   function handleDestinationClick(destination: Destination) {
     setSelectedDestination(destination);
@@ -185,10 +223,11 @@ export default function WisataList() {
                 fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec")
                   .then(res => res.json())
                   .then(data => {
-                    const parsed = data.data.map((d: any) => ({
-                      ...d,
-                      posisi: d.posisi ? JSON.parse(d.posisi) : null,
-                    }));
+                            const parsed = data.data.map((d: any) => ({
+          ...d,
+          img: d.img || null, // Ensure img is not empty string
+          posisi: d.posisi ? JSON.parse(d.posisi) : null,
+        }));
                     setDestinations(parsed);
                     setLoading(false);
                     setError(null);
@@ -210,7 +249,16 @@ export default function WisataList() {
             {filteredData.map(item => (
               <div key={item.id} className="rounded-3xl overflow-hidden shadow-xl bg-glass">
                 <div className="relative w-full h-48">
-                  <Image src={item.img} alt={item.nama} fill className="object-cover w-full h-full" />
+                  {item.img ? (
+                    <Image src={item.img} alt={item.nama} fill className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <div className="text-gray-500 text-center">
+                        <div className="text-4xl mb-2">🏞️</div>
+                        <div className="text-sm">No Image</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="p-6 flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -218,6 +266,14 @@ export default function WisataList() {
                     <span className="ml-auto text-[#16A86E] font-bold text-lg">{item.rating}★</span>
                   </div>
                   <span className="text-black/60 text-sm">{item.lokasi} &middot; {item.kategori}</span>
+                  {item.harga && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#16A86E] font-bold text-lg">
+                        Rp {item.harga.toLocaleString("id-ID")}
+                      </span>
+                      {/* <span className="text-gray-500 text-sm">per destinasi</span> */}
+                    </div>
+                  )}
                   <div className="flex gap-2 mt-2">
                     <Link
                       href={`/wisata/${item.id}`}
@@ -227,7 +283,7 @@ export default function WisataList() {
                     </Link>
                     <button
                       className="bg-[#213DFF] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#16A86E] transition disabled:opacity-50"
-                      onClick={() => handleAddToCart(item.id, item.nama)}
+                      onClick={() => handleAddToCart(item.id, item.nama, item.harga)}
                       disabled={cart.length >= 3 || !!cart.find(cartItem => cartItem.id == item.id)}
                     >
                       +

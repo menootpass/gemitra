@@ -161,6 +161,32 @@ class ApiService {
       throw error;
     }
   }
+
+  async postComment(commentData: {
+    invoiceCode: string;
+    komentar: string;
+    destinationId: number;
+  }): Promise<any> {
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(commentData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gagal mengirim komentar');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error in postComment:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

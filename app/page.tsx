@@ -23,7 +23,20 @@ export default function Home() {
         const data = await res.json();
         const parsed = data.data.map((d: any) => ({
           ...d,
-          posisi: d.posisi ? JSON.parse(d.posisi) : null,
+          posisi: d.posisi ? (() => {
+            try {
+              const parsed = JSON.parse(d.posisi);
+              // Validate that parsed data is an array with 2 numbers
+              if (Array.isArray(parsed) && parsed.length === 2 && 
+                  typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
+                return parsed;
+              }
+              return null;
+            } catch {
+              console.warn('Invalid position data for destination:', d.nama, d.posisi);
+              return null;
+            }
+          })() : null,
         }));
         if (isMounted) {
           setDestinations(parsed);

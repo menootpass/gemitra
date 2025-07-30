@@ -7,22 +7,22 @@ import { apiService } from "../services/api";
 
 const packageOptions = [
   {
-    key: "Paket Basic",
-    label: "Paket Basic",
+    key: "Mobil Brio",
+    label: "Mobil Brio",
     harga: 920000,
-    fasilitas: ["6 penumpang", "AC", "Driver"],
-    maxPassengers: 6,
+    fasilitas: ["4 penumpang", "AC", "Driver"],
+    maxPassengers: 4,
   },
   {
-    key: "Paket Lite",
-    label: "Paket Lite",
+    key: "Mobil Innova Reborn",
+    label: "Mobil Innova Reborn",
     harga: 1320000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Lebih nyaman"],
     maxPassengers: 6,
   },
   {
-    key: "Paket Premium",
-    label: "Paket Premium",
+    key: "HIACE",
+    label: "HIACE",
     harga: 1720000,
     fasilitas: ["11 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 11,
@@ -64,11 +64,24 @@ export default function SidebarCart({
   const [nama, setNama] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
 
-  // Cari paket yang dipilih
+  // Calculate destination prices
+  const destinationTotal = cart.reduce((sum, item) => sum + (item.harga || 0), 0);
+  
+  // Filter cars based on passenger capacity
+  const availableCars = packageOptions.filter(car => car.maxPassengers >= jumlahPenumpang);
+  
+  // Get selected car, ensuring it has sufficient capacity
   const selectedPackage = packageOptions.find(p => p.key === kendaraan) || packageOptions[0];
-  const totalBiaya = selectedPackage.harga;
-  const maxPassengers = selectedPackage.maxPassengers;
+  const currentCarIsValid = selectedPackage.maxPassengers >= jumlahPenumpang;
+  
+  // Use selected car if valid, otherwise use first available
+  const finalSelectedPackage = currentCarIsValid ? selectedPackage : (availableCars[0] || packageOptions[0]);
+  
+  const carPrice = finalSelectedPackage.harga;
+  const totalBiaya = destinationTotal + carPrice;
+  const maxPassengers = finalSelectedPackage.maxPassengers;
 
   async function handlePesan() {
     if (!nama || cart.length === 0 || !tanggalBooking || !waktuBooking || !kendaraan) {
@@ -82,18 +95,45 @@ export default function SidebarCart({
     const transactionData = {
       nama,
       destinasi: cart.map(item => item.nama).join(', '),
+      destinasi_harga: cart.map(item => item.harga || 0),
       penumpang: jumlahPenumpang,
       tanggal_berangkat: tanggalBooking,
       waktu_berangkat: waktuBooking,
       kendaraan: kendaraan,
+      kendaraan_harga: carPrice,
       total: totalBiaya,
     };
 
     try {
       const result = await apiService.postTransaction(transactionData);
-      setSubmitMessage(`Transaksi berhasil! Kode Booking Anda: ${result.kode}`);
+      
+      // Generate WhatsApp message
+      const whatsappMessage = `Halo! Saya ingin memesan paket wisata dengan detail berikut:
+
+*Detail Pemesanan:*
+👤 Nama: ${nama}
+🗺️ Destinasi: ${cart.map(item => item.nama).join(', ')}
+👥 Jumlah Penumpang: ${jumlahPenumpang} orang
+🚗 Kendaraan: ${kendaraan}
+📅 Tanggal Berangkat: ${tanggalBooking}
+⏰ Waktu: ${waktuBooking}
+💰 Total Biaya: Rp ${totalBiaya.toLocaleString("id-ID")}
+
+*Kode Invoice: ${result.kode}*
+
+Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
+
+      // Encode message for WhatsApp URL
+      const encodedMessage = encodeURIComponent(whatsappMessage);
+      const whatsappUrl = `https://wa.me/6289606883082?text=${encodedMessage}`;
+      
+      // Set success message
+      setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Silakan klik tombol WhatsApp di bawah.`);
       setNama('');
       onCartUpdate([]);
+      
+      // Store WhatsApp URL in state for the anchor link
+      setWhatsappUrl(whatsappUrl);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
       setSubmitMessage(`Gagal: ${errorMessage}`);
@@ -110,6 +150,21 @@ export default function SidebarCart({
     }
   }, [kendaraan, jumlahPenumpang, maxPassengers, onPenumpangChange]);
 
+  // Auto-select appropriate car only when current car becomes insufficient
+  useEffect(() => {
+    const currentCar = packageOptions.find(car => car.key === kendaraan);
+    if (currentCar && currentCar.maxPassengers < jumlahPenumpang) {
+      // Current car is insufficient, find a suitable replacement
+      const suitableCar = availableCars.find(car => car.maxPassengers >= jumlahPenumpang);
+      if (suitableCar && suitableCar.key !== kendaraan) {
+        onKendaraanChange(suitableCar.key);
+
+      }
+    }
+  }, [jumlahPenumpang, kendaraan, availableCars, onKendaraanChange]);
+
+
+
   if (!visible) {
     return null;
   }
@@ -117,7 +172,10 @@ export default function SidebarCart({
   return (
     <aside className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col z-50">
       <header className="flex items-center justify-between p-6 border-b bg-gray-50">
-        <h2 className="text-xl font-bold text-[#213DFF]">Keranjang Anda</h2>
+        <div>
+          <h2 className="text-xl font-bold text-[#213DFF]">Keranjang Anda</h2>
+          <p className="text-xs text-gray-600 mt-1">Pesanan akan diproses via WhatsApp</p>
+        </div>
         <button
           className="text-[#213DFF] hover:text-[#16A86E] p-2 rounded-lg hover:bg-[#213DFF11] transition"
           onClick={onClose}
@@ -134,7 +192,14 @@ export default function SidebarCart({
             <ul className="space-y-2">
               {cart.map(item => (
                 <li key={item.id} className="flex items-center justify-between bg-[#213DFF11] rounded-xl px-3 py-2 text-sm">
-                  <span>{item.nama}</span>
+                  <div className="flex-1">
+                    <span className="font-medium">{item.nama}</span>
+                    {item.harga && (
+                      <span className="block text-xs text-gray-600">
+                        Rp {item.harga.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </div>
                   <button className="text-red-500 font-bold ml-2 hover:text-red-700" onClick={() => onRemoveFromCart(item.id)}>Hapus</button>
                 </li>
               ))}
@@ -160,28 +225,55 @@ export default function SidebarCart({
 
           {/* Pilihan Paket (Card) */}
           <div>
-            <label className="block text-black/70 mb-1 font-medium">Pilih Paket</label>
+            <label className="block text-black/70 mb-1 font-medium">Pilih Mobil</label>
+            {availableCars.length === 0 && (
+              <div className="mb-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                <p className="text-red-700 text-sm font-medium">
+                  ⚠️ Tidak ada kendaraan yang tersedia untuk {jumlahPenumpang} penumpang. 
+                  Maksimal kapasitas: {Math.max(...packageOptions.map(p => p.maxPassengers))} penumpang.
+                </p>
+              </div>
+            )}
             <div className="flex flex-col gap-3">
-              {packageOptions.map(pkg => (
-                <button
-                  key={pkg.key}
-                  type="button"
-                  onClick={() => onKendaraanChange(pkg.key)}
-                  className={`w-full text-left rounded-2xl border-2 p-4 transition flex flex-col gap-2 shadow-sm
-                    ${kendaraan === pkg.key ? 'border-[#213DFF] bg-[#213DFF08]' : 'border-[#16A86E22] bg-white'}
-                  `}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-base md:text-lg text-[#213DFF]">{pkg.label}</span>
-                    <span className="font-bold text-base md:text-lg text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
-                  </div>
-                  <ul className="flex flex-wrap gap-2 mt-1">
-                    {pkg.fasilitas.map(f => (
-                      <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
-                    ))}
-                  </ul>
-                </button>
-              ))}
+              {packageOptions.map(pkg => {
+                const isAvailable = pkg.maxPassengers >= jumlahPenumpang;
+                const isSelected = kendaraan === pkg.key;
+                const isInsufficient = !isAvailable && isSelected;
+                
+                return (
+                  <button
+                    key={pkg.key}
+                    type="button"
+                    onClick={() => {
+                      if (isAvailable) {
+                        onKendaraanChange(pkg.key);
+                      }
+                    }}
+                    disabled={!isAvailable}
+                    className={`w-full text-left rounded-2xl border-2 p-4 transition flex flex-col gap-2 shadow-sm
+                      ${isSelected ? 'border-[#213DFF] bg-[#213DFF08]' : 'border-[#16A86E22] bg-white'}
+                      ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-base md:text-lg text-[#213DFF]">{pkg.label}</span>
+                      <span className="font-bold text-base md:text-lg text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
+                    </div>
+                    <ul className="flex flex-wrap gap-2 mt-1">
+                      {pkg.fasilitas.map(f => (
+                        <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
+                      ))}
+                    </ul>
+                    {isInsufficient && (
+                      <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded-lg">
+                        <p className="text-red-700 text-xs">
+                          ⚠️ Kapasitas tidak cukup untuk {jumlahPenumpang} penumpang
+                        </p>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -251,19 +343,62 @@ export default function SidebarCart({
       </div>
 
       <footer className="p-6 bg-gray-50 border-t mt-auto">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-lg font-bold text-gray-800">Total Biaya</span>
-          <span className="text-xl font-extrabold text-[#213DFF]">
-            Rp {totalBiaya.toLocaleString("id-ID")}
-          </span>
+        {/* Cost Breakdown */}
+        <div className="mb-4 space-y-2">
+          {cart.length > 0 && destinationTotal > 0 && (
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Destinasi ({cart.length})</span>
+              <span className="text-gray-800">Rp {destinationTotal.toLocaleString("id-ID")}</span>
+            </div>
+          )}
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">Kendaraan ({selectedPackage.label})</span>
+            <span className="text-gray-800">Rp {carPrice.toLocaleString("id-ID")}</span>
+          </div>
+          <div className="border-t pt-2 flex justify-between items-center">
+            <span className="text-lg font-bold text-gray-800">Total Biaya</span>
+            <span className="text-xl font-extrabold text-[#213DFF]">
+              Rp {totalBiaya.toLocaleString("id-ID")}
+            </span>
+          </div>
         </div>
-        <button
-          onClick={handlePesan}
-          disabled={isSubmitting || cart.length === 0 || !nama || !tanggalBooking || !waktuBooking}
-          className="w-full bg-[#16A86E] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#213DFF] transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Memproses...' : 'Pesan Sekarang'}
-        </button>
+        {!whatsappUrl ? (
+          <button
+            onClick={handlePesan}
+            disabled={isSubmitting || cart.length === 0 || !nama || !tanggalBooking || !waktuBooking}
+            className="w-full bg-[#16A86E] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#213DFF] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              'Memproses...'
+            ) : (
+              <>
+                <span>📱</span>
+                Pesan via WhatsApp
+              </>
+            )}
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#128C7E] transition flex items-center justify-center gap-2"
+            >
+              <span>📱</span>
+              Buka WhatsApp
+            </a>
+            <button
+              onClick={() => {
+                setWhatsappUrl(null);
+                setSubmitMessage('');
+              }}
+              className="w-full bg-gray-500 text-white font-bold py-2 rounded-xl shadow-lg hover:bg-gray-600 transition"
+            >
+              Pesan Lagi
+            </button>
+          </div>
+        )}
         {submitMessage && (
           <div className={`mt-4 text-center text-sm ${submitMessage.includes('Gagal') ? 'text-red-600' : 'text-green-600'}`}>
             {submitMessage}
