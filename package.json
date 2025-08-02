@@ -10,11 +10,12 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "next": "15.3.5",
+    "next": "^15.4.5",
     "phosphor-react": "^1.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-leaflet": "^5.0.0"
+    "react-leaflet": "^5.0.0",
+    "swr": "^2.3.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

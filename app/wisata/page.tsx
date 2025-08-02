@@ -1,13 +1,16 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import SidebarCart from "../components/SidebarCart";
 import GemitraMap from "../components/GemitraMap";
 import DestinationDetail from "../components/DestinationDetail";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import ImageSlider from "../components/ImageSlider";
+import EventsSlider from "../components/EventsSlider";
+import HeaderNavigation from "../components/HeaderNavigation";
 import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
+import { useDestinationsSWR } from "../hooks/useDestinationsSWR";
 
 export default function WisataList() {
   // Cart state
@@ -24,58 +27,120 @@ export default function WisataList() {
   // Data state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Use destinations hook with SWR
+  const { 
+    destinations, 
+    loading, 
+    error, 
+    mutate: refresh, 
+    isValidating,
+    lastUpdate 
+  } = useDestinationsSWR({
+    refreshInterval: 10000, // Update setiap 10 detik
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true
+  });
 
   // Map state
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
-  // Polling fetch destinasi
-  useEffect(() => {
-    let isMounted = true;
-    const fetchDestinations = async () => {
+  // Enhanced function for image processing
+  const processImageData = (d: any) => {
+    if (!d.img) {
+      return null;
+    }
+    
+    // If img is already an array, return the whole array
+    if (Array.isArray(d.img) && d.img.length > 0) {
+      return d.img;
+    }
+    
+    // If img is a string, it might be a JSON array string
+    if (typeof d.img === 'string') {
+      // Try to parse as JSON array first
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec");
-        const data = await res.json();
-        const parsed = data.data.map((d: any) => ({
-          ...d,
-          img: d.img || null, // Ensure img is not empty string
-          posisi: d.posisi ? (() => {
-            try {
-              const parsed = JSON.parse(d.posisi);
-              // Validate that parsed data is an array with 2 numbers
-              if (Array.isArray(parsed) && parsed.length === 2 && 
-                  typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
-                return parsed;
-              }
-              return null;
-            } catch {
-              console.warn('Invalid position data for destination:', d.nama, d.posisi);
-              return null;
-            }
-          })() : null,
-        }));
-        if (isMounted) {
-          setDestinations(parsed);
-          setLoading(false);
-          setError(null);
+        const parsed = JSON.parse(d.img);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
         }
-      } catch {
-        if (isMounted) {
-          setLoading(false);
-          setError("Gagal mengambil data destinasi");
+      } catch (e) {
+        // If JSON parsing fails, try to clean the string first
+        try {
+          // Remove any problematic characters and try again
+          const cleaned = d.img.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e2) {
+          // Failed to parse even after cleaning
         }
       }
-    };
-    fetchDestinations();
-    const interval = setInterval(fetchDestinations, 5000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, []);
+      
+      // Check if it looks like an array string (starts with [ and ends with ])
+      if (d.img.startsWith('[') && d.img.endsWith(']')) {
+        try {
+          // Try to extract URLs from the string manually
+          const urlMatches = d.img.match(/https?:\/\/[^\s,\]]+/g);
+          if (urlMatches && urlMatches.length > 0) {
+            return urlMatches;
+          }
+        } catch (e) {
+          // Failed to extract URLs
+        }
+        
+        // If regex extraction fails, try manual parsing
+        try {
+          // Remove brackets and split by comma
+          const content = d.img.slice(1, -1); // Remove [ and ]
+          const urls = content.split(',').map((url: string) => url.trim().replace(/"/g, ''));
+          const validUrls = urls.filter((url: string) => url.startsWith('http'));
+          if (validUrls.length > 0) {
+            return validUrls;
+          }
+        } catch (e) {
+          // Failed manual extraction
+        }
+        
+        // Additional parsing for array format like [url1, url2]
+        try {
+          // Remove brackets and split by comma, handling quotes
+          const content = d.img.slice(1, -1); // Remove [ and ]
+          const urls = content.split(',').map((url: string) => {
+            const trimmed = url.trim();
+            // Remove quotes if present
+            return trimmed.replace(/^["']|["']$/g, '');
+          });
+          const validUrls = urls.filter((url: string) => url.startsWith('http'));
+          if (validUrls.length > 0) {
+            return validUrls;
+          }
+        } catch (e) {
+          // Failed additional parsing
+        }
+      }
+      
+      // If it's a valid URL, return it as array
+      if (d.img.startsWith('http://') || d.img.startsWith('https://')) {
+        return [d.img];
+      }
+      // Check if it's a Google Drive URL format (even without http/https)
+      if (d.img.includes('drive.google.com')) {
+        return [d.img];
+      }
+      // If it looks like a URL but doesn't start with http/https, try to fix it
+      if (d.img.includes('.com') || d.img.includes('.org') || d.img.includes('.net')) {
+        return [`https://${d.img}`];
+      }
+      return null;
+    }
+    
+    return null;
+  };
+
+
 
   useEffect(() => {
     try {
@@ -161,35 +226,52 @@ export default function WisataList() {
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
+    <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10 pt-24">
+      <HeaderNavigation />
+      
       {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
+        {/* Events Section */}
+        <EventsSlider />
+        
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF]">Destinasi Wisata</h1>
-                      <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode("list")}
-              className={`px-4 py-2 rounded-full font-bold transition ${
-                viewMode === "list" 
-                  ? "bg-[#16A86E] text-white" 
-                  : "bg-white text-[#213DFF] border border-[#213DFF]"
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setViewMode("map")}
-              className={`px-4 py-2 rounded-full font-bold transition ${
-                viewMode === "map" 
-                  ? "bg-[#16A86E] text-white" 
-                  : "bg-white text-[#213DFF] border border-[#213DFF]"
-              }`}
-            >
-              Peta
-            </button>
-            
-          </div>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF]">Destinasi Wisata</h1>
+              {/* {isValidating && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Updating...</span>
+                </div>
+              )}
+              {lastUpdate && (
+                <div className="text-xs text-gray-500">
+                  Last update: {lastUpdate.toLocaleTimeString()}
+                </div>
+              )} */}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-4 py-2 rounded-full font-bold transition ${
+                  viewMode === "list" 
+                    ? "bg-[#16A86E] text-white" 
+                    : "bg-white text-[#213DFF] border border-[#213DFF]"
+                }`}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`px-4 py-2 rounded-full font-bold transition ${
+                  viewMode === "map" 
+                    ? "bg-[#16A86E] text-white" 
+                    : "bg-white text-[#213DFF] border border-[#213DFF]"
+                }`}
+              >
+                Peta
+              </button>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
@@ -217,26 +299,7 @@ export default function WisataList() {
             <p className="font-bold">Error:</p>
             <p>{error}</p>
             <button 
-              onClick={() => {
-                setLoading(true);
-                setError(null);
-                fetch("https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec")
-                  .then(res => res.json())
-                  .then(data => {
-                            const parsed = data.data.map((d: any) => ({
-          ...d,
-          img: d.img || null, // Ensure img is not empty string
-          posisi: d.posisi ? JSON.parse(d.posisi) : null,
-        }));
-                    setDestinations(parsed);
-                    setLoading(false);
-                    setError(null);
-                  })
-                  .catch(() => {
-                    setLoading(false);
-                    setError("Gagal mengambil data destinasi");
-                  });
-              }}
+              onClick={() => refresh()}
               className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
             >
               Coba Lagi
@@ -246,19 +309,15 @@ export default function WisataList() {
 
         {viewMode === "list" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredData.map(item => (
+            {filteredData.map((item, index) => (
               <div key={item.id} className="rounded-3xl overflow-hidden shadow-xl bg-glass">
                 <div className="relative w-full h-48">
-                  {item.img ? (
-                    <Image src={item.img} alt={item.nama} fill className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <div className="text-gray-500 text-center">
-                        <div className="text-4xl mb-2">🏞️</div>
-                        <div className="text-sm">No Image</div>
-                      </div>
-                    </div>
-                  )}
+                  <ImageSlider 
+                    images={processImageData(item) || []}
+                    alt={item.nama}
+                    className="w-full h-full"
+                    priority={index === 0}
+                  />
                 </div>
                 <div className="p-6 flex flex-col gap-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -276,7 +335,7 @@ export default function WisataList() {
                   )}
                   <div className="flex gap-2 mt-2">
                     <Link
-                      href={`/wisata/${item.id}`}
+                      href={`/wisata/${item.slug || item.id}`}
                       className="flex-1 bg-[#16A86E] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#213DFF] transition text-center"
                     >
                       Detail

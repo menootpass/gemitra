@@ -1,6 +1,6 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
+import ImageSlider from "./ImageSlider";
 import { Destination } from "../types";
 
 type DestinationDetailProps = {
@@ -21,26 +21,97 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
     );
   }
 
+  // Function to process image data
+  const processImageData = (img: any) => {
+    if (!img) return [];
+    if (Array.isArray(img) && img.length > 0) {
+      return img;
+    }
+    if (typeof img === 'string') {
+      try {
+        const parsed = JSON.parse(img);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        try {
+          const cleaned = img.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e2) {
+          // Failed to parse even after cleaning
+        }
+      }
+      
+      if (img.startsWith('[') && img.endsWith(']')) {
+        try {
+          const urlMatches = img.match(/https?:\/\/[^\s,\]]+/g);
+          if (urlMatches && urlMatches.length > 0) {
+            return urlMatches;
+          }
+        } catch (e) {
+          // Failed to extract URLs
+        }
+        
+        try {
+          const content = img.slice(1, -1);
+          const urls = content.split(',').map((url: string) => url.trim().replace(/"/g, ''));
+          const validUrls = urls.filter((url: string) => url.startsWith('http'));
+          if (validUrls.length > 0) {
+            return validUrls;
+          }
+        } catch (e) {
+          // Failed manual extraction
+        }
+        
+        // Additional parsing for array format like [url1, url2]
+        try {
+          const content = img.slice(1, -1);
+          const urls = content.split(',').map((url: string) => {
+            const trimmed = url.trim();
+            return trimmed.replace(/^["']|["']$/g, '');
+          });
+          const validUrls = urls.filter((url: string) => url.startsWith('http'));
+          if (validUrls.length > 0) {
+            return validUrls;
+          }
+        } catch (e) {
+          // Failed additional parsing
+        }
+      }
+      
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        return [img];
+      }
+      if (img.includes('drive.google.com')) {
+        return [img];
+      }
+      if (img.includes('.com') || img.includes('.org') || img.includes('.net')) {
+        return [`https://${img}`];
+      }
+      return [];
+    }
+    return [];
+  };
+
   return (
     <div className="w-full h-96 bg-glass rounded-xl overflow-hidden shadow-xl">
-      <div className="relative w-full h-48">
-        {destination.img ? (
-          <Image src={destination.img} alt={destination.nama} fill className="object-cover w-full h-full" />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <div className="text-gray-500 text-center">
-              <div className="text-4xl mb-2">🏞️</div>
-              <div className="text-sm">No Image</div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 bg-white/90 text-[#213DFF] font-bold px-2 py-1 rounded-full text-xs hover:bg-white transition"
-        >
-          ✕
-        </button>
-      </div>
+              <div className="relative w-full h-48">
+          <ImageSlider 
+            images={processImageData(destination.img)}
+            alt={destination.nama}
+            className="w-full h-full"
+            priority={false}
+          />
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-white/90 text-[#213DFF] font-bold px-2 py-1 rounded-full text-xs hover:bg-white transition z-10"
+          >
+            ✕
+          </button>
+        </div>
       <div className="p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-[#213DFF]">{destination.nama}</h3>

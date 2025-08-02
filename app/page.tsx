@@ -7,6 +7,7 @@ import GemitraMap from "./components/GemitraMap";
 import DestinationDetail from "./components/DestinationDetail";
 import LoadingSkeleton from "./components/LoadingSkeleton";
 import { Destination } from "./types";
+import FeedbackForm from "./components/FeedbackForm";
 
 export default function Home() {
   const router = useRouter();
@@ -66,10 +67,11 @@ export default function Home() {
           <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={120} height={44} className="block" />
         </div>
         <nav className="hidden sm:flex gap-6 md:gap-10 text-[#213DFF] font-bold text-base tracking-wide">
-          <a href="#about" className="hover:text-[#16A86E] transition">Tentang Kami</a>
-          <a href="#services" className="hover:text-[#16A86E] transition">Layanan</a>
-          <a href="#projects" className="hover:text-[#16A86E] transition">Destinasi</a>
-          <a href="#contact" className="hover:text-[#16A86E] transition">Kontak</a>
+              <a href="#about" className="hover:text-[#16A86E] transition">Tentang Kami</a>
+              <a href="#services" className="hover:text-[#16A86E] transition">Layanan</a>
+              <a href="/wisata" className="hover:text-[#16A86E] transition">Destinasi</a>
+              <a href="/event" className="hover:text-[#16A86E] transition">Event</a>
+              <a href="#feedback" className="hover:text-[#16A86E] transition">Feedback</a>
         </nav>
         <div className="flex gap-2">
           <button onClick={() => router.push("/wisata")} className="bg-[#16A86E] text-white font-bold px-6 py-2 rounded-full shadow-lg hover:bg-[#213DFF] hover:glow-blue transition border-2 border-[#16A86E] w-full sm:w-auto">Mulai Jelajah</button>
@@ -78,7 +80,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-14 mt-4 md:mt-12 px-4 sm:px-6">
+      <section id="about" className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-14 mt-4 md:mt-12 px-4 sm:px-6">
         <div className="flex-1 flex flex-col gap-6 md:gap-8 items-center md:items-start w-full">
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-[#213DFF] leading-tight text-center md:text-left">
             Temukan Hidden Gems<br />
@@ -215,6 +217,12 @@ export default function Home() {
             Lihat Semua Destinasi
           </button>
         </div>
+      </section>
+
+      {/* Feedback Form Section */}
+      <section id="feedback" className="w-full max-w-5xl mt-14 md:mt-20 px-4 sm:px-6">
+        
+        <FeedbackForm />
       </section>
 
       {/* Footer Slogan */}

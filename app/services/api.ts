@@ -1,3 +1,5 @@
+import { Destination, CartItem, Event } from '../types';
+
 interface ApiConfig {
   baseUrl: string;
   username: string;
@@ -17,12 +19,7 @@ class ApiService {
       cacheDuration: 5 * 60 * 1000, // 5 menit cache
     };
     
-    // Debug: Log auth status (without exposing credentials)
-    console.log('API Service initialized with auth:', {
-      hasUsername: !!this.config.username,
-      hasPassword: !!this.config.password,
-      baseUrl: this.config.baseUrl
-    });
+
   }
 
   private getAuthHeaders(): HeadersInit {
@@ -51,12 +48,10 @@ class ApiService {
     // Check cache first
     if (useCache && this.isCacheValid(cacheKey)) {
       const cached = this.cache.get(cacheKey);
-      console.log('Using cached destinations data');
       return cached!.data;
     }
 
     try {
-      console.log('Fetching destinations from API...');
       
       const response = await fetch(this.config.baseUrl, {
         headers: this.getAuthHeaders(),
@@ -82,7 +77,6 @@ class ApiService {
       // Return cached data if available, even if expired
       const cached = this.cache.get(cacheKey);
       if (cached) {
-        console.log('Using expired cache as fallback');
         return cached.data;
       }
       
@@ -94,7 +88,6 @@ class ApiService {
     // Fungsi ini mungkin perlu diubah atau dihapus jika tidak lagi relevan
     // dengan API handler yang baru. Untuk saat ini, kita akan menonaktifkannya
     // dengan mengosongkan isinya agar tidak menyebabkan error.
-    console.log('Fungsi purgeCache dinonaktifkan untuk API handler lokal.');
     this.cache.clear();
   }
 
@@ -137,7 +130,6 @@ class ApiService {
   // Method untuk clear cache manual
   clearCache(): void {
     this.cache.clear();
-    console.log('Local cache cleared');
   }
 
   async postTransaction(transactionData: any): Promise<any> {
@@ -165,6 +157,7 @@ class ApiService {
   async postComment(commentData: {
     invoiceCode: string;
     komentar: string;
+    rating: number;
     destinationId: number;
   }): Promise<any> {
     try {
@@ -187,7 +180,108 @@ class ApiService {
       throw error;
     }
   }
+
+  // Feedback API
+  async submitFeedback(feedbackData: {
+    nama: string;
+    email: string;
+    telepon?: string;
+    kategori?: string;
+    rating: number;
+    pesan: string;
+  }): Promise<any> {
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
-export const apiService = new ApiService(); 
+export const apiService = new ApiService();
+
+// Events API Service
+class EventsApiService {
+  private eventsUrl: string;
+
+  constructor() {
+    this.eventsUrl = process.env.NEXT_PUBLIC_GEMITRA_EVENTS_URL || 
+                     'https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec';
+  }
+
+  async fetchEvents(): Promise<Event[]> {
+    try {
+      const response = await fetch(this.eventsUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Events API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Gagal mengambil data events');
+      }
+
+      return data.data || [];
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      throw error;
+    }
+  }
+
+  async fetchEventBySlug(slug: string): Promise<Event | null> {
+    try {
+      const events = await this.fetchEvents();
+      return events.find(event => event.slug === slug) || null;
+    } catch (error) {
+      console.error('Error fetching event by slug:', error);
+      throw error;
+    }
+  }
+
+  async fetchEventsByCategory(category: string): Promise<Event[]> {
+    try {
+      const events = await this.fetchEvents();
+      return events.filter(event => 
+        event.category.toLowerCase() === category.toLowerCase()
+      );
+    } catch (error) {
+      console.error('Error fetching events by category:', error);
+      throw error;
+    }
+  }
+
+  async incrementEventReader(slug: string): Promise<boolean> {
+    try {
+      const event = await this.fetchEventBySlug(slug);
+      if (!event) {
+        throw new Error('Event tidak ditemukan');
+      }
+
+      // Note: This would require a separate API endpoint for incrementing
+      // For now, we'll just return true as the increment is handled server-side
+      return true;
+    } catch (error) {
+      console.error('Error incrementing event reader:', error);
+      throw error;
+    }
+  }
+}
+
+// Export events API service
+export const eventsApiService = new EventsApiService(); 

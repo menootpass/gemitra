@@ -1,17 +1,18 @@
 "use client";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import SidebarCart from "../../components/SidebarCart";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
 import CommentForm from "../../components/CommentForm";
+import ImageSlider from "../../components/ImageSlider";
 import { CartItem } from "../../types";
-import { useDestinationDetail } from "../../hooks/useDestinations";
+import { useDestinationDetailBySlug } from "../../hooks/useDestinations";
+import useSWR from "swr";
 import { ShoppingCartSimple } from "phosphor-react";
 
 export default function WisataDetail() {
   const params = useParams();
-  const id = params.id;
+  const slug = params.id; // This will be the slug from URL
 
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -25,8 +26,7 @@ export default function WisataDetail() {
   const [jumlahPenumpang, setJumlahPenumpang] = useState(1);
 
   // Data state
-  const destinationId = typeof id === 'string' ? parseInt(id) : null;
-  const { destination: data, loading, error } = useDestinationDetail(destinationId);
+  const { destination: data, loading, error } = useDestinationDetailBySlug(slug as string);
   
   // Real-time comments state
   const [localComments, setLocalComments] = useState<any[]>([]);
@@ -90,33 +90,30 @@ export default function WisataDetail() {
       // Pastikan komentar adalah array dan format yang benar
       let comments = data.komentar;
       
-      console.log('Raw comments from data:', comments);
-      console.log('Type of comments:', typeof comments);
-      
       // Jika komentar adalah string JSON, parse dulu
       if (typeof comments === 'string') {
         try {
           comments = JSON.parse(comments);
-          console.log('Parsed comments:', comments);
         } catch (error) {
-          console.error('Error parsing comments:', error);
           comments = [];
         }
       }
       
       // Pastikan comments adalah array
       if (Array.isArray(comments)) {
-        console.log('Setting local comments:', comments);
         setLocalComments(comments);
       } else {
-        console.warn('Comments is not an array:', comments);
         setLocalComments([]);
       }
     } else {
-      console.log('No comments data, setting empty array');
       setLocalComments([]);
     }
   }, [data]);
+
+  // Hitung rating rata-rata
+  const averageRating = localComments.length > 0 
+    ? localComments.reduce((sum, comment) => sum + (comment.rating || 0), 0) / localComments.length
+    : 0;
 
   function handleAddToCart() {
     if (!data) return;
@@ -130,10 +127,8 @@ export default function WisataDetail() {
 
   // Function to add comment in real-time
   function handleCommentAdded(newComment: any) {
-    console.log('Adding new comment:', newComment);
     setLocalComments(prev => {
       const updated = [...prev, newComment];
-      console.log('Updated comments array:', updated);
       return updated;
     });
     
@@ -170,17 +165,94 @@ export default function WisataDetail() {
       <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
         <div className="rounded-3xl overflow-hidden shadow-xl bg-glass">
           <div className="relative w-full h-60 sm:h-80">
-            {data.img ? (
-              <Image src={data.img} alt={data.nama} fill className="object-cover w-full h-full" />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <div className="text-gray-500 text-center">
-                  <div className="text-6xl mb-4">🏞️</div>
-                  <div className="text-lg font-semibold">No Image Available</div>
-                  <div className="text-sm">Gambar destinasi tidak tersedia</div>
-                </div>
-              </div>
-            )}
+            <ImageSlider 
+              images={(() => {
+                if (!data.img) return [];
+                if (Array.isArray(data.img) && data.img.length > 0) {
+                  return data.img;
+                }
+                if (typeof data.img === 'string') {
+                  try {
+                    const parsed = JSON.parse(data.img);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      return parsed;
+                    }
+                  } catch (e) {
+                    // If JSON parsing fails, try to clean the string first
+                    try {
+                      const cleaned = data.img.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+                      const parsed = JSON.parse(cleaned);
+                      if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed;
+                      }
+                    } catch (e2) {
+                      // Failed to parse even after cleaning
+                    }
+                  }
+                  
+                  // Check if it looks like an array string (starts with [ and ends with ])
+                  if (data.img.startsWith('[') && data.img.endsWith(']')) {
+                    try {
+                      // Try to extract URLs from the string manually
+                      const urlMatches = data.img.match(/https?:\/\/[^\s,\]]+/g);
+                      if (urlMatches && urlMatches.length > 0) {
+                        return urlMatches;
+                      }
+                    } catch (e) {
+                      // Failed to extract URLs
+                    }
+                    
+                    // If regex extraction fails, try manual parsing
+                    try {
+                      // Remove brackets and split by comma
+                      const content = data.img.slice(1, -1); // Remove [ and ]
+                      const urls = content.split(',').map((url: string) => url.trim().replace(/"/g, ''));
+                      const validUrls = urls.filter((url: string) => url.startsWith('http'));
+                      if (validUrls.length > 0) {
+                        return validUrls;
+                      }
+                    } catch (e) {
+                      // Failed manual extraction
+                    }
+                    
+                    // Additional parsing for array format like [url1, url2]
+                    try {
+                      // Remove brackets and split by comma, handling quotes
+                      const content = data.img.slice(1, -1); // Remove [ and ]
+                      const urls = content.split(',').map((url: string) => {
+                        const trimmed = url.trim();
+                        // Remove quotes if present
+                        return trimmed.replace(/^["']|["']$/g, '');
+                      });
+                      const validUrls = urls.filter((url: string) => url.startsWith('http'));
+                      if (validUrls.length > 0) {
+                        return validUrls;
+                      }
+                    } catch (e) {
+                      // Failed additional parsing
+                    }
+                  }
+                  
+                  // If it's a valid URL, return it as array
+                  if (data.img.startsWith('http://') || data.img.startsWith('https://')) {
+                    return [data.img];
+                  }
+                  // Check if it's a Google Drive URL format (even without http/https)
+                  if (data.img.includes('drive.google.com')) {
+                    return [data.img];
+                  }
+                  // If it looks like a URL but doesn't start with http/https, try to fix it
+                  if (data.img.includes('.com') || data.img.includes('.org') || data.img.includes('.net')) {
+                    return [`https://${data.img}`];
+                  }
+                  return [];
+                }
+                return [];
+              })()}
+              alt={data.nama}
+              className="w-full h-full"
+              priority={true}
+            />
           </div>
           {/* Tombol Tambahkan Destinasi Wisata */}
           <div className="p-4 border-b border-[#213DFF11] flex justify-end">
@@ -195,7 +267,23 @@ export default function WisataDetail() {
           <div className="p-6 flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#213DFF]">{data.nama}</h1>
-              <span className="ml-auto text-[#16A86E] font-bold text-lg">{data.rating}★</span>
+              <div className="ml-auto flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`text-lg ${
+                        star <= averageRating ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-[#16A86E] font-bold text-lg">
+                  {averageRating > 0 ? averageRating.toFixed(1) : data.rating}★
+                </span>
+              </div>
             </div>
             <span className="text-black/60 text-sm mb-2">{data.lokasi} &middot; {data.kategori}</span>
             {data.harga && (
@@ -236,7 +324,25 @@ export default function WisataDetail() {
                         i === localComments.length - 1 ? 'animate-pulse bg-[#16A86E22]' : ''
                       }`}
                     >
-                      <span className="font-bold text-[#16A86E]">{k.nama}:</span> {k.komentar}
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="font-bold text-[#16A86E]">{k.nama}</span>
+                        {k.rating && (
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <span
+                                key={star}
+                                className={`text-xs ${
+                                  star <= k.rating ? 'text-yellow-400' : 'text-gray-300'
+                                }`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                            <span className="text-xs text-gray-500 ml-1">({k.rating})</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-gray-700">{k.komentar}</p>
                       {k.tanggal && (
                         <div className="text-xs text-gray-500 mt-1">
                           {new Date(k.tanggal).toLocaleDateString('id-ID', {

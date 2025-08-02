@@ -3,8 +3,26 @@ import { NextResponse } from 'next/server';
 // URL Google Apps Script Anda
 const SCRIPT_URL = process.env.GEMITRA_DESTINATIONS_URL!;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('slug');
+    
+    // Jika ada slug, fetch destinasi berdasarkan slug
+    if (slug) {
+      const response = await fetch(`${SCRIPT_URL}?slug=${encodeURIComponent(slug)}`, {
+        next: { revalidate: 600 },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gagal mengambil data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return NextResponse.json(data);
+    }
+    
+    // Jika tidak ada slug, fetch semua destinasi
     const response = await fetch(SCRIPT_URL, {
       // Opsi untuk revalidasi cache, misalnya setiap 10 menit
       next: { revalidate: 600 }, 

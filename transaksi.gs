@@ -46,9 +46,8 @@ function doPost(e) {
     const sheet = SpreadsheetApp.openById(TRANSAKSI_SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
     const data = JSON.parse(e.postData.contents);
     
-    // Generate ID baru (auto-increment)
-    const lastRow = sheet.getLastRow();
-    const newId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
+    // Generate ID baru (auto-increment) - Fixed to use proper sequential numbers
+    const newId = getNextTransactionId();
     
     // Generate kode transaksi unik (contoh: INV-TIMESTAMP)
     const kodeTransaksi = `INV-${new Date().getTime()}`;
@@ -74,6 +73,12 @@ function doPost(e) {
     ];
     
     sheet.appendRow(newRow);
+    
+    // Increment visitor count for destinations
+    if (data.destinasi) {
+      const destinasiNames = data.destinasi.split(', ').map(name => name.trim());
+      incrementDestinationVisitors(destinasiNames);
+    }
     
     const response = { 
       success: true, 
@@ -104,6 +109,98 @@ function createJsonResponse(data, statusCode = 200) {
   return output; 
 }
 
+
+// =================== FUNGSI ID GENERATOR ===================
+
+/**
+ * Function to ensure new transactions get sequential IDs
+ */
+function getNextTransactionId() {
+  try {
+    const sheet = SpreadsheetApp.openById(TRANSAKSI_SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
+    
+    if (!sheet) {
+      return 1; // Return 1 if sheet doesn't exist
+    }
+    
+    // Get the last row with data
+    const lastRow = sheet.getLastRow();
+    
+    if (lastRow <= 1) {
+      return 1; // Return 1 if only header exists
+    }
+    
+    // Get the last ID from the sheet
+    const lastId = sheet.getRange(lastRow, 1).getValue();
+    
+    // If last ID is a number, increment it
+    if (typeof lastId === 'number' && !isNaN(lastId)) {
+      return lastId + 1;
+    }
+    
+    // If last ID is not a number, count existing rows (excluding header)
+    return lastRow;
+    
+  } catch (error) {
+    console.error("❌ Error getting next ID:", error);
+    return 1;
+  }
+}
+
+// =================== FUNGSI INCREMENT VISITOR ===================
+
+/**
+ * Function to increment visitor count for destinations
+ * @param {string[]} destinasiNames - Array of destination names
+ */
+function incrementDestinationVisitors(destinasiNames) {
+  try {
+    const destinasiSheet = SpreadsheetApp.openById(TRANSAKSI_SPREADSHEET_ID).getSheetByName('Destinasi');
+    
+    if (!destinasiSheet) {
+      console.error("❌ Sheet 'Destinasi' not found!");
+      return;
+    }
+    
+    const destinasiData = destinasiSheet.getDataRange().getValues();
+    const headers = destinasiData[0];
+    const rows = destinasiData.slice(1);
+    
+    // Find nama column index
+    const namaIndex = headers.indexOf('nama');
+    const dikunjungiIndex = headers.indexOf('dikunjungi');
+    
+    if (namaIndex === -1 || dikunjungiIndex === -1) {
+      console.error("❌ Required columns 'nama' or 'dikunjungi' not found!");
+      return;
+    }
+    
+    // For each destination name in the transaction
+    for (const destinasiName of destinasiNames) {
+      // Find the destination in the Destinasi sheet
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const sheetDestinasiName = row[namaIndex];
+        
+        // Case-insensitive comparison
+        if (sheetDestinasiName && sheetDestinasiName.toString().toLowerCase() === destinasiName.toLowerCase()) {
+          // Get current visitor count
+          const currentVisitors = parseInt(row[dikunjungiIndex]) || 0;
+          const newVisitors = currentVisitors + 1;
+          
+          // Update the visitor count in the sheet
+          destinasiSheet.getRange(i + 2, dikunjungiIndex + 1).setValue(newVisitors);
+          
+          console.log(`✅ Incremented visitors for "${destinasiName}": ${currentVisitors} → ${newVisitors}`);
+          break; // Found and updated, move to next destination
+        }
+      }
+    }
+    
+  } catch (error) {
+    console.error("❌ Error incrementing destination visitors:", error);
+  }
+}
 
 // =================== SETUP AWAL (Jalankan manual sekali) ===================
 

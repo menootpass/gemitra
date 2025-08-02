@@ -6,6 +6,7 @@ const DESTINATIONS_URL = process.env.GEMITRA_DESTINATIONS_URL!;
 interface CommentRequest {
   invoiceCode: string;
   komentar: string;
+  rating: number;
   destinationId: number;
 }
 
@@ -27,9 +28,17 @@ export async function POST(request: Request) {
     const body: CommentRequest = await request.json();
 
     // Validasi input
-    if (!body.invoiceCode || !body.komentar || !body.destinationId) {
+    if (!body.invoiceCode || !body.komentar || !body.destinationId || !body.rating) {
       return NextResponse.json(
         { message: 'Data tidak lengkap' }, 
+        { status: 400 }
+      );
+    }
+
+    // Validasi rating
+    if (body.rating < 1 || body.rating > 5) {
+      return NextResponse.json(
+        { message: 'Rating harus antara 1-5' }, 
         { status: 400 }
       );
     }
@@ -104,6 +113,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validasi destinasi yang dikomentari sesuai dengan destinasi yang dipesan
+    const transactionDestinations = validTransaction.destinasi ? 
+      validTransaction.destinasi.split(',').map((dest: string) => dest.trim()) : [];
+    
+    // Cek apakah destinasi yang dikomentari ada dalam daftar destinasi yang dipesan
+    const isDestinationInTransaction = transactionDestinations.some((dest: string) => 
+      dest.toLowerCase() === destination.nama.toLowerCase()
+    );
+
+    if (!isDestinationInTransaction) {
+      return NextResponse.json(
+        { 
+          message: `hehe Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan. Destinasi yang dipesan: ${transactionDestinations.join(', ')}` 
+        }, 
+        { status: 403 }
+      );
+    }
+
     // Parse komentar yang ada
     let existingComments = [];
     try {
@@ -117,6 +144,7 @@ export async function POST(request: Request) {
     const newComment = {
       nama: namaFromDatabase,
       komentar: body.komentar,
+      rating: body.rating,
       tanggal: new Date().toISOString(),
     };
 

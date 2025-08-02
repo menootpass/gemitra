@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { XSquare } from "phosphor-react";
 import { CartItem } from "../types";
 import { apiService } from "../services/api";
+import { mutate } from "swr";
+import Image from "next/image";
 
 
 const packageOptions = [
@@ -12,6 +14,7 @@ const packageOptions = [
     harga: 920000,
     fasilitas: ["4 penumpang", "AC", "Driver"],
     maxPassengers: 4,
+    image: "/images/mobilio.png",
   },
   {
     key: "Mobil Innova Reborn",
@@ -19,6 +22,7 @@ const packageOptions = [
     harga: 1320000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Lebih nyaman"],
     maxPassengers: 6,
+    image: "/images/innova.png",
   },
   {
     key: "HIACE",
@@ -26,6 +30,7 @@ const packageOptions = [
     harga: 1720000,
     fasilitas: ["11 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 11,
+    image: "/images/hiace.png",
   },
 ];
 
@@ -105,6 +110,7 @@ export default function SidebarCart({
     };
 
     try {
+      // Single API call - transaction data includes destination names for visitor increment
       const result = await apiService.postTransaction(transactionData);
       
       // Generate WhatsApp message
@@ -131,6 +137,14 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
       setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Silakan klik tombol WhatsApp di bawah.`);
       setNama('');
       onCartUpdate([]);
+      
+      // Clear destinations cache to force refresh (since visitor count changed)
+      localStorage.removeItem('gemitra_destinations_cache');
+      localStorage.removeItem('gemitra_destinations_timestamp');
+      
+      // Trigger SWR revalidation for destinations
+      mutate('/api/destinations');
+      mutate('/api/destinations?limit=6');
       
       // Store WhatsApp URL in state for the anchor link
       setWhatsappUrl(whatsappUrl);
@@ -170,7 +184,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
   }
 
   return (
-    <aside className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col z-50">
+    <aside className="fixed top-2 right-2 bottom-2 left-2 bg-white shadow-2xl flex flex-col z-50 rounded-2xl">
       <header className="flex items-center justify-between p-6 border-b bg-gray-50">
         <div>
           <h2 className="text-xl font-bold text-[#213DFF]">Keranjang Anda</h2>
@@ -234,7 +248,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
                 </p>
               </div>
             )}
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {packageOptions.map(pkg => {
                 const isAvailable = pkg.maxPassengers >= jumlahPenumpang;
                 const isSelected = kendaraan === pkg.key;
@@ -256,12 +270,21 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
                     `}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-base md:text-lg text-[#213DFF]">{pkg.label}</span>
-                      <span className="font-bold text-base md:text-lg text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
+                      <div className="flex items-center gap-3">
+                        <Image 
+                          src={pkg.image} 
+                          alt={pkg.label}
+                          className="w-24 h-12 object-cover rounded-lg"
+                          width={200}
+                          height={200}
+                        />
+                        <span className="font-bold text-sm md:text-base text-[#213DFF]">{pkg.label}</span>
+                      </div>
+                      <span className="font-bold text-sm md:text-base text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
                     </div>
-                    <ul className="flex flex-wrap gap-2 mt-1">
+                    <ul className="flex flex-wrap gap-1 mt-1">
                       {pkg.fasilitas.map(f => (
-                        <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
+                        <li key={f} className="px-2 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
                       ))}
                     </ul>
                     {isInsufficient && (
@@ -373,7 +396,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
             ) : (
               <>
                 <span>📱</span>
-                Pesan via WhatsApp
+                Booking Sekarang
               </>
             )}
           </button>
@@ -386,7 +409,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
               className="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#128C7E] transition flex items-center justify-center gap-2"
             >
               <span>📱</span>
-              Buka WhatsApp
+              Konfirmasi ke WhatsApp
             </a>
             <button
               onClick={() => {

@@ -4,13 +4,14 @@ export interface Destination {
   lokasi: string;
   rating: number;
   kategori: string;
-  img: string;
+  img: string | string[] | null;
   deskripsi: string;
   fasilitas: string[];
   komentar: Comment[];
   posisi?: [number, number];
   pengunjung?: number;
   harga?: number; // Added field for destination pricing
+  slug: string; // Added slug field for URL routing
 }
 
 export interface Comment {
@@ -44,4 +45,18 @@ export interface LeafletIcon {
   html: string;
   iconSize: [number, number];
   iconAnchor: [number, number];
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  image: string[] | null;
+  date: string;
+  location: string;
+  category: string;
+  totalPembaca: number;
+  content: string;
+  author: string;
+  slug: string;
 } 
