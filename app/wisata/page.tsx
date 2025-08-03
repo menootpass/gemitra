@@ -33,9 +33,7 @@ export default function WisataList() {
     destinations, 
     loading, 
     error, 
-    mutate: refresh, 
-    isValidating,
-    lastUpdate 
+    mutate: refresh
   } = useDestinationsSWR({
     refreshInterval: 10000, // Update setiap 10 detik
     revalidateOnFocus: true,
@@ -65,7 +63,7 @@ export default function WisataList() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
         }
-      } catch (e) {
+      } catch {
         // If JSON parsing fails, try to clean the string first
         try {
           // Remove any problematic characters and try again
@@ -74,7 +72,7 @@ export default function WisataList() {
           if (Array.isArray(parsed) && parsed.length > 0) {
             return parsed;
           }
-        } catch (e2) {
+        } catch {
           // Failed to parse even after cleaning
         }
       }
@@ -87,7 +85,7 @@ export default function WisataList() {
           if (urlMatches && urlMatches.length > 0) {
             return urlMatches;
           }
-        } catch (e) {
+        } catch {
           // Failed to extract URLs
         }
         
@@ -100,7 +98,7 @@ export default function WisataList() {
           if (validUrls.length > 0) {
             return validUrls;
           }
-        } catch (e) {
+        } catch {
           // Failed manual extraction
         }
         
@@ -117,7 +115,7 @@ export default function WisataList() {
           if (validUrls.length > 0) {
             return validUrls;
           }
-        } catch (e) {
+        } catch {
           // Failed additional parsing
         }
       }
@@ -155,8 +153,7 @@ export default function WisataList() {
           setCart([]);
         }
       }
-    } catch (error) {
-      console.error('Error parsing cart from localStorage:', error);
+    } catch {
       localStorage.removeItem("gemitra_cart"); // Clean up invalid data
       setCart([]);
     }
@@ -176,8 +173,8 @@ export default function WisataList() {
     if (hydrated && Array.isArray(cart)) {
       try {
         localStorage.setItem("gemitra_cart", JSON.stringify(cart));
-      } catch (error) {
-        console.error('Error saving cart to localStorage:', error);
+      } catch {
+        // Handle localStorage error
       }
     }
   }, [cart, hydrated]);
@@ -238,17 +235,6 @@ export default function WisataList() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF]">Destinasi Wisata</h1>
-              {/* {isValidating && (
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>Updating...</span>
-                </div>
-              )}
-              {lastUpdate && (
-                <div className="text-xs text-gray-500">
-                  Last update: {lastUpdate.toLocaleTimeString()}
-                </div>
-              )} */}
             </div>
             <div className="flex gap-2">
               <button

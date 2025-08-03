@@ -51,7 +51,7 @@ export default function CommentForm({ destinationId, onCommentAdded }: CommentFo
     setMessage(null);
 
     try {
-      const result = await apiService.postComment({
+      const result = await apiService.createComment({
         ...formData,
         destinationId,
       });

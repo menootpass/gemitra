@@ -111,7 +111,7 @@ export default function SidebarCart({
 
     try {
       // Single API call - transaction data includes destination names for visitor increment
-      const result = await apiService.postTransaction(transactionData);
+      const result = await apiService.createTransaction(transactionData);
       
       // Generate WhatsApp message
       const whatsappMessage = `Halo! Saya ingin memesan paket wisata dengan detail berikut:

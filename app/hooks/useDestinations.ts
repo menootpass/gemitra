@@ -57,6 +57,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
               return parsed;
             }
           } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             // If JSON parsing fails, try to clean the string first
             try {
               // Remove any problematic characters and try again
@@ -66,6 +67,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
                 return parsed;
               }
             } catch (e2) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               // Failed to parse even after cleaning
             }
           }
@@ -79,6 +81,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
                 return urlMatches;
               }
             } catch (e) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               // Failed to extract URLs
             }
             
@@ -92,6 +95,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
                 return validUrls;
               }
             } catch (e) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               // Failed manual extraction
             }
             
@@ -109,6 +113,7 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
                 return validUrls;
               }
             } catch (e) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               // Failed additional parsing
             }
           }
@@ -222,33 +227,6 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
   };
 }
 
-// Helper function untuk parsing comments
-const parseComments = (rawComments: any): any[] => {
-  // If comments is already an array/object, return it directly
-  if (Array.isArray(rawComments) || typeof rawComments === 'object') {
-    return rawComments;
-  }
-  
-  // If it's a string, try to parse it
-  if (typeof rawComments === 'string') {
-    try {
-      const parsed = JSON.parse(rawComments);
-      return parsed;
-    } catch (error) {
-      // If JSON parsing fails, try to clean the string first
-      try {
-        const cleaned = rawComments.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-        const parsed = JSON.parse(cleaned);
-        return parsed;
-      } catch (e2) {
-        return [];
-      }
-    }
-  }
-  
-  return [];
-};
-
 // Hook khusus untuk detail destinasi berdasarkan ID
 export function useDestinationDetail(id: number | null) {
   const [destination, setDestination] = useState<Destination | null>(null);
@@ -285,6 +263,7 @@ export function useDestinationDetail(id: number | null) {
                   return parsed;
                 }
               } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 // If JSON parsing fails, try to clean the string first
                 try {
                   // Remove any problematic characters and try again
@@ -294,6 +273,7 @@ export function useDestinationDetail(id: number | null) {
                     return parsed;
                   }
                 } catch (e2) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed to parse even after cleaning
                 }
               }
@@ -307,6 +287,7 @@ export function useDestinationDetail(id: number | null) {
                     return urlMatches;
                   }
                 } catch (e) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed to extract URLs
                 }
                 
@@ -320,6 +301,7 @@ export function useDestinationDetail(id: number | null) {
                     return validUrls;
                   }
                 } catch (e) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed manual extraction
                 }
               }
@@ -422,6 +404,7 @@ export function useDestinationDetailBySlug(slug: string | null) {
                   return parsed;
                 }
               } catch (e) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 try {
                   const cleaned = rawData.img.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
                   const parsed = JSON.parse(cleaned);
@@ -429,6 +412,7 @@ export function useDestinationDetailBySlug(slug: string | null) {
                     return parsed;
                   }
                 } catch (e2) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed to parse even after cleaning
                 }
               }
@@ -440,6 +424,7 @@ export function useDestinationDetailBySlug(slug: string | null) {
                     return urlMatches;
                   }
                 } catch (e) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed to extract URLs
                 }
                 
@@ -451,6 +436,7 @@ export function useDestinationDetailBySlug(slug: string | null) {
                     return validUrls;
                   }
                 } catch (e) {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   // Failed manual extraction
                 }
               }

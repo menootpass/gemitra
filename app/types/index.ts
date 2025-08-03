@@ -50,13 +50,25 @@ export interface LeafletIcon {
 export interface Event {
   id: string;
   title: string;
-  description: string;
+  description: string | string[];
   image: string[] | null;
   date: string;
   location: string;
   category: string;
   totalPembaca: number;
-  content: string;
+  content: string | string[];
   author: string;
   slug: string;
+} 
+
+export interface Feedback {
+  id: number;
+  nama: string;
+  email: string;
+  telepon: string;
+  kategori: string;
+  rating: number;
+  pesan: string;
+  status: 'pending' | 'processed' | 'completed';
+  timestamp: string;
 } 

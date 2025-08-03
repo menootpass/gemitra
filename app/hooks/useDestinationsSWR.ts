@@ -30,15 +30,6 @@ interface UseDestinationsSWRReturn {
   lastUpdate: Date | null;
 }
 
-// Fetcher function untuk SWR
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch data');
-  }
-  return response.json();
-};
-
 // Custom fetcher untuk destinations
 const destinationsFetcher = async (key: string) => {
   const params = new URLSearchParams(key);
@@ -107,14 +98,14 @@ export function useDestinationsSWR(options: UseDestinationsSWROptions = {}): Use
             if (Array.isArray(parsed) && parsed.length > 0) {
               return parsed;
             }
-          } catch (e) {
+          } catch {
             try {
               const cleaned = item.img.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
               const parsed = JSON.parse(cleaned);
               if (Array.isArray(parsed) && parsed.length > 0) {
                 return parsed;
               }
-            } catch (e2) {
+            } catch {
               // Failed to parse even after cleaning
             }
           }
@@ -125,7 +116,7 @@ export function useDestinationsSWR(options: UseDestinationsSWROptions = {}): Use
               if (urlMatches && urlMatches.length > 0) {
                 return urlMatches;
               }
-            } catch (e) {
+            } catch {
               // Failed to extract URLs
             }
             
@@ -136,7 +127,7 @@ export function useDestinationsSWR(options: UseDestinationsSWROptions = {}): Use
               if (validUrls.length > 0) {
                 return validUrls;
               }
-            } catch (e) {
+            } catch {
               // Failed manual extraction
             }
             
@@ -151,7 +142,7 @@ export function useDestinationsSWR(options: UseDestinationsSWROptions = {}): Use
               if (validUrls.length > 0) {
                 return validUrls;
               }
-            } catch (e) {
+            } catch {
               // Failed additional parsing
             }
           }

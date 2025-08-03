@@ -1,63 +1,55 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-const SCRIPT_URL = process.env.GEMITRA_TRANSACTIONS_URL!;
-const DESTINATIONS_URL = process.env.GEMITRA_DESTINATIONS_URL!;
+const SCRIPT_URL = process.env.GEMITRA_TRANSACTION_URL!;
 
-// Fungsi untuk generate kode unik
-function generateUniqueCode(): string {
-  return `GEM-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-}
-
-
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const { nama, telepon, email, destinasi, kendaraan, tanggal, waktu, penumpang, totalHarga } = body;
 
-    // Validasi data dasar
-    if (!body.nama || !body.destinasi || !body.penumpang || !body.tanggal_berangkat || !body.kendaraan) {
-      return NextResponse.json({ message: 'Data tidak lengkap' }, { status: 400 });
-    }
-
-    // Siapkan payload untuk dikirim ke Google Apps Script
     const payload = {
-      ...body,
-      status: 'success',
-      kode: generateUniqueCode(),
-      tanggal_transaksi: new Date().toISOString(),
-      waktu_transaksi: new Date().toISOString(),
+      nama,
+      telepon,
+      email,
+      destinasi,
+      kendaraan,
+      tanggal,
+      waktu,
+      penumpang,
+      totalHarga,
     };
 
-    // Kirim data ke Google Apps Script (includes visitor increment)
     const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
 
-    console.log('📥 Response status dari Google Apps Script:', response.status);
-
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Google Apps Script Error:', errorText);
-        throw new Error(`Gagal mengirim data ke Google Apps Script: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('✅ Transaksi berhasil:', data);
 
-    // Visitor increment sudah ditangani di Google Apps Script
-    // Tidak perlu API call tambahan
-
-    return NextResponse.json(data);
-
+    if (data.success) {
+      return NextResponse.json({
+        success: true,
+        message: "Transaksi berhasil dibuat",
+        kodeInvoice: data.kodeInvoice,
+      });
+    } else {
+      return NextResponse.json(
+        { success: false, message: data.message || "Gagal membuat transaksi" },
+        { status: 400 }
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error('💥 Error di API route (transactions):', error);
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    console.error('Error in transaction API:', error);
     return NextResponse.json(
-      { message: 'Terjadi kesalahan pada server', error: errorMessage },
+      { success: false, message: "Terjadi kesalahan pada server" },
       { status: 500 }
     );
   }

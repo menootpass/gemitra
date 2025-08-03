@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Event } from '../types';
 import { useEvents } from '../hooks/useEvents';
 import HeaderNavigation from '../components/HeaderNavigation';
 
@@ -24,8 +23,11 @@ export default function EventListPage() {
 
   // Filter events based on search term and category
   const filteredEvents = events.filter(event => {
+    const descriptionText = Array.isArray(event.description)
+      ? event.description.join(' ')
+      : event.description;
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         descriptionText.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = selectedCategory === '' || event.category.toLowerCase() === selectedCategory.toLowerCase();
