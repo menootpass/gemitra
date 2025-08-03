@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import GemitraMap from "./components/GemitraMap";
@@ -69,8 +70,8 @@ export default function Home() {
         <nav className="hidden sm:flex gap-6 md:gap-10 text-[#213DFF] font-bold text-base tracking-wide">
               <a href="#about" className="hover:text-[#16A86E] transition">Tentang Kami</a>
               <a href="#services" className="hover:text-[#16A86E] transition">Layanan</a>
-              <a href="/wisata" className="hover:text-[#16A86E] transition">Destinasi</a>
-              <a href="/event" className="hover:text-[#16A86E] transition">Event</a>
+              <Link href="/wisata" className="hover:text-[#16A86E] transition">Destinasi</Link>
+              <Link href="/event" className="hover:text-[#16A86E] transition">Event</Link>
               <a href="#feedback" className="hover:text-[#16A86E] transition">Feedback</a>
         </nav>
         <div className="flex gap-2">
