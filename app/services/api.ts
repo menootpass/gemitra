@@ -158,26 +158,38 @@ export class EventsApiService {
   }
 
   async fetchEvents(): Promise<any[]> {
-    const url = process.env.NEXT_PUBLIC_GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
-    const data = await this.fetchWithCache(url, true);
+    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+    const data = await this.fetchWithCache(baseUrl, true);
     return data.data || [];
   }
 
   async fetchEventBySlug(slug: string): Promise<any> {
-    const url = `${process.env.NEXT_PUBLIC_GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec"}?slug=${encodeURIComponent(slug)}`;
+    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+    const url = `${baseUrl}?slug=${encodeURIComponent(slug)}`;
+    console.log('Fetching event from URL:', url);
     const data = await this.fetchWithCache(url, false);
+    console.log('API response:', data);
+    
+    // If API returns array, filter by slug
+    if (data.data && Array.isArray(data.data)) {
+      const foundEvent = data.data.find((event: any) => event.slug === slug);
+      console.log('Filtered event by slug:', foundEvent);
+      return foundEvent || null;
+    }
+    
     return data.data || null;
   }
 
   async fetchEventsByCategory(category: string): Promise<any[]> {
-    const url = `${process.env.NEXT_PUBLIC_GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec"}?category=${encodeURIComponent(category)}`;
+    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+    const url = `${baseUrl}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }
 
   async incrementEventReader(eventId: string): Promise<any> {
-    const url = process.env.NEXT_PUBLIC_GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
-    const response = await fetch(url, {
+    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+    const response = await fetch(baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

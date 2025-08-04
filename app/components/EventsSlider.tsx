@@ -7,7 +7,20 @@ import Image from "next/image";
 export default function EventsSlider() {
   const { events, loading, error } = useEvents();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const cardsPerView = 3; // Number of cards visible at once
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const cardsPerView = isMobile ? 1 : 3; // 1 card on mobile, 3 on desktop
   const maxIndex = Math.max(0, events.length - cardsPerView);
 
   // Auto-advance slider
@@ -22,7 +35,7 @@ export default function EventsSlider() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [events.length]);
+  }, [events.length, cardsPerView]);
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => 
@@ -56,11 +69,13 @@ export default function EventsSlider() {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#213DFF]">Event Terbaru</h2>
+          <Link href="/event">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#213DFF] underline">Event Terbaru</h2>
+          </Link>
         </div>
         <div className="flex justify-center gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-gray-200 rounded-xl w-80 h-48"></div>
+            <div key={i} className="animate-pulse bg-gray-200 rounded-xl w-72 sm:w-80 h-40 sm:h-48"></div>
           ))}
         </div>
       </div>
@@ -71,7 +86,9 @@ export default function EventsSlider() {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#213DFF]">Event Terbaru</h2>
+          <Link href="/event">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#213DFF] underline">Event Terbaru</h2>
+          </Link>
         </div>
         <div className="text-center text-gray-500">
           {error || "Tidak ada event tersedia saat ini"}
@@ -83,14 +100,16 @@ export default function EventsSlider() {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-[#213DFF]">Event Terbaru</h2>
+        <Link href="/event">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#213DFF] underline">Event Terbaru</h2>
+        </Link>
       </div>
       
       <div className="relative overflow-hidden">
         {/* Navigation Buttons - Left */}
         <button 
           onClick={prevSlide} 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 text-[#213DFF] p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200 border border-gray-200"
+          className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 text-[#213DFF] p-2 sm:p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200 border border-gray-200"
         >
           ‹
         </button>
@@ -98,31 +117,31 @@ export default function EventsSlider() {
         {/* Navigation Buttons - Right */}
         <button 
           onClick={nextSlide} 
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 text-[#213DFF] p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200 border border-gray-200"
+          className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 text-[#213DFF] p-2 sm:p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-200 border border-gray-200"
         >
           ›
         </button>
         
         {/* Cards Container with Horizontal Scroll */}
         <div 
-          className="flex gap-6 transition-transform duration-500 ease-in-out px-16"
+          className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-in-out px-12 sm:px-16"
           style={{
-            transform: `translateX(-${currentIndex * (320 + 24)}px)`, // 320px card width + 24px gap
-            width: `${events.length * (320 + 24) - 24}px` // Total width minus last gap
+            transform: `translateX(-${currentIndex * (isMobile ? 288 + 16 : 320 + 24)}px)`, // Responsive card width + gap
+            width: `${events.length * (isMobile ? 288 + 16 : 320 + 24) - (isMobile ? 16 : 24)}px` // Total width minus last gap
           }}
         >
           {events.map((event, index) => (
             <div 
               key={event.id} 
-              className="flex-shrink-0 w-80"
+              className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-80'}`}
             >
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
-                <div className="relative h-40 overflow-hidden">
+                <div className={`relative ${isMobile ? 'h-32' : 'h-40'} overflow-hidden`}>
                   <Image
                     src={getImageSrc(event)}
                     alt={event.title}
-                    width={320}
-                    height={160}
+                    width={isMobile ? 288 : 320}
+                    height={isMobile ? 128 : 160}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
                       // Fallback to placeholder if image fails to load
@@ -131,12 +150,12 @@ export default function EventsSlider() {
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-[#16A86E] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
+                    <span className="bg-[#16A86E] text-white text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg">
                       {event.category || 'Event'}
                     </span>
                   </div>
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                     <div className="bg-white/90 backdrop-blur-sm text-[#213DFF] text-xs font-bold px-2 py-1 rounded-full">
                       {new Date(event.date).toLocaleDateString('id-ID', { 
                         day: 'numeric', 
@@ -146,28 +165,30 @@ export default function EventsSlider() {
                   </div>
                 </div>
                 
-                <div className="p-5">
-                  <h3 className="font-bold text-[#213DFF] text-base mb-3 line-clamp-2 group-hover:text-[#16A86E] transition-colors duration-300">
+                <div className="p-3 sm:p-5">
+                  <h3 className="font-bold text-[#213DFF] text-sm sm:text-base mb-2 sm:mb-3 line-clamp-2 group-hover:text-[#16A86E] transition-colors duration-300">
                     {event.title}
                   </h3>
                   
-                  <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
+                  <div className="flex items-center gap-2 sm:gap-4 text-xs text-gray-600 mb-2 sm:mb-3">
                     <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
                       <span>📅</span>
-                      <span>{new Date(event.date).toLocaleDateString('id-ID')}</span>
+                      <span className="hidden sm:inline">{new Date(event.date).toLocaleDateString('id-ID')}</span>
+                      <span className="sm:hidden">{new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
                     </div>
                     <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
                       <span>👥</span>
-                      <span>{event.totalPembaca || 0} pembaca</span>
+                      <span className="hidden sm:inline">{event.totalPembaca || 0} pembaca</span>
+                      <span className="sm:hidden">{event.totalPembaca || 0}</span>
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600 line-clamp-3 mb-4 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-3 mb-3 sm:mb-4 leading-relaxed">
                     {event.description}
                   </p>
                   
                   <Link href={`/event/${event.slug || event.id}`}>
-                    <button className="w-full bg-gradient-to-r from-[#16A86E] to-[#213DFF] text-white text-sm font-bold px-4 py-2 rounded-full text-center hover:from-[#213DFF] hover:to-[#16A86E] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    <button className="w-full bg-gradient-to-r from-[#16A86E] to-[#213DFF] text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 rounded-full text-center hover:from-[#213DFF] hover:to-[#16A86E] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                       Detail Event
                     </button>
                   </Link>
@@ -178,12 +199,12 @@ export default function EventsSlider() {
         </div>
         
         {/* Enhanced Dots Indicator */}
-        <div className="flex justify-center mt-6 gap-3">
+        <div className="flex justify-center mt-4 sm:mt-6 gap-2 sm:gap-3">
           {Array.from({ length: Math.ceil(events.length / cardsPerView) }, (_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index * cardsPerView)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
                 Math.floor(currentIndex / cardsPerView) === index
                   ? 'bg-gradient-to-r from-[#16A86E] to-[#213DFF] scale-125' 
                   : 'bg-gray-300 hover:bg-gray-400'

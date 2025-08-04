@@ -44,9 +44,13 @@ export function useEventBySlug(slug: string) {
       try {
         setLoading(true);
         setError(null);
+        console.log('Fetching event with slug:', slug);
+        console.log('Environment URL:', process.env.GEMITRA_EVENTS_URL);
         const data = await eventsApiService.fetchEventBySlug(slug);
+        console.log('Fetched event data:', data);
         setEvent(data);
       } catch (err) {
+        console.error('Error fetching event:', err);
         setError(err instanceof Error ? err.message : 'Gagal mengambil data event');
       } finally {
         setLoading(false);
