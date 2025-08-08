@@ -22,6 +22,7 @@ const VISITORS_SHEET_NAME = 'Visitors';
  * Contoh: ?endpoint=destinations, ?endpoint=events, ?endpoint=transactions, ?endpoint=feedback
  */
 function doGet(e) {
+<<<<<<< HEAD
   // TAMBAHKAN INI: Cek 'e' untuk menghindari error saat dijalankan manual
   if (!e || !e.parameter) {
     // Berikan response default jika dijalankan dari editor
@@ -32,6 +33,8 @@ function doGet(e) {
     });
   }
   
+=======
+>>>>>>> 24efa4295a0332da5c2c9f58177747bd11ac2410
   const params = e.parameter || {};
   const endpoint = params.endpoint || 'destinations'; // Default ke destinations
 
@@ -1413,4 +1416,8 @@ function setupSheet(sheetName, headers) {
   } catch(e) {
     Logger.log(`Gagal setup sheet "${sheetName}": ${e.toString()}`);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 24efa4295a0332da5c2c9f58177747bd11ac2410
