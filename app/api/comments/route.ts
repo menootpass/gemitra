@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const TRANSACTIONS_URL = process.env.GEMITRA_TRANSACTIONS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
-const DESTINATIONS_URL = process.env.GEMITRA_DESTINATIONS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+const MAIN_URL = process.env.GEMITRA_MAIN_APP_SCRIPT_URL || process.env.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec";
 
 interface CommentRequest {
   invoiceCode: string;
@@ -51,12 +50,12 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Fetching transactions from:', TRANSACTIONS_URL);
+    console.log('Fetching transactions from MAIN_URL');
 
     // Ambil data transaksi untuk validasi invoice code
     let transactions: Transaction[] = [];
     try {
-      const transactionsResponse = await fetch(TRANSACTIONS_URL, {
+      const transactionsResponse = await fetch(`${MAIN_URL}?endpoint=transactions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -102,12 +101,12 @@ export async function POST(request: Request) {
     const namaFromDatabase = validTransaction.nama;
     console.log('Valid transaction found:', validTransaction);
 
-    console.log('Fetching destinations from:', DESTINATIONS_URL);
+    console.log('Fetching destinations from MAIN_URL');
 
     // Ambil data destinasi untuk update komentar
     let destinations: Destination[] = [];
     try {
-      const destinationsResponse = await fetch(DESTINATIONS_URL, {
+      const destinationsResponse = await fetch(`${MAIN_URL}?endpoint=destinations`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +213,7 @@ export async function POST(request: Request) {
 
       console.log('Sending update payload:', updatePayload);
 
-      const updateResponse = await fetch(DESTINATIONS_URL, {
+      const updateResponse = await fetch(MAIN_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

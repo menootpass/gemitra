@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-// URL Google Apps Script Anda
-const SCRIPT_URL = process.env.GEMITRA_DESTINATIONS_URL!;
+// Unified Google Apps Script URL
+const SCRIPT_URL = process.env.GEMITRA_MAIN_APP_SCRIPT_URL || process.env.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     
     // Jika ada slug, fetch destinasi berdasarkan slug
     if (slug) {
-      const response = await fetch(`${SCRIPT_URL}?slug=${encodeURIComponent(slug)}`, {
+      const response = await fetch(`${SCRIPT_URL}?endpoint=destinations&slug=${encodeURIComponent(slug)}`, {
         next: { revalidate: 600 },
       });
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     }
     
     // Jika tidak ada slug, fetch semua destinasi
-    const response = await fetch(SCRIPT_URL, {
+    const response = await fetch(`${SCRIPT_URL}?endpoint=destinations`, {
       // Opsi untuk revalidasi cache, misalnya setiap 10 menit
       next: { revalidate: 600 }, 
     });

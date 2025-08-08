@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SCRIPT_URL = process.env.GEMITRA_TRANSACTIONS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+const SCRIPT_URL = process.env.GEMITRA_MAIN_APP_SCRIPT_URL || process.env.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = {
+      action: 'createTransaction',
       nama,
       destinasi,
       destinasi_harga: Array.isArray(destinasi_harga) ? destinasi_harga : [destinasi_harga],

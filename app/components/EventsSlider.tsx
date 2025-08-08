@@ -162,7 +162,7 @@ export default function EventsSlider() {
                         month: 'short' 
                       })}
                     </div>
-                  </div>
+                    </div>
                   </div>
                   
                 <div className="p-3 sm:p-5">
@@ -180,7 +180,7 @@ export default function EventsSlider() {
                         <span>👥</span>
                       <span className="hidden sm:inline">{event.totalPembaca || 0} pembaca</span>
                       <span className="sm:hidden">{event.totalPembaca || 0}</span>
-                    </div>
+                      </div>
                     </div>
                     
                   <p className="text-xs sm:text-sm text-gray-600 line-clamp-3 mb-3 sm:mb-4 leading-relaxed">

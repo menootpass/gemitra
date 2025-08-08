@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 
-// URL Google Apps Script untuk Feedback
-const SCRIPT_URL = process.env.GEMITRA_FEEDBACK_URL;
+// Unified Google Apps Script URL
+const SCRIPT_URL = process.env.GEMITRA_MAIN_APP_SCRIPT_URL || process.env.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL;
 
 export async function POST(request: Request) {
   try {
     // Validasi environment variable
     if (!SCRIPT_URL) {
-      console.error('GEMITRA_FEEDBACK_URL tidak ditemukan di environment variables');
+      console.error('GEMITRA_MAIN_APP_SCRIPT_URL tidak ditemukan di environment variables');
       return NextResponse.json({ 
         message: 'Konfigurasi server tidak lengkap. Silakan hubungi administrator.' 
       }, { status: 500 });
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
     // Siapkan payload untuk feedback
     const payload = {
+      action: 'createFeedback',
       nama: body.nama,
       email: body.email,
       telepon: body.telepon || '',
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     if (!SCRIPT_URL) {
-      console.error('GEMITRA_FEEDBACK_URL tidak ditemukan di environment variables');
+      console.error('GEMITRA_MAIN_APP_SCRIPT_URL tidak ditemukan di environment variables');
       return NextResponse.json({ 
         message: 'Konfigurasi server tidak lengkap' 
       }, { status: 500 });
