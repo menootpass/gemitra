@@ -71,6 +71,15 @@ export default function SidebarCart({
   const [submitMessage, setSubmitMessage] = useState('');
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
 
+  // Min booking datetime: now + 3 days
+  const now = new Date();
+  const minDateTime = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const formatDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const formatTime = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const minBookingDate = formatDate(minDateTime);
+  const minBookingTime = formatTime(minDateTime);
+  const isOnMinDate = tanggalBooking === minBookingDate;
+  
   // Calculate destination prices
   const destinationTotal = cart.reduce((sum, item) => sum + (item.harga || 0), 0);
   
@@ -92,6 +101,13 @@ export default function SidebarCart({
     if (!nama || cart.length === 0 || !tanggalBooking || !waktuBooking || !kendaraan) {
         setSubmitMessage('Harap lengkapi semua isian: Nama, Destinasi, Tanggal, Waktu, dan Kendaraan.');
         return;
+    }
+
+    // Validate H+3 rule
+    const selectedDateTime = new Date(`${tanggalBooking}T${waktuBooking}:00`);
+    if (selectedDateTime < minDateTime) {
+      setSubmitMessage(`Tanggal/Waktu minimal pemesanan adalah ${minBookingDate} ${minBookingTime} (H+3).`);
+      return;
     }
 
     setIsSubmitting(true);
@@ -347,8 +363,23 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
                 id="tanggal"
                 className="w-full rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base"
                 value={tanggalBooking}
-                onChange={e => onTanggalChange(e.target.value)}
-                min={today}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value && value < minBookingDate) {
+                    onTanggalChange(minBookingDate);
+                    // If moving to min date and current time earlier than min, adjust time as well
+                    if (!waktuBooking || waktuBooking < minBookingTime) {
+                      onWaktuChange(minBookingTime);
+                    }
+                  } else {
+                    onTanggalChange(value);
+                    // If picking min date, ensure time respects min time
+                    if (value === minBookingDate && waktuBooking && waktuBooking < minBookingTime) {
+                      onWaktuChange(minBookingTime);
+                    }
+                  }
+                }}
+                min={minBookingDate}
               />
             </div>
             <div>
@@ -358,7 +389,15 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
                 id="waktu"
                 className="w-full rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base"
                 value={waktuBooking}
-                onChange={e => onWaktuChange(e.target.value)}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (isOnMinDate && value < minBookingTime) {
+                    onWaktuChange(minBookingTime);
+                  } else {
+                    onWaktuChange(value);
+                  }
+                }}
+                min={isOnMinDate ? minBookingTime : undefined}
               />
             </div>
           </div>
