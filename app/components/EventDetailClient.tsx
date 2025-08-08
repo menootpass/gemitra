@@ -4,10 +4,56 @@ import { useDestinations } from "../hooks/useDestinations";
 import LoadingSkeleton from "./LoadingSkeleton";
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo } from "react";
+import type { SyntheticEvent } from "react";
+import type { Destination } from "../types";
 
 export default function EventDetailClient({ slug }: { slug: string }) {
   const { event, loading, error } = useEventBySlug(slug);
   const { destinations } = useDestinations();
+
+  // Find destinasi source from multiple possible keys (destinasiIds, destinasi, Destinasi)
+  const rawDestinasiSource = useMemo(() => {
+    const anyEvent: any = event as any;
+    if (!anyEvent) return undefined;
+    if (anyEvent.destinasiIds) return anyEvent.destinasiIds;
+    if (anyEvent.destinasi) return anyEvent.destinasi;
+    const key = Object.keys(anyEvent || {}).find(k => k.toLowerCase() === 'destinasi');
+    return key ? anyEvent[key] : undefined;
+  }, [event]);
+
+  // Normalize related IDs using the discovered source
+  const relatedIds = useMemo(() => {
+    const src: any = rawDestinasiSource;
+    if (Array.isArray(src)) return src.map((v: any) => String(v).trim()).filter(Boolean);
+    if (typeof src === 'string') return src.split(',').map((s: string) => s.trim()).filter(Boolean);
+    return [] as string[];
+  }, [rawDestinasiSource]);
+
+  const related: Destination[] = useMemo(() => {
+    if (!destinations?.length || !relatedIds.length) return [];
+    const byId = new Map(destinations.map(d => [String(d.id).trim(), d]));
+    const byName = new Map(destinations.map(d => [String(d.nama).toLowerCase().trim(), d]));
+
+    const primaryMatches = relatedIds
+      .map(id => byId.get(String(id).trim()) || null)
+      .filter((d): d is Destination => Boolean(d));
+
+    if (primaryMatches.length > 0) {
+      return primaryMatches.slice(0, 3);
+    }
+
+    // Fallback: match by destination name when IDs don't match (handles legacy data like "Merapi, Borobudur")
+    const fallbackMatches = relatedIds
+      .map(t => byName.get(String(t).toLowerCase().trim()) || null)
+      .filter((d): d is Destination => Boolean(d));
+
+    return fallbackMatches.slice(0, 3);
+  }, [destinations, relatedIds]);
+
+  const hasRelated = related.length > 0;
+  const sectionTitle = "Destinasi Terkait";
+  const displayDestinations: Destination[] = related as Destination[];
 
   if (loading) {
     return <LoadingSkeleton type="detail" />;
@@ -26,6 +72,8 @@ export default function EventDetailClient({ slug }: { slug: string }) {
   console.log('Complete event data:', event);
   console.log('Event data keys:', Object.keys(event));
   console.log('Event data values:', Object.values(event));
+  console.log('Event.destinasiIds:', (event as any).destinasiIds);
+  console.log('Raw destinasi source (for relatedIds):', rawDestinasiSource);
   
   // Check if destinasi exists in event object
   if (event.destinasi !== undefined) {
@@ -107,6 +155,19 @@ export default function EventDetailClient({ slug }: { slug: string }) {
     console.log('All destinations:', destinations);
     console.log('All destinations length:', destinations?.length);
     
+    // Normalize event destinasi into array of string IDs
+    let eventDestIds: string[] = [];
+    if (Array.isArray(event.destinasi)) {
+      eventDestIds = event.destinasi.map((v: any) => v != null ? v.toString().trim() : '').filter(Boolean);
+    } else if (typeof (event as any).destinasi === 'string') {
+      const raw = (event as any).destinasi as string;
+      eventDestIds = raw
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+    console.log('Normalized event destinasi IDs:', eventDestIds);
+    
     // Log all destination names and IDs for debugging
     if (destinations && destinations.length > 0) {
       console.log('📋 Available destinations:');
@@ -115,7 +176,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
       });
     }
     
-    if (!event.destinasi || !Array.isArray(event.destinasi) || event.destinasi.length === 0) {
+    if (!eventDestIds || eventDestIds.length === 0) {
       console.log('❌ No event destinasi data or empty array');
       console.log('Event data keys:', Object.keys(event));
       console.log('💡 To show related destinations, add a "destinasi" column to the Event spreadsheet');
@@ -129,27 +190,14 @@ export default function EventDetailClient({ slug }: { slug: string }) {
       return [];
     }
 
-    console.log('✅ Event has destinasi:', event.destinasi);
+    console.log('✅ Event has destinasi:', eventDestIds);
     console.log('✅ Destinations available:', destinations.length);
 
     // Find destinations that match the event's destinasi IDs
     const relatedDestinations = destinations.filter(dest => {
-      const isMatch = event.destinasi!.some((eventDestId: string) => {
-        // Convert both to strings and trim whitespace
-        const destId = dest.id.toString();
-        const eventDestIdStr = eventDestId.toString().trim();
-        
-        // Exact ID match
-        const idMatch = destId === eventDestIdStr;
-        
-        console.log(`🔍 Checking: "${dest.nama}" (ID: ${dest.id}) vs "${eventDestId}"`);
-        console.log(`   - Dest ID: "${destId}"`);
-        console.log(`   - Event dest ID: "${eventDestIdStr}"`);
-        console.log(`   - ID match: ${idMatch}`);
-        console.log(`   - Final result: ${idMatch}`);
-        
-        return idMatch;
-      });
+      const destId = dest.id != null ? dest.id.toString().trim() : '';
+      const isMatch = eventDestIds.includes(destId);
+      console.log(`🔍 Checking: "${dest.nama}" (ID: ${dest.id}) vs list [${eventDestIds.join(', ')}] => ${isMatch}`);
       return isMatch;
     });
 
@@ -161,18 +209,16 @@ export default function EventDetailClient({ slug }: { slug: string }) {
       console.log('💡 Make sure destination IDs in the Event spreadsheet match destination IDs in the Destinations spreadsheet');
       console.log('💡 Example: If event has "1, 2", make sure there are destinations with IDs "1" and "2" in Destinations database');
       console.log('💡 Available destination IDs:', destinations.map(d => d.id));
-      console.log('💡 Event destinasi IDs:', event.destinasi);
+      console.log('💡 Event destinasi IDs:', eventDestIds);
     }
     
     return relatedDestinations.slice(0, 3); // Limit to 3 destinations
   };
 
-  const relatedDestinations = getRelatedDestinations();
-  const hasRelatedDestinations = relatedDestinations.length > 0;
-
-  // Only show related destinations if they exist
-  const displayDestinations = relatedDestinations;
-  const sectionTitle = "Destinasi Terkait";
+  // const relatedDestinations = getRelatedDestinations();
+  // const hasRelatedDestinations = relatedDestinations.length > 0;
+  // const displayDestinations = relatedDestinations;
+  // const sectionTitle = "Destinasi Terkait";
 
   return (
     <div className="space-y-6">
@@ -187,10 +233,9 @@ export default function EventDetailClient({ slug }: { slug: string }) {
               fill
               className="object-cover"
               priority
-              onError={(e) => {
+              onError={(e: SyntheticEvent<HTMLImageElement>) => {
                 console.log('Image load error:', e);
-                const target = e.target as HTMLImageElement;
-                target.src = '/images/brandman-transparant.png';
+                e.currentTarget.src = '/images/brandman-transparant.png';
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -245,14 +290,14 @@ export default function EventDetailClient({ slug }: { slug: string }) {
       </div>
 
       {/* Related Destinations Section - Only show if there are related destinations */}
-      {hasRelatedDestinations && (
+      {hasRelated && (
         <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <span className="mr-2">📍</span>
             {sectionTitle}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayDestinations.map((dest) => (
+            {displayDestinations.map((dest: Destination) => (
               <Link 
                 key={dest.id} 
                 href={`/wisata/${dest.id}`}
@@ -266,9 +311,8 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                       alt={dest.nama || "Destination Image"}
                       fill
                       className="object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/images/brandman-transparant.png';
+                      onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                        e.currentTarget.src = '/images/brandman-transparant.png';
                       }}
                     />
                   ) : (
@@ -327,8 +371,8 @@ export default function EventDetailClient({ slug }: { slug: string }) {
           <div className="text-sm text-yellow-700 space-y-1">
             <p><strong>Event destinasi:</strong> {JSON.stringify(event.destinasi)}</p>
             <p><strong>Destinations count:</strong> {destinations?.length || 0}</p>
-            <p><strong>Related destinations:</strong> {relatedDestinations.length}</p>
-            <p><strong>Has related destinations:</strong> {hasRelatedDestinations ? 'Yes' : 'No'}</p>
+            <p><strong>Related destinations:</strong> {related.length}</p>
+            <p><strong>Has related destinations:</strong> {hasRelated ? 'Yes' : 'No'}</p>
             {destinations && destinations.length > 0 && (
               <div className="mt-2">
                 <p><strong>Available destination IDs:</strong></p>
@@ -339,7 +383,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                 </ul>
               </div>
             )}
-            {!hasRelatedDestinations && (
+            {!hasRelated && (
               <div className="mt-2 p-2 bg-yellow-100 rounded">
                 <p className="font-medium">💡 Cara menampilkan Destinasi Terkait:</p>
                 <ul className="list-disc list-inside mt-1 space-y-1">

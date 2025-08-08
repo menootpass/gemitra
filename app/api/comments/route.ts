@@ -14,7 +14,7 @@ interface Transaction {
   kode: string;
   nama: string;
   destinasi: string;
-  status: string;
+  status?: string;
 }
 
 interface Destination {
@@ -29,15 +29,16 @@ export async function POST(request: Request) {
     console.log('Received comment data:', body);
 
     // Validasi input
-    if (!body.invoiceCode || !body.komentar || !body.destinationId || !body.rating) {
-      console.log('Missing required fields:', { 
-        invoiceCode: !!body.invoiceCode, 
-        komentar: !!body.komentar, 
-        destinationId: !!body.destinationId, 
-        rating: !!body.rating 
-      });
+    const missing = {
+      invoiceCode: !body.invoiceCode,
+      komentar: !body.komentar,
+      destinationId: body.destinationId === undefined || body.destinationId === null,
+      rating: body.rating === undefined || body.rating === null,
+    };
+    if (missing.invoiceCode || missing.komentar || missing.destinationId || missing.rating) {
+      console.log('Missing required fields:', missing);
       return NextResponse.json(
-        { message: 'Data tidak lengkap' }, 
+        { message: 'Data tidak lengkap' },
         { status: 400 }
       );
     }
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     // Validasi rating
     if (body.rating < 1 || body.rating > 5) {
       return NextResponse.json(
-        { message: 'Rating harus antara 1-5' }, 
+        { message: 'Rating harus antara 1-5' },
         { status: 400 }
       );
     }
@@ -75,21 +76,25 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error('Error fetching transactions:', error);
       return NextResponse.json(
-        { message: 'Gagal memvalidasi kode invoice' }, 
+        { message: 'Gagal memvalidasi kode invoice' },
         { status: 500 }
       );
     }
 
     // Validasi kode invoice - HARUS ada transaksi yang valid
-    const validTransaction = transactions.find(
-      (transaction: Transaction) => 
-        transaction.kode === body.invoiceCode && 
-        transaction.status === 'success'
-    );
+    const requestedCode = (body.invoiceCode || '').toString().trim().toLowerCase();
+    const allowedStatuses = new Set(['success', 'berhasil', 'ok', 'paid']);
+
+    const validTransaction = transactions.find((transaction: Transaction) => {
+      const codeMatch = (transaction.kode || '').toString().trim().toLowerCase() === requestedCode;
+      const status = (transaction.status || '').toString().trim().toLowerCase();
+      const statusOk = !status || allowedStatuses.has(status);
+      return codeMatch && statusOk;
+    });
 
     if (!validTransaction) {
       return NextResponse.json(
-        { message: 'Kode invoice tidak valid atau tidak ditemukan' }, 
+        { message: 'Anda Belum Bayar!!! Silahkan Bayar Terlebih Dahulu Lalu Komentar' },
         { status: 400 }
       );
     }
@@ -122,17 +127,19 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error('Error fetching destinations:', error);
       return NextResponse.json(
-        { message: 'Gagal mengambil data destinasi' }, 
+        { message: 'Gagal mengambil data destinasi' },
         { status: 500 }
       );
     }
 
     // Cari destinasi yang sesuai
-    const destination = destinations.find((dest: Destination) => dest.id === body.destinationId);
+    const requestedDestinationId = Number(body.destinationId);
+    console.log('Looking for destinationId:', requestedDestinationId, 'from body:', body.destinationId);
+    const destination = destinations.find((dest: Destination) => Number(dest.id) === requestedDestinationId);
     if (!destination) {
-      console.log('Destination not found for ID:', body.destinationId);
+      console.log('Destination not found for ID:', requestedDestinationId, 'Available IDs:', destinations.map(d => d.id));
       return NextResponse.json(
-        { message: 'Destinasi tidak ditemukan' }, 
+        { message: 'Destinasi tidak ditemukan' },
         { status: 404 }
       );
     }
@@ -140,19 +147,20 @@ export async function POST(request: Request) {
     console.log('Found destination:', destination);
 
     // Validasi destinasi yang dikomentari HARUS ada dalam transaksi
-    const transactionDestinations = validTransaction.destinasi ? 
-      validTransaction.destinasi.split(',').map((dest: string) => dest.trim()) : [];
-    
-    // Cek apakah destinasi yang dikomentari ada dalam daftar destinasi yang dipesan
-    const isDestinationInTransaction = transactionDestinations.some((dest: string) => 
-      dest.toLowerCase() === destination.nama.toLowerCase()
-    );
+    const transactionDestinations = validTransaction.destinasi ?
+      validTransaction.destinasi.split(',').map((dest: string) => dest.trim().toLowerCase()) : [];
+
+    const destinationName = (destination.nama || '').toString().trim().toLowerCase();
+
+    const isDestinationInTransaction = transactionDestinations.includes(destinationName);
 
     if (!isDestinationInTransaction) {
       return NextResponse.json(
-        { 
-          message: `Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan. Destinasi yang dipesan: ${transactionDestinations.join(', ')}` 
-        }, 
+        {
+          message: 'Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan pada invoice ini.',
+          orderedDestinations: transactionDestinations,
+          requestedDestination: destinationName,
+        },
         { status: 403 }
       );
     }
@@ -167,13 +175,13 @@ export async function POST(request: Request) {
     }
 
     // Cek apakah user sudah pernah komentar untuk destinasi ini
-    const hasUserCommented = existingComments.some((comment: any) => 
+    const hasUserCommented = existingComments.some((comment: any) =>
       comment.nama === namaFromDatabase
     );
 
     if (hasUserCommented) {
       return NextResponse.json(
-        { message: 'Anda sudah pernah memberikan komentar untuk destinasi ini' }, 
+        { message: 'Anda sudah pernah memberikan komentar untuk destinasi ini' },
         { status: 400 }
       );
     }
@@ -235,7 +243,7 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error('Error updating destination:', error);
       return NextResponse.json(
-        { message: 'Gagal menyimpan komentar', error: error instanceof Error ? error.message : 'Unknown error' }, 
+        { message: 'Gagal menyimpan komentar', error: error instanceof Error ? error.message : 'Unknown error' },
         { status: 500 }
       );
     }

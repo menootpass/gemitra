@@ -38,7 +38,28 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
 
   const processData = useCallback((rawData: any[]): Destination[] => {
     return rawData.map((item: any) => ({
-      ...item,
+      // Normalize commonly used fields
+      id: (() => {
+        const candidate = item.id ?? item.ID ?? item.Id ?? item.no ?? item.No;
+        if (candidate == null) return 0;
+        const numeric = Number(String(candidate).trim().replace(/\s+/g, ''));
+        return Number.isFinite(numeric) ? numeric : Number(String(candidate).replace(/[^0-9]/g, '')) || 0;
+      })(),
+      nama: (item.nama ?? item.name ?? item.title ?? '').toString().trim(),
+      lokasi: (item.lokasi ?? item.location ?? '').toString().trim(),
+      kategori: (item.kategori ?? item.category ?? '').toString().trim(),
+      rating: (() => {
+        const r = item.rating ?? item.ratings ?? 0;
+        const n = Number(r);
+        return Number.isFinite(n) ? n : 0;
+      })(),
+      harga: (() => {
+        const h = item.harga ?? item.price;
+        if (h == null) return undefined;
+        const n = Number(String(h).toString().replace(/[^0-9]/g, ''));
+        return Number.isFinite(n) ? n : undefined;
+      })(),
+      slug: (item.slug ?? '').toString().trim(),
       img: (() => {
         // Handle img field - could be array, string, or null
         if (!item.img) return null;

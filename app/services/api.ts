@@ -1,4 +1,13 @@
 // API Service untuk semua endpoint
+// Helper to pick correct env URL depending on runtime (client vs server)
+function getEnvUrl(serverKey: string, publicKey: string, fallback: string): string {
+  const isBrowser = typeof window !== 'undefined';
+  const fromPublic = (process as any).env?.[publicKey];
+  const fromServer = (process as any).env?.[serverKey];
+  const chosen = isBrowser ? (fromPublic || fromServer) : (fromServer || fromPublic);
+  return chosen || fallback;
+}
+
 export class ApiService {
   private cache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit
@@ -33,10 +42,12 @@ export class ApiService {
 
   // Destinations API
   async fetchDestinations(enableCache = true): Promise<any[]> {
-    const url = process.env.GEMITRA_DESTINATIONS_URL || 
-                "https://script.google.com/macros/s/AKfycbwBtHw-f7gtdpgVFQGCwYA40BnEEy8tkcIQcSuMsZcwU2wAt7zb-grUOz0W-a5zhAXK/exec";
+    const url = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbwBtHw-f7gtdpgVFQGCwYA40BnEEy8tkcIQcSuMsZcwU2wAt7zb-grUOz0W-a5zhAXK/exec'
+    );
     console.log('Fetching destinations from URL:', url);
-    console.log('Environment variable GEMITRA_DESTINATIONS_URL:', process.env.GEMITRA_DESTINATIONS_URL);
     
     try {
     const data = await this.fetchWithCache(url, enableCache);
@@ -63,40 +74,55 @@ export class ApiService {
   }
 
   async fetchDestinationsWithLimit(limit: number): Promise<any[]> {
-    const baseUrl = process.env.GEMITRA_DESTINATIONS_URL || 
-                   "https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec'
+    );
     const url = `${baseUrl}?limit=${limit}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }
 
   async fetchDestinationsByCategory(category: string): Promise<any[]> {
-    const baseUrl = process.env.GEMITRA_DESTINATIONS_URL || 
-                   "https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec'
+    );
     const url = `${baseUrl}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }
 
   async searchDestinations(query: string): Promise<any[]> {
-    const baseUrl = process.env.GEMITRA_DESTINATIONS_URL || 
-                   "https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec'
+    );
     const url = `${baseUrl}?search=${encodeURIComponent(query)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }
 
   async fetchDestinationById(id: number): Promise<any> {
-    const baseUrl = process.env.GEMITRA_DESTINATIONS_URL || 
-                   "https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec'
+    );
     const url = `${baseUrl}?id=${id}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || null;
   }
 
   async fetchDestinationBySlug(slug: string): Promise<any> {
-    const baseUrl = process.env.GEMITRA_DESTINATIONS_URL || 
-                   "https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_DESTINATIONS_URL',
+      'NEXT_PUBLIC_GEMITRA_DESTINATIONS_URL',
+      'https://script.google.com/macros/s/AKfycbxh1N6MGxG9zr-YirAVbNG67PNGXiJSMNIy18RUhgjIxUPIcTjPPjik_DVt92Qe3wuWiQ/exec'
+    );
     const url = `${baseUrl}?slug=${encodeURIComponent(slug)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || null;
@@ -129,11 +155,21 @@ export class ApiService {
       body: JSON.stringify(commentData),
     });
 
+    const text = await response.text();
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || `HTTP error! status: ${response.status}`);
+      } catch {
+        throw new Error(text || `HTTP error! status: ${response.status}`);
+      }
     }
 
-    return response.json();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: true };
+    }
   }
 
   // Feedback API
@@ -175,6 +211,22 @@ export class EventsApiService {
   private cache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit
 
+  private normalizeEventDestinations(raw: any): any {
+    if (!raw) return raw;
+    const ev = { ...raw };
+    const source = (ev as any).destinasi ?? (ev as any).destinasiIds;
+    let ids: string[] = [];
+    if (Array.isArray(source)) {
+      ids = source.map((v: any) => (v != null ? String(v).trim() : '')).filter(Boolean);
+    } else if (typeof source === 'string') {
+      ids = source.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+    // Ensure both keys exist so client components can rely on either one
+    (ev as any).destinasiIds = ids;
+    (ev as any).destinasi = Array.isArray((ev as any).destinasi) ? (ev as any).destinasi : ids;
+    return ev;
+  }
+
   private async fetchWithCache(url: string, enableCache = true): Promise<any> {
     if (enableCache) {
       const cached = this.cache.get(url);
@@ -198,16 +250,24 @@ export class EventsApiService {
   }
 
   async fetchEvents(): Promise<any[]> {
-    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+    const baseUrl = getEnvUrl(
+      'GEMITRA_EVENTS_URL',
+      'NEXT_PUBLIC_GEMITRA_EVENTS_URL',
+      'https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec'
+    );
     const data = await this.fetchWithCache(baseUrl, true);
-    return data.data || [];
+    const arr = data.data || [];
+    return Array.isArray(arr) ? arr.map((e: any) => this.normalizeEventDestinations(e)) : [];
   }
 
   async fetchEventBySlug(slug: string): Promise<any> {
-    const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
-    const url = `${baseUrl}?slug=${encodeURIComponent(slug)}`;
+    const baseUrl = getEnvUrl(
+      'GEMITRA_EVENTS_URL',
+      'NEXT_PUBLIC_GEMITRA_EVENTS_URL',
+      'https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec'
+    );
+    const url = `${baseUrl}?action=slug&slug=${encodeURIComponent(slug)}`;
     console.log('Fetching event from URL:', url);
-    console.log('Environment variable GEMITRA_EVENTS_URL:', process.env.GEMITRA_EVENTS_URL);
     
     const data = await this.fetchWithCache(url, false);
     console.log('API response:', data);
@@ -215,36 +275,18 @@ export class EventsApiService {
     console.log('API response.data type:', typeof data.data);
     console.log('API response.data is array:', Array.isArray(data.data));
     
-    // If API returns array, filter by slug
     if (data.data && Array.isArray(data.data)) {
       console.log('✅ API returned array of events');
-      console.log('All events in array:', data.data);
-      console.log('Looking for event with slug:', slug);
-      
       const foundEvent = data.data.find((event: any) => event.slug === slug);
-      console.log('Found event by slug:', foundEvent);
-      
-      if (foundEvent) {
-        console.log('✅ Event found! Event keys:', Object.keys(foundEvent));
-        console.log('Event destinasi:', foundEvent.destinasi);
-        console.log('Event destinasi type:', typeof foundEvent.destinasi);
-        console.log('Event destinasi is array:', Array.isArray(foundEvent.destinasi));
-      } else {
-        console.log('❌ Event not found with slug:', slug);
-        console.log('Available slugs:', data.data.map((e: any) => e.slug));
-      }
-      
-      return foundEvent || null;
+      const normalized = foundEvent ? this.normalizeEventDestinations(foundEvent) : null;
+      console.log('Found event by slug (normalized):', normalized);
+      return normalized || null;
     } else if (data.data && typeof data.data === 'object') {
-      console.log('✅ API returned single event object');
-      console.log('Event keys:', Object.keys(data.data));
-      console.log('Event destinasi:', data.data.destinasi);
-      console.log('Event destinasi type:', typeof data.data.destinasi);
-      console.log('Event destinasi is array:', Array.isArray(data.data.destinasi));
-      return data.data;
+      const normalized = this.normalizeEventDestinations(data.data);
+      console.log('✅ API returned single event object (normalized)');
+      return normalized;
     } else {
       console.log('❌ API returned unexpected data format');
-      console.log('Data format:', typeof data.data);
       return null;
     }
   }
@@ -253,7 +295,8 @@ export class EventsApiService {
     const baseUrl = process.env.GEMITRA_EVENTS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
     const url = `${baseUrl}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false);
-    return data.data || [];
+    const arr = data.data || [];
+    return Array.isArray(arr) ? arr.map((e: any) => this.normalizeEventDestinations(e)) : [];
   }
 
   async incrementEventReader(eventId: string): Promise<any> {

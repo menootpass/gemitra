@@ -130,16 +130,16 @@ export default function EventsSlider() {
             width: `${events.length * (isMobile ? 288 + 16 : 320 + 24) - (isMobile ? 16 : 24)}px` // Total width minus last gap
           }}
         >
-          {events.map((event, index) => (
-            <div 
-              key={event.id} 
+            {events.map((event, index) => (
+              <div 
+                key={event.id} 
               className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-80'}`}
             >
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
                 <div className={`relative ${isMobile ? 'h-32' : 'h-40'} overflow-hidden`}>
                   <Image
-                    src={getImageSrc(event)}
-                    alt={event.title}
+                      src={getImageSrc(event)}
+                      alt={event.title}
                     width={isMobile ? 288 : 320}
                     height={isMobile ? 128 : 160}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
@@ -153,8 +153,8 @@ export default function EventsSlider() {
                   <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
                     <span className="bg-[#16A86E] text-white text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg">
                       {event.category || 'Event'}
-                    </span>
-                  </div>
+                      </span>
+                    </div>
                   <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
                     <div className="bg-white/90 backdrop-blur-sm text-[#213DFF] text-xs font-bold px-2 py-1 rounded-full">
                       {new Date(event.date).toLocaleDateString('id-ID', { 
@@ -163,39 +163,39 @@ export default function EventsSlider() {
                       })}
                     </div>
                   </div>
-                </div>
-                
+                  </div>
+                  
                 <div className="p-3 sm:p-5">
                   <h3 className="font-bold text-[#213DFF] text-sm sm:text-base mb-2 sm:mb-3 line-clamp-2 group-hover:text-[#16A86E] transition-colors duration-300">
-                    {event.title}
-                  </h3>
-                  
+                      {event.title}
+                    </h3>
+                    
                   <div className="flex items-center gap-2 sm:gap-4 text-xs text-gray-600 mb-2 sm:mb-3">
                     <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
-                      <span>📅</span>
+                        <span>📅</span>
                       <span className="hidden sm:inline">{new Date(event.date).toLocaleDateString('id-ID')}</span>
                       <span className="sm:hidden">{new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-                    </div>
+                      </div>
                     <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
-                      <span>👥</span>
+                        <span>👥</span>
                       <span className="hidden sm:inline">{event.totalPembaca || 0} pembaca</span>
                       <span className="sm:hidden">{event.totalPembaca || 0}</span>
                     </div>
-                  </div>
-                  
+                    </div>
+                    
                   <p className="text-xs sm:text-sm text-gray-600 line-clamp-3 mb-3 sm:mb-4 leading-relaxed">
-                    {event.description}
-                  </p>
-                  
-                  <Link href={`/event/${event.slug || event.id}`}>
+                      {event.description}
+                    </p>
+                    
+                    <Link href={`/event/${event.slug || event.id}`}>
                     <button className="w-full bg-gradient-to-r from-[#16A86E] to-[#213DFF] text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 rounded-full text-center hover:from-[#213DFF] hover:to-[#16A86E] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                      Detail Event
-                    </button>
-                  </Link>
+                        Detail Event
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
         
         {/* Enhanced Dots Indicator */}

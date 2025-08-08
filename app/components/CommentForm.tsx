@@ -73,8 +73,13 @@ export default function CommentForm({ destinationId, onCommentAdded }: CommentFo
       mutate('/api/destinations');
       mutate('/api/destinations?limit=6');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan pada server.";
-      setMessage({ type: "error", text: errorMessage });
+      let msg = error instanceof Error ? error.message : 'Terjadi kesalahan pada server.';
+      // If message is a JSON string like {"message":"..."}, extract the message
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed && typeof parsed.message === 'string') msg = parsed.message;
+      } catch {}
+      setMessage({ type: "error", text: msg });
     } finally {
       setIsSubmitting(false);
     }
