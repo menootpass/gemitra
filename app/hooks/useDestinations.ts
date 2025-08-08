@@ -150,71 +150,67 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
     })) as Destination[];
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchDestinations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      let rawData: any[];
-
-      if (category) {
-        rawData = await apiService.fetchDestinationsByCategory(category);
-      } else if (searchTerm) {
-        rawData = await apiService.searchDestinations(searchTerm);
-      } else if (limit) {
-        rawData = await apiService.fetchDestinationsWithLimit(limit);
+      
+      console.log('Fetching destinations...');
+      const data = await apiService.fetchDestinations();
+      console.log('Raw destinations data:', data);
+      console.log('Destinations data type:', typeof data);
+      console.log('Destinations is array:', Array.isArray(data));
+      console.log('Destinations length:', data?.length);
+      
+      if (data && Array.isArray(data)) {
+        console.log('✅ Destinations data is valid array');
+        console.log('First destination:', data[0]);
+        console.log('All destination names:', data.map(d => d.nama));
+        
+        const processedData = processData(data);
+        console.log('Processed destinations:', processedData);
+        console.log('Processed destinations length:', processedData.length);
+        console.log('Processed destination names:', processedData.map(d => d.nama));
+        setDestinations(processedData);
       } else {
-        rawData = await apiService.fetchDestinations(enableCache);
+        console.log('❌ No destinations data or invalid format');
+        console.log('Data received:', data);
+        setDestinations([]);
       }
-
-      const processedData = processData(rawData);
-      setDestinations(processedData);
+      
       setLastUpdate(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat mengambil data');
-      console.error('Error in useDestinations:', err);
+      console.error('Error fetching destinations:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch destinations');
+      setDestinations([]);
     } finally {
       setLoading(false);
     }
-  }, [limit, category, searchTerm, enableCache, processData]);
+  }, [processData]);
+
+  useEffect(() => {
+    fetchDestinations();
+  }, [fetchDestinations]);
+
+  useEffect(() => {
+    if (enablePolling) {
+      const interval = setInterval(() => {
+        fetchDestinations();
+      }, pollingInterval);
+      
+      return () => clearInterval(interval);
+    }
+  }, [fetchDestinations, enablePolling, pollingInterval]);
 
   const refresh = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
+    await fetchDestinations();
+  }, [fetchDestinations]);
 
   const clearCache = useCallback(() => {
-    apiService.clearCache();
+    // Clear any cached data if needed
+    setDestinations([]);
+    setError(null);
   }, []);
-
-  // Polling effect untuk real-time updates
-  useEffect(() => {
-    if (!enablePolling) return;
-
-    const interval = setInterval(() => {
-      fetchData();
-    }, pollingInterval);
-
-    return () => clearInterval(interval);
-  }, [enablePolling, pollingInterval, fetchData]);
-
-  // Visibility change listener untuk update saat user kembali ke tab
-  useEffect(() => {
-    if (!enablePolling) return;
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [enablePolling, fetchData]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   return {
     destinations,
@@ -222,8 +218,8 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
     error,
     refresh,
     clearCache,
-    cacheStats: apiService.getCacheStats(),
-    lastUpdate,
+    cacheStats: { size: 0, keys: [] }, // Placeholder
+    lastUpdate
   };
 }
 

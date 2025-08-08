@@ -102,8 +102,11 @@ export default function CommentForm({ destinationId, onCommentAdded }: CommentFo
           <p className="text-sm text-blue-800 mb-2">
             <strong>Info:</strong> Nama pengguna akan diambil otomatis dari database berdasarkan kode invoice yang Anda masukkan.
           </p>
-          <p className="text-xs text-blue-700">
+          <p className="text-xs text-blue-700 mb-2">
             <strong>Validasi:</strong> Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan dalam invoice tersebut.
+          </p>
+          <p className="text-xs text-blue-700">
+            <strong>Batasan:</strong> Setiap user hanya dapat memberikan 1 komentar per destinasi.
           </p>
         </div>
 

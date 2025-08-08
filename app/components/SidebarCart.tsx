@@ -236,6 +236,45 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
               placeholder="Masukkan nama lengkap Anda"
             />
           </div>
+          <div>
+            <label className="block text-black/70 mb-1 font-medium">Jumlah Penumpang</label>
+            <div className="flex items-center">
+              <button
+                className="px-3 py-1 bg-gray-200 rounded-l-lg"
+                onClick={() => {
+                  if (jumlahPenumpang > 1) {
+                    onPenumpangChange(jumlahPenumpang - 1);
+                  }
+                }}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                className="w-16 text-center border-t border-b border-[#16A86E33]"
+                value={jumlahPenumpang}
+                onChange={e => {
+                  const value = parseInt(e.target.value);
+                  if (value >= 1 && value <= maxPassengers) {
+                    onPenumpangChange(value);
+                  }
+                }}
+                min="1"
+                max={maxPassengers}
+              />
+              <button
+                className="px-3 py-1 bg-gray-200 rounded-r-lg"
+                onClick={() => {
+                  if (jumlahPenumpang < maxPassengers) {
+                    onPenumpangChange(jumlahPenumpang + 1);
+                  }
+                }}
+              >
+                +
+              </button>
+              <span className="ml-3 text-sm text-gray-500">Maks. {maxPassengers}</span>
+            </div>
+          </div>
 
           {/* Pilihan Paket (Card) */}
           <div>
@@ -323,45 +362,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
               />
             </div>
           </div>
-          <div>
-            <label className="block text-black/70 mb-1 font-medium">Jumlah Penumpang</label>
-            <div className="flex items-center">
-              <button
-                className="px-3 py-1 bg-gray-200 rounded-l-lg"
-                onClick={() => {
-                  if (jumlahPenumpang > 1) {
-                    onPenumpangChange(jumlahPenumpang - 1);
-                  }
-                }}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                className="w-16 text-center border-t border-b border-[#16A86E33]"
-                value={jumlahPenumpang}
-                onChange={e => {
-                  const value = parseInt(e.target.value);
-                  if (value >= 1 && value <= maxPassengers) {
-                    onPenumpangChange(value);
-                  }
-                }}
-                min="1"
-                max={maxPassengers}
-              />
-              <button
-                className="px-3 py-1 bg-gray-200 rounded-r-lg"
-                onClick={() => {
-                  if (jumlahPenumpang < maxPassengers) {
-                    onPenumpangChange(jumlahPenumpang + 1);
-                  }
-                }}
-              >
-                +
-              </button>
-              <span className="ml-3 text-sm text-gray-500">Maks. {maxPassengers}</span>
-            </div>
-          </div>
+          
         </div>
       </div>
 

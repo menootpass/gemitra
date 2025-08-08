@@ -1,8 +1,10 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import SWRProvider from "./providers/SWRProvider";
+import Script from "next/script";
+import VisitorTracker from "./components/VisitorTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,19 +21,23 @@ export const metadata: Metadata = {
   description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SWRProvider>
-          {children}
-        </SWRProvider>
+      <head>{/* Google Analytics */}
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=G-4NEX9PWWFQ`} strategy="afterInteractive"/>
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-4NEX9PWWFQ');
+          `}
+        </Script>
+      </head>
+      <body>
+        <VisitorTracker />
+        {children}
       </body>
     </html>
   );

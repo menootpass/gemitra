@@ -59,6 +59,7 @@ export interface Event {
   content: string | string[];
   author: string;
   slug: string;
+  destinasi?: string[];
 } 
 
 export interface Feedback {

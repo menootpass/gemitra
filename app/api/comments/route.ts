@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const TRANSACTIONS_URL = process.env.GEMITRA_TRANSACTIONS_URL!;
-const DESTINATIONS_URL = process.env.GEMITRA_DESTINATIONS_URL!;
+const TRANSACTIONS_URL = process.env.GEMITRA_TRANSACTIONS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
+const DESTINATIONS_URL = process.env.GEMITRA_DESTINATIONS_URL || "https://script.google.com/macros/s/AKfycbxpr2JiKv4exY0UrBrXrArLYTTi8Qxh3DrugG_anIjUReS0Y38zE3bqS9R0mb35brfUEA/exec";
 
 interface CommentRequest {
   invoiceCode: string;
@@ -26,9 +26,16 @@ interface Destination {
 export async function POST(request: Request) {
   try {
     const body: CommentRequest = await request.json();
+    console.log('Received comment data:', body);
 
     // Validasi input
     if (!body.invoiceCode || !body.komentar || !body.destinationId || !body.rating) {
+      console.log('Missing required fields:', { 
+        invoiceCode: !!body.invoiceCode, 
+        komentar: !!body.komentar, 
+        destinationId: !!body.destinationId, 
+        rating: !!body.rating 
+      });
       return NextResponse.json(
         { message: 'Data tidak lengkap' }, 
         { status: 400 }
@@ -43,6 +50,8 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('Fetching transactions from:', TRANSACTIONS_URL);
+
     // Ambil data transaksi untuk validasi invoice code
     let transactions: Transaction[] = [];
     try {
@@ -53,9 +62,15 @@ export async function POST(request: Request) {
         },
       });
 
+      console.log('Transactions response status:', transactionsResponse.status);
+
       if (transactionsResponse.ok) {
         const transactionsData = await transactionsResponse.json();
+        console.log('Transactions data:', transactionsData);
         transactions = transactionsData.data || transactionsData || [];
+      } else {
+        const errorText = await transactionsResponse.text();
+        console.error('Transactions API error:', errorText);
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -65,7 +80,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validasi kode invoice
+    // Validasi kode invoice - HARUS ada transaksi yang valid
     const validTransaction = transactions.find(
       (transaction: Transaction) => 
         transaction.kode === body.invoiceCode && 
@@ -79,8 +94,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Gunakan nama dari database transaksi, bukan dari input user
     const namaFromDatabase = validTransaction.nama;
+    console.log('Valid transaction found:', validTransaction);
+
+    console.log('Fetching destinations from:', DESTINATIONS_URL);
 
     // Ambil data destinasi untuk update komentar
     let destinations: Destination[] = [];
@@ -92,9 +109,15 @@ export async function POST(request: Request) {
         },
       });
 
+      console.log('Destinations response status:', destinationsResponse.status);
+
       if (destinationsResponse.ok) {
         const destinationsData = await destinationsResponse.json();
+        console.log('Destinations data:', destinationsData);
         destinations = destinationsData.data || destinationsData || [];
+      } else {
+        const errorText = await destinationsResponse.text();
+        console.error('Destinations API error:', errorText);
       }
     } catch (error) {
       console.error('Error fetching destinations:', error);
@@ -107,13 +130,16 @@ export async function POST(request: Request) {
     // Cari destinasi yang sesuai
     const destination = destinations.find((dest: Destination) => dest.id === body.destinationId);
     if (!destination) {
+      console.log('Destination not found for ID:', body.destinationId);
       return NextResponse.json(
         { message: 'Destinasi tidak ditemukan' }, 
         { status: 404 }
       );
     }
 
-    // Validasi destinasi yang dikomentari sesuai dengan destinasi yang dipesan
+    console.log('Found destination:', destination);
+
+    // Validasi destinasi yang dikomentari HARUS ada dalam transaksi
     const transactionDestinations = validTransaction.destinasi ? 
       validTransaction.destinasi.split(',').map((dest: string) => dest.trim()) : [];
     
@@ -125,7 +151,7 @@ export async function POST(request: Request) {
     if (!isDestinationInTransaction) {
       return NextResponse.json(
         { 
-          message: `hehe Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan. Destinasi yang dipesan: ${transactionDestinations.join(', ')}` 
+          message: `Anda hanya dapat memberikan komentar untuk destinasi yang Anda pesan. Destinasi yang dipesan: ${transactionDestinations.join(', ')}` 
         }, 
         { status: 403 }
       );
@@ -140,7 +166,19 @@ export async function POST(request: Request) {
       existingComments = [];
     }
 
-    // Tambahkan komentar baru dengan nama dari database
+    // Cek apakah user sudah pernah komentar untuk destinasi ini
+    const hasUserCommented = existingComments.some((comment: any) => 
+      comment.nama === namaFromDatabase
+    );
+
+    if (hasUserCommented) {
+      return NextResponse.json(
+        { message: 'Anda sudah pernah memberikan komentar untuk destinasi ini' }, 
+        { status: 400 }
+      );
+    }
+
+    // Tambahkan komentar baru
     const newComment = {
       nama: namaFromDatabase,
       komentar: body.komentar,
@@ -150,19 +188,15 @@ export async function POST(request: Request) {
 
     existingComments.push(newComment);
 
-    // Update destinasi dengan komentar baru
-    // const updatedDestination = {
-    //   ...destination,
-    //   komentar: JSON.stringify(existingComments),
-    // };
+    console.log('New comment to add:', newComment);
+    console.log('Total comments after adding:', existingComments.length);
 
-    // Kirim update ke Google Apps Script dengan format yang benar
+    // Kirim update ke Google Apps Script
     try {
       const updatePayload = {
         action: 'updateComment',
         destinationId: body.destinationId,
         komentar: JSON.stringify(existingComments),
-        // Tambahkan data untuk debugging
         debug: {
           originalComments: destination.komentar,
           newCommentsCount: existingComments.length,
@@ -181,6 +215,7 @@ export async function POST(request: Request) {
       });
 
       const updateResult = await updateResponse.text();
+      console.log('Update response status:', updateResponse.status);
       console.log('Update response:', updateResult);
 
       if (!updateResponse.ok) {

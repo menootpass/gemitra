@@ -30,18 +30,65 @@ function doGet(e) {
     // Ambil header (baris pertama)
     const headers = data[0];
     
-         // Cari indeks kolom berdasarkan nama
-     const idIndex = headers.indexOf("id");
-     const titleIndex = headers.indexOf("title");
-     const descriptionIndex = headers.indexOf("description");
-     const imageIndex = headers.indexOf("image");
-     const dateIndex = headers.indexOf("date");
-     const locationIndex = headers.indexOf("location");
-     const categoryIndex = headers.indexOf("category");
-     const totalPembacaIndex = headers.indexOf("totalPembaca");
-     const contentIndex = headers.indexOf("content");
-     const authorIndex = headers.indexOf("author");
-     const slugIndex = headers.indexOf("slug");
+    console.log('=== SPREADSHEET DEBUG ===');
+    console.log('Total rows in spreadsheet:', data.length);
+    console.log('Headers found:', headers);
+    console.log('Headers count:', headers.length);
+    
+    // Cari indeks kolom berdasarkan nama
+    const idIndex = headers.indexOf("id");
+    const titleIndex = headers.indexOf("title");
+    const descriptionIndex = headers.indexOf("description");
+    const imageIndex = headers.indexOf("image");
+    const dateIndex = headers.indexOf("date");
+    const locationIndex = headers.indexOf("location");
+    const categoryIndex = headers.indexOf("category");
+    const totalPembacaIndex = headers.indexOf("totalPembaca");
+    const contentIndex = headers.indexOf("content");
+    const authorIndex = headers.indexOf("author");
+    const slugIndex = headers.indexOf("slug");
+    const destinasiIndex = headers.indexOf("destinasi");
+
+    console.log('Destinasi column index:', destinasiIndex);
+    console.log('All column indexes:', {
+      id: idIndex,
+      title: titleIndex,
+      description: descriptionIndex,
+      image: imageIndex,
+      date: dateIndex,
+      location: locationIndex,
+      category: categoryIndex,
+      totalPembaca: totalPembacaIndex,
+      content: contentIndex,
+      author: authorIndex,
+      slug: slugIndex,
+      destinasi: destinasiIndex
+    });
+     
+     // Check if destinasi column exists
+     if (destinasiIndex === -1) {
+       console.log('WARNING: Destinasi column not found! Available columns:', headers);
+       console.log('Trying alternative column names...');
+       
+       // Try alternative column names
+       const alternativeNames = ["Destinasi", "destinasi", "DESTINASI", "destinations", "Destinations"];
+       let foundIndex = -1;
+       for (const altName of alternativeNames) {
+         const index = headers.indexOf(altName);
+         if (index !== -1) {
+           foundIndex = index;
+           console.log(`Found alternative column: "${altName}" at index ${index}`);
+           break;
+         }
+       }
+       
+       if (foundIndex === -1) {
+         console.log('No destinasi column found with any name. Will use empty array.');
+         console.log('Available columns in spreadsheet:', headers.join(', '));
+       }
+     } else {
+       console.log('Destinasi column found at index:', destinasiIndex);
+     }
 
      // Validasi apakah semua kolom yang diperlukan ada
      const requiredColumns = [
@@ -131,6 +178,34 @@ function doGet(e) {
         }
       }
 
+      // Process destinasi data
+      let destinasiData = [];
+      const actualDestinasiIndex = destinasiIndex !== -1 ? destinasiIndex : 
+        (() => {
+          const alternatives = ["Destinasi", "destinasi", "DESTINASI", "destinations", "Destinations"];
+          for (const altName of alternatives) {
+            const index = headers.indexOf(altName);
+            if (index !== -1) return index;
+          }
+          return -1;
+        })();
+      
+      if (actualDestinasiIndex !== -1 && row[actualDestinasiIndex]) {
+        const destinasiValue = row[actualDestinasiIndex];
+        console.log('Raw destinasi value:', destinasiValue);
+        if (typeof destinasiValue === 'string') {
+          // Split by comma and trim each destination
+          destinasiData = destinasiValue.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0);
+          console.log('Processed destinasi data:', destinasiData);
+        } else if (Array.isArray(destinasiValue)) {
+          destinasiData = destinasiValue;
+          console.log('Destinasi is already array:', destinasiData);
+        }
+      } else {
+        console.log('No destinasi data found for row:', row);
+        console.log('Available columns in this row:', row.map((val, idx) => `${headers[idx]}: ${val}`));
+      }
+
       const event = {
         id: row[idIndex].toString(),
         title: row[titleIndex] ? row[titleIndex].toString() : "",
@@ -142,7 +217,8 @@ function doGet(e) {
         totalPembaca: totalPembaca,
         content: row[contentIndex] ? row[contentIndex].toString() : "",
         author: row[authorIndex] ? row[authorIndex].toString() : "",
-        slug: row[slugIndex] ? row[slugIndex].toString() : ""
+        slug: row[slugIndex] ? row[slugIndex].toString() : "",
+        destinasi: destinasiData
       };
 
       events.push(event);
@@ -192,6 +268,7 @@ function getEventById(eventId) {
     const contentIndex = headers.indexOf("content");
     const authorIndex = headers.indexOf("author");
     const slugIndex = headers.indexOf("slug");
+    const destinasiIndex = headers.indexOf("destinasi");
 
     // Cari event dengan ID yang sesuai
     for (let i = 1; i < data.length; i++) {
@@ -248,6 +325,27 @@ function getEventById(eventId) {
           }
         }
 
+        // Process destinasi data
+        let destinasiData = [];
+        const actualDestinasiIndex = destinasiIndex !== -1 ? destinasiIndex : 
+          (() => {
+            const alternatives = ["Destinasi", "destinasi", "DESTINASI", "destinations", "Destinations"];
+            for (const altName of alternatives) {
+              const index = headers.indexOf(altName);
+              if (index !== -1) return index;
+            }
+            return -1;
+          })();
+        
+        if (actualDestinasiIndex !== -1 && row[actualDestinasiIndex]) {
+          const destinasiValue = row[actualDestinasiIndex];
+          if (typeof destinasiValue === 'string') {
+            destinasiData = destinasiValue.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0);
+          } else if (Array.isArray(destinasiValue)) {
+            destinasiData = destinasiValue;
+          }
+        }
+
         return {
           id: row[idIndex].toString(),
           title: row[titleIndex] ? row[titleIndex].toString() : "",
@@ -259,7 +357,8 @@ function getEventById(eventId) {
           totalPembaca: totalPembaca,
           content: row[contentIndex] ? row[contentIndex].toString() : "",
           author: row[authorIndex] ? row[authorIndex].toString() : "",
-          slug: row[slugIndex] ? row[slugIndex].toString() : ""
+          slug: row[slugIndex] ? row[slugIndex].toString() : "",
+          destinasi: destinasiData
         };
       }
     }
@@ -295,6 +394,7 @@ function getEventsByCategory(category) {
     const contentIndex = headers.indexOf("content");
     const authorIndex = headers.indexOf("author");
     const slugIndex = headers.indexOf("slug");
+    const destinasiIndex = headers.indexOf("destinasi");
 
     const events = [];
     for (let i = 1; i < data.length; i++) {
@@ -358,6 +458,27 @@ function getEventsByCategory(category) {
           }
         }
 
+        // Process destinasi data
+        let destinasiData = [];
+        const actualDestinasiIndex = destinasiIndex !== -1 ? destinasiIndex : 
+          (() => {
+            const alternatives = ["Destinasi", "destinasi", "DESTINASI", "destinations", "Destinations"];
+            for (const altName of alternatives) {
+              const index = headers.indexOf(altName);
+              if (index !== -1) return index;
+            }
+            return -1;
+          })();
+        
+        if (actualDestinasiIndex !== -1 && row[actualDestinasiIndex]) {
+          const destinasiValue = row[actualDestinasiIndex];
+          if (typeof destinasiValue === 'string') {
+            destinasiData = destinasiValue.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0);
+          } else if (Array.isArray(destinasiValue)) {
+            destinasiData = destinasiValue;
+          }
+        }
+
         const event = {
           id: row[idIndex].toString(),
           title: row[titleIndex] ? row[titleIndex].toString() : "",
@@ -369,7 +490,8 @@ function getEventsByCategory(category) {
           totalPembaca: totalPembaca,
           content: row[contentIndex] ? row[contentIndex].toString() : "",
           author: row[authorIndex] ? row[authorIndex].toString() : "",
-          slug: row[slugIndex] ? row[slugIndex].toString() : ""
+          slug: row[slugIndex] ? row[slugIndex].toString() : "",
+          destinasi: destinasiData
         };
 
         events.push(event);
@@ -473,6 +595,7 @@ function getEventBySlug(slug) {
     const contentIndex = headers.indexOf("content");
     const authorIndex = headers.indexOf("author");
     const slugIndex = headers.indexOf("slug");
+    const destinasiIndex = headers.indexOf("destinasi");
 
     // Cari event dengan slug yang sesuai
     for (let i = 1; i < data.length; i++) {
@@ -529,6 +652,27 @@ function getEventBySlug(slug) {
           }
         }
 
+        // Process destinasi data
+        let destinasiData = [];
+        const actualDestinasiIndex = destinasiIndex !== -1 ? destinasiIndex : 
+          (() => {
+            const alternatives = ["Destinasi", "destinasi", "DESTINASI", "destinations", "Destinations"];
+            for (const altName of alternatives) {
+              const index = headers.indexOf(altName);
+              if (index !== -1) return index;
+            }
+            return -1;
+          })();
+        
+        if (actualDestinasiIndex !== -1 && row[actualDestinasiIndex]) {
+          const destinasiValue = row[actualDestinasiIndex];
+          if (typeof destinasiValue === 'string') {
+            destinasiData = destinasiValue.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0);
+          } else if (Array.isArray(destinasiValue)) {
+            destinasiData = destinasiValue;
+          }
+        }
+
         return {
           id: row[idIndex].toString(),
           title: row[titleIndex] ? row[titleIndex].toString() : "",
@@ -540,7 +684,8 @@ function getEventBySlug(slug) {
           totalPembaca: totalPembaca,
           content: row[contentIndex] ? row[contentIndex].toString() : "",
           author: row[authorIndex] ? row[authorIndex].toString() : "",
-          slug: row[slugIndex] ? row[slugIndex].toString() : ""
+          slug: row[slugIndex] ? row[slugIndex].toString() : "",
+          destinasi: destinasiData
         };
       }
     }
@@ -552,7 +697,7 @@ function getEventBySlug(slug) {
 }
 
 // Function untuk menambahkan event baru dengan slug otomatis
-function addNewEvent(title, description, image, date, location, category, content, author) {
+function addNewEvent(title, description, image, date, location, category, content, author, destinasi) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
     if (!sheet) {
@@ -600,7 +745,8 @@ function addNewEvent(title, description, image, date, location, category, conten
       0, // totalPembaca default 0
       content,
       author,
-      finalSlug
+      finalSlug,
+      destinasi || "" // destinasi column
     ];
 
     // Tambahkan ke sheet
@@ -619,7 +765,8 @@ function addNewEvent(title, description, image, date, location, category, conten
         totalPembaca: 0,
         content: content,
         author: author,
-        slug: finalSlug
+        slug: finalSlug,
+        destinasi: destinasi ? destinasi.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0) : []
       }
     };
 
