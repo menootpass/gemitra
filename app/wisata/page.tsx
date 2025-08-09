@@ -12,6 +12,50 @@ import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
 import { useDestinationsSWR } from "../hooks/useDestinationsSWR";
 
+const NEW_CATEGORIES = [
+  "Alam",
+  "Budaya & Sejarah",
+  "Kreatif & Edukasi",
+  "Kuliner Tersembunyi",
+] as const;
+
+type NewCategory = typeof NEW_CATEGORIES[number];
+
+function mapToNewCategory(destination: Destination): NewCategory | null {
+  const raw = (destination.kategori || "").toString().toLowerCase();
+  const name = (destination.nama || "").toString().toLowerCase();
+  const haystack = `${raw} ${name}`;
+
+  const hasAny = (keywords: string[]) => keywords.some(k => haystack.includes(k));
+
+  const alam = [
+    "alam", "air terjun", "curug", "pantai", "gunung", "bukit", "hutan", "gua", "goa",
+    "danau", "sungai", "puncak", "tebing", "kebun", "taman nasional", "savanna", "savannah",
+    "perbukitan", "geopark", "kaldera", "lembah"
+  ];
+  const budayaSejarah = [
+    "budaya", "sejarah", "candi", "keraton", "kraton", "museum", "situs", "heritage",
+    "batik", "desa wisata", "kampung", "makam", "benteng", "monumen", "masjid", "gereja",
+    "klenteng", "vihara", "pura", "istana"
+  ];
+  const kreatifEdukasi = [
+    "kreatif", "edukasi", "workshop", "galeri", "gallery", "seni", "art", "studio",
+    "kursus", "pameran", "kafe unik", "kafe", "cafe", "creative", "edutour", "edutrip",
+    "komunitas", "maker", "inovasi"
+  ];
+  const kuliner = [
+    "kuliner", "makanan", "kedai", "warung", "angkringan", "street food", "bakmi", "gudeg",
+    "sate", "kopi", "coffee", "roastery", "hidden", "hidden gem", "view", "rooftop"
+  ];
+
+  // Priority: Kuliner-specific first, then Kreatif (kafe unik, workshop), then Budaya/Sejarah, then Alam
+  if (hasAny(kuliner)) return "Kuliner Tersembunyi";
+  if (hasAny(kreatifEdukasi)) return "Kreatif & Edukasi";
+  if (hasAny(budayaSejarah)) return "Budaya & Sejarah";
+  if (hasAny(alam)) return "Alam";
+  return null;
+}
+
 export default function WisataList() {
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -237,10 +281,11 @@ export default function WisataList() {
   const filteredData = destinations.filter(item => {
     const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.lokasi.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || item.kategori === selectedCategory;
+    const mappedCategory = mapToNewCategory(item);
+    const matchesCategory = !selectedCategory || mappedCategory === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-  const categories = [...new Set(destinations.map(item => item.kategori))];
+  const categories = NEW_CATEGORIES as readonly string[];
 
   if (!hydrated || loading) return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
