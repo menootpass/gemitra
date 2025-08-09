@@ -12,6 +12,70 @@ export default function EventListPage() {
   
   const { events, loading, error } = useEvents();
 
+  // Enhanced image handling with better fallbacks
+  const getImageSrc = (event: any): string => {
+    // Handle string that contains array (e.g., "["https://..."]")
+    if (typeof event.image === 'string' && event.image.trim() !== '') {
+      const trimmed = event.image.trim();
+      
+      // Check if it's a stringified array
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const firstUrl = parsed[0];
+            if (typeof firstUrl === 'string' && (firstUrl.startsWith('http://') || firstUrl.startsWith('https://'))) {
+              return firstUrl;
+            }
+          }
+        } catch {
+          // If JSON parsing fails, try to extract URL manually
+          const urlMatch = trimmed.match(/https?:\/\/[^\s,\]]+/);
+          if (urlMatch) {
+            return urlMatch[0];
+          }
+        }
+      }
+      
+      // If it's a direct URL string
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+    }
+    
+    // Handle actual array
+    if (Array.isArray(event.image) && event.image.length > 0) {
+      const firstItem = event.image[0];
+      if (typeof firstItem === 'string') {
+        // Handle nested stringified arrays in array
+        if (firstItem.startsWith('[') && firstItem.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(firstItem);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const url = parsed[0];
+              if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+                return url;
+              }
+            }
+          } catch {
+            // Try manual extraction
+            const urlMatch = firstItem.match(/https?:\/\/[^\s,\]]+/);
+            if (urlMatch) {
+              return urlMatch[0];
+            }
+          }
+        }
+        // Direct URL in array
+        if (firstItem.startsWith('http://') || firstItem.startsWith('https://')) {
+          return firstItem;
+        }
+      }
+    }
+    
+    // Return a placeholder image
+    return 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80';
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('id-ID', {
@@ -177,7 +241,7 @@ export default function EventListPage() {
                     {/* Event Image */}
                     <div className="relative w-full h-48">
                       <Image
-                        src={event.image && event.image.length > 0 ? event.image[0] : "/images/event-placeholder.jpg"}
+                        src={getImageSrc(event)}
                         alt={event.title}
                         fill
                         className="object-cover"

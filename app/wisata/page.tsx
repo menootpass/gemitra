@@ -52,7 +52,34 @@ export default function WisataList() {
     
     // If img is already an array, return the whole array
     if (Array.isArray(d.img) && d.img.length > 0) {
-      return d.img;
+      // Sanitize each element in case it contains a stringified array
+      const flattened: string[] = [];
+      for (const entry of d.img) {
+        if (typeof entry === 'string') {
+          const trimmed = entry.trim();
+          if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (Array.isArray(parsed)) {
+                for (const u of parsed) {
+                  if (typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://'))) {
+                    flattened.push(u);
+                  }
+                }
+                continue;
+              }
+            } catch {
+              // fallthrough to push sanitized single url below
+            }
+          }
+          // Strip surrounding quotes if present
+          const unquoted = trimmed.replace(/^\["|\[\'|\"|\']?|[\"\'\]]$/g, '').trim();
+          if (unquoted.startsWith('http://') || unquoted.startsWith('https://')) {
+            flattened.push(unquoted);
+          }
+        }
+      }
+      return flattened.length > 0 ? flattened : d.img;
     }
     
     // If img is a string, it might be a JSON array string

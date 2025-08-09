@@ -12,7 +12,27 @@ type ImageSliderProps = {
 export default function ImageSlider({ images, alt, className = "", priority = false }: ImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) {
+  // Normalize images: flatten nested stringified arrays and filter valid URLs
+  const normalized: string[] = Array.isArray(images)
+    ? images.flatMap((src) => {
+        if (typeof src !== 'string') return [];
+        const s = src.trim();
+        if (s.startsWith('[') && s.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) {
+              return parsed.filter((u: any) => typeof u === 'string');
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return [s];
+      })
+      .filter((u) => typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/')))
+    : [];
+
+  if (!normalized || normalized.length === 0) {
     return (
       <div className={`w-full h-full bg-gray-200 flex items-center justify-center ${className}`}>
         <div className="text-gray-500 text-center">
@@ -35,13 +55,13 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
     <div className={`relative w-full h-full ${className}`}>
       {/* Main Image */}
       <Image 
-        src={images[currentIndex]} 
+        src={normalized[currentIndex]} 
         alt={`${alt} ${currentIndex + 1}`}
         fill 
         priority={priority}
         className="object-cover w-full h-full"
         onError={(e) => {
-          console.error('Image failed to load:', images[currentIndex]);
+          console.error('Image failed to load:', normalized[currentIndex]);
           // Fallback to "No Image" display
           const target = e.target as HTMLImageElement;
           target.style.display = 'none';
@@ -60,7 +80,7 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
       />
       
       {/* Navigation Controls */}
-      {images.length > 1 && (
+      {normalized.length > 1 && (
         <>
           {/* Previous Button */}
           <button
@@ -82,12 +102,12 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
           
           {/* Image Counter */}
           <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
-            {currentIndex + 1} / {images.length}
+            {currentIndex + 1} / {normalized.length}
           </div>
           
           {/* Dots Indicator */}
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-            {images.map((_, index) => (
+            {normalized.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}

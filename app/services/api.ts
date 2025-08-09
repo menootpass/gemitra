@@ -19,6 +19,22 @@ class ApiService {
   private cache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit
 
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  async purgeCache(): Promise<void> {
+    this.cache.clear();
+    // Di masa depan, ini bisa memanggil endpoint server untuk membersihkan cache server
+  }
+
+  getCacheStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys()),
+    };
+  }
+
   private async fetchWithCache(url: string, enableCache = true): Promise<any> {
     if (enableCache) {
       const cached = this.cache.get(url);
@@ -41,6 +57,36 @@ class ApiService {
   async fetchDestinations(enableCache = true): Promise<any[]> {
     const url = getUrlWithEndpoint('destinations');
     const data = await this.fetchWithCache(url, enableCache);
+    return data.data || [];
+  }
+
+  async fetchDestinationById(id: number): Promise<any> {
+    const url = `${getUrlWithEndpoint('destinations')}&id=${id}`;
+    const data = await this.fetchWithCache(url, false);
+    return data.data || null;
+  }
+
+  async fetchDestinationsWithLimit(limit: number): Promise<any[]> {
+    const url = `${getUrlWithEndpoint('destinations')}&limit=${limit}`;
+    const data = await this.fetchWithCache(url, false); // SWR handles caching
+    return data.data || [];
+  }
+
+  async fetchEventsByCategory(category: string): Promise<any[]> {
+    const url = `${getUrlWithEndpoint('events')}&category=${encodeURIComponent(category)}`;
+    const data = await this.fetchWithCache(url, false);
+    return data.data || [];
+  }
+
+  async fetchDestinationsByCategory(category: string): Promise<any[]> {
+    const url = `${getUrlWithEndpoint('destinations')}&category=${encodeURIComponent(category)}`;
+    const data = await this.fetchWithCache(url, false); // SWR handles caching
+    return data.data || [];
+  }
+
+  async searchDestinations(query: string): Promise<any[]> {
+    const url = `${getUrlWithEndpoint('destinations')}&search=${encodeURIComponent(query)}`;
+    const data = await this.fetchWithCache(url, false); // SWR handles caching
     return data.data || [];
   }
 
@@ -125,6 +171,21 @@ class EventsApiService {
     const url = `${getUrlWithEndpoint('events')}&slug=${encodeURIComponent(slug)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || null;
+  }
+
+  async fetchEventsByCategory(category: string): Promise<any[]> {
+    const url = `${getUrlWithEndpoint('events')}&category=${encodeURIComponent(category)}`;
+    const data = await this.fetchWithCache(url, false);
+    return data.data || [];
+  }
+
+  async incrementEventReader(eventId: string): Promise<void> {
+    const mainUrl = getMainScriptUrl();
+    await fetch(mainUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'incrementReader', eventId })
+    }).catch(() => {});
   }
 }
 

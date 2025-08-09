@@ -22,7 +22,6 @@ const VISITORS_SHEET_NAME = 'Visitors';
  * Contoh: ?endpoint=destinations, ?endpoint=events, ?endpoint=transactions, ?endpoint=feedback
  */
 function doGet(e) {
-<<<<<<< HEAD
   // TAMBAHKAN INI: Cek 'e' untuk menghindari error saat dijalankan manual
   if (!e || !e.parameter) {
     // Berikan response default jika dijalankan dari editor
@@ -33,8 +32,6 @@ function doGet(e) {
     });
   }
   
-=======
->>>>>>> 24efa4295a0332da5c2c9f58177747bd11ac2410
   const params = e.parameter || {};
   const endpoint = params.endpoint || 'destinations'; // Default ke destinations
 
@@ -63,7 +60,8 @@ function doGet(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const action = data.action;
+    const actionOriginal = data.action;
+    const action = (actionOriginal || '').toString().toLowerCase();
 
     if (!action) {
       return createJsonResponse({ success: false, error: "Properti 'action' tidak ditemukan dalam request body" }, 400);
@@ -71,39 +69,65 @@ function doPost(e) {
 
     let result;
     switch (action) {
-      // Actions for Destinations
-      case 'createDestination':
+      // Actions for Destinations (lowercase + aliases)
+      case 'createdestination':
+      case 'create':
         result = createDestination(data);
         break;
-      case 'updateDestination':
+      case 'updatedestination':
+      case 'update':
         result = updateDestination(data);
         break;
-      case 'updateComment':
+      case 'updatecomment':
         result = updateDestinationComment(data);
         break;
-      case 'deleteDestination':
+      case 'deletedestination':
+      case 'delete':
         result = deleteDestination(data);
         break;
-      case 'incrementVisitor': 
-         result = handleVisitorUpdate(data);
-         break;
+      case 'incrementvisitor':
+        result = handleVisitorUpdate(data);
+        break;
+
+      // Actions for Events (lowercase + aliases)
+      case 'addevent':
+      case 'createevent':
+        result = addNewEvent(data.title, data.description, data.image, data.date, data.location, data.category, data.content, data.author, data.destinasi);
+        break;
+      case 'updateevent':
+        result = updateEventById(data.id, data.title, data.description, data.image, data.date, data.location, data.category, data.content, data.author, data.destinasi);
+        break;
+      case 'deleteevent':
+        result = deleteEventById(data.id);
+        break;
+      case 'incrementpembaca':
+        result = incrementTotalPembaca(data.id);
+        break;
 
       // Actions for Transactions
-      case 'createTransaction':
+      case 'createtransaction':
         result = handleTransaction(data);
         break;
 
       // Actions for Feedback
-      case 'createFeedback':
+      case 'createfeedback':
         result = createFeedback(data);
         break;
 
       // Actions for Visitor Tracking
-      case 'trackVisitor':
+      case 'trackvisitor':
         return trackVisitor(); // Fungsi ini punya return sendiri
+      
+      // Actions for Events (increment reader)
+      case 'incrementReader':
+      case 'incrementTotalPembaca': {
+        const id = (data && (data.eventId || data.id)) ? String(data.eventId || data.id) : '';
+        const ok = id ? incrementTotalPembaca(id) : false;
+        return createJsonResponse({ success: !!ok, id });
+      }
 
       default:
-        result = { success: false, error: `Action '${action}' tidak dikenal` };
+        result = { success: false, error: `Action '${actionOriginal}' tidak dikenal` };
     }
     return createJsonResponse(result);
 
@@ -127,7 +151,72 @@ function doPut(e) { return doPost(e); }
  */
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+      .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Normalizes various image input formats into a JSON string array of URLs.
+ * Accepts:
+ * - Array of URLs -> returns JSON string
+ * - JSON string array -> returns JSON string
+ * - Comma/newline separated URLs -> returns JSON string
+ * - Comma/newline separated Google Drive IDs -> converts to view URLs and returns JSON string
+ * - Single URL string -> returns the same string
+ */
+function normalizeImageInput(imgInput) {
+  if (!imgInput && imgInput !== 0) return '';
+
+  // If already an array
+  if (Array.isArray(imgInput)) {
+    return JSON.stringify(imgInput);
+  }
+
+  if (typeof imgInput === 'string') {
+    var trimmed = imgInput.trim();
+
+    // If looks like a JSON array string, try parse then stringify cleanly
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('\"[') && trimmed.endsWith(']\"'))) {
+      try {
+        var parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return JSON.stringify(parsed);
+        }
+      } catch (e) {
+        // fallthrough to tokenization
+      }
+    }
+
+    // Tokenize by comma or newline, strip surrounding quotes
+    var rawTokens = trimmed.split(/\n|,/).map(function(t){ return t.trim(); }).filter(function(t){ return t.length > 0; });
+    // If only one token and it's a single URL, return as-is (backend expects string in some places)
+    if (rawTokens.length === 1) {
+      var t = rawTokens[0].replace(/^"|"$/g, '');
+      // If contains http(s), it's a URL
+      if (t.indexOf('http://') === 0 || t.indexOf('https://') === 0) {
+        return t;
+      }
+      // Otherwise treat as single ID
+      return JSON.stringify(["https://drive.google.com/uc?export=view&id=" + t]);
+    }
+
+    // Map tokens: if token is URL, keep; if ID, convert
+    var urls = rawTokens.map(function(token){
+      var clean = token.replace(/^"|"$/g, '');
+      // Extract ID from common Drive URL shapes
+      var byQuery = clean.match(/id=([^&\"]+)/);
+      if (byQuery && byQuery[1]) return "https://drive.google.com/uc?export=view&id=" + byQuery[1];
+      var byPath = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (byPath && byPath[1]) return "https://drive.google.com/uc?export=view&id=" + byPath[1];
+      // If token already looks like URL, keep
+      if (clean.indexOf('http://') === 0 || clean.indexOf('https://') === 0) return clean;
+      // Fallback: treat as ID
+      return "https://drive.google.com/uc?export=view&id=" + clean;
+    });
+
+    return JSON.stringify(urls);
+  }
+
+  return '';
 }
 
 /**
@@ -163,17 +252,17 @@ function handleGetDestinations(e) {
   }
   
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const rows = data.slice(1);
-  
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+    
   const destinations = rows.map(row => {
     let destination = {};
-    headers.forEach((header, i) => {
-      destination[header] = row[i];
+      headers.forEach((header, i) => {
+        destination[header] = row[i];
+      });
+      return destination;
     });
-    return destination;
-  });
   return createJsonResponse({ success: true, data: destinations });
 }
 
@@ -221,36 +310,57 @@ function updateDestinationComment(data) {
 // Fungsi untuk membuat destinasi baru
 function createDestination(data) {
   try {
-    console.log('Apps Script - Data yang diterima:', JSON.stringify(data, null, 2));
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange[0];
+    const namaIndex = headers.indexOf('nama');
+    const slugIndex = headers.indexOf('slug');
+
+    // --- VALIDASI NAMA DUPLIKAT DIMULAI DI SINI ---
+    const newName = data.nama || '';
+    if (!newName) {
+      return { success: false, error: "Nama destinasi tidak boleh kosong." };
+    }
+
+    // Ambil semua nama yang sudah ada dan ubah ke huruf kecil untuk perbandingan
+    const existingNames = dataRange.slice(1).map(row => row[namaIndex].toString().trim().toLowerCase());
     
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
-    // Generate ID baru (auto increment)
+    // Cek apakah nama baru sudah ada
+    if (existingNames.includes(newName.trim().toLowerCase())) {
+      return { success: false, error: `Nama destinasi "${newName}" sudah ada. Harap gunakan nama lain.` };
+    }
+    // --- VALIDASI SELESAI ---
+
+    // Generate ID baru (auto-increment)
     const lastRow = sheet.getLastRow();
-    const newId = lastRow > 1 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
+    const newId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
     
-    // Generate unique slug
-    const existingSlugs = getAllExistingSlugs();
-    const uniqueSlug = generateUniqueSlug(data.nama || 'destinasi', existingSlugs);
+    // Generate slug yang unik dari nama destinasi
+    const existingSlugs = dataRange.slice(1).map(row => row[slugIndex]).filter(slug => slug && slug.trim() !== '');
+    const uniqueSlug = generateUniqueSlug(newName, existingSlugs);
     
-    // Siapkan data untuk insert
+    // Normalize image input (IDs/URLs) to clean JSON array string of URLs
+    var imgData = normalizeImageInput(data.img);
+    
+    // Siapkan data untuk baris baru
     const newData = [
       newId,
-      data.nama || '',
+      newName,
       data.lokasi || '',
       data.rating || 0,
       data.kategori || '',
-      data.img || '',
+      imgData,
       data.deskripsi || '',
       data.fasilitas || '',
-      data.komentar || '',
+      '[]', // Komentar default dalam bentuk string JSON array kosong
       data.dikunjungi || 0,
       data.posisi || '',
       data.harga || 0,
-      uniqueSlug, // Add slug
+      uniqueSlug,
     ];
-    // Insert data baru
+    
+    // Tambahkan baris baru ke sheet
     sheet.appendRow(newData);
-    console.log('Apps Script - Data yang disimpan:', JSON.stringify(newData, null, 2));
     
     return { 
       success: true, 
@@ -259,14 +369,15 @@ function createDestination(data) {
       slug: uniqueSlug
     };
   } catch (error) {
-    return { error: error.toString() };
+    Logger.log(error.toString()); // Log error untuk debugging
+    return { success: false, error: error.toString() };
   }
 }
 
 // Fungsi untuk mengupdate destinasi
 function updateDestination(data) {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     // Cari row berdasarkan ID
     let rowIndex = -1;
@@ -286,6 +397,9 @@ function updateDestination(data) {
       slug = generateUniqueSlug(data.nama, existingSlugs);
     }
     
+    // Normalize image input (IDs/URLs) to clean JSON array string of URLs
+    var imgData = normalizeImageInput(data.img);
+    
     // Update data
     const updateData = [
       data.id,
@@ -293,7 +407,7 @@ function updateDestination(data) {
       data.lokasi || '',
       data.rating || 0,
       data.kategori || '',
-      data.img || '',
+      imgData,
       data.deskripsi || '',
       data.fasilitas || '',
       data.komentar || '',
@@ -317,7 +431,7 @@ function updateDestination(data) {
 // Fungsi untuk menghapus destinasi
 function deleteDestination(data) {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     // Cari row berdasarkan ID
     let rowIndex = -1;
@@ -344,7 +458,7 @@ function deleteDestination(data) {
 // Fungsi untuk menambah jumlah pengunjung berdasarkan ID (untuk checkout)
 function incrementVisitor(id) {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     // Cari row berdasarkan ID
     let rowIndex = -1;
@@ -368,10 +482,23 @@ function incrementVisitor(id) {
   }
 }
 
+// Fungsi untuk menangani update visitor
+function handleVisitorUpdate(data) {
+  try {
+    if (data.destinasi) {
+      const destinasiNames = data.destinasi.split(',').map(name => name.trim());
+      return incrementDestinationVisitors(destinasiNames);
+    }
+    return { success: false, error: 'Destinasi tidak ditemukan' };
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
+}
+
 // Fungsi untuk menambah jumlah pengunjung berdasarkan nama destinasi
 function incrementVisitorByName(destinasiName) {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     const headers = dataRange[0];
     const rows = dataRange.slice(1);
@@ -415,7 +542,7 @@ function incrementVisitorByName(destinasiName) {
 // Fungsi untuk mendapatkan semua slug yang ada
 function getAllExistingSlugs() {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     const headers = dataRange[0];
     const rows = dataRange.slice(1);
@@ -435,7 +562,7 @@ function getAllExistingSlugs() {
 // Fungsi untuk mengisi slug yang kosong (jalankan sekali)
 function fillEmptySlugs() {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(DESTINASI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     const headers = dataRange[0];
     const rows = dataRange.slice(1);
@@ -757,18 +884,142 @@ function getEventsByCategory(category) {
   }
 }
 
-// ... (Tambahkan fungsi helper lain dari event.gs) ...
+// Fungsi untuk update event berdasarkan ID
+function updateEventById(eventId, title, description, image, date, location, category, content, author, destinasi) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    if (!sheet) {
+      return { success: false, error: "Sheet 'Event' tidak ditemukan" };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: false, error: "Tidak ada data event" };
+    }
+
+    const headers = data[0];
+    const idIndex = headers.indexOf("id");
+    const titleIndex = headers.indexOf("title");
+    const descriptionIndex = headers.indexOf("description");
+    const imageIndex = headers.indexOf("image");
+    const dateIndex = headers.indexOf("date");
+    const locationIndex = headers.indexOf("location");
+    const categoryIndex = headers.indexOf("category");
+    const contentIndex = headers.indexOf("content");
+    const authorIndex = headers.indexOf("author");
+    const slugIndex = headers.indexOf("slug");
+    const destinasiIndex = headers.indexOf("destinasi");
+
+    // Cari baris dengan ID yang sesuai
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[idIndex] && row[idIndex].toString() === eventId.toString()) {
+        
+        // Generate slug baru jika title berubah
+        let finalSlug = row[slugIndex] || '';
+        if (title && title !== row[titleIndex]) {
+          const existingSlugs = data.slice(1).map((r, idx) => ({
+            slug: r[slugIndex],
+            index: idx + 1
+          })).filter(item => item.slug && item.index !== i);
+          
+          let baseSlug = generateSlug(title);
+          let counter = 1;
+          while (existingSlugs.some(item => item.slug === baseSlug)) {
+            baseSlug = `${generateSlug(title)}-${counter}`;
+            counter++;
+          }
+          finalSlug = baseSlug;
+        }
+
+        // Update data
+        const updateData = [
+          eventId,
+          title || row[titleIndex],
+          description || row[descriptionIndex],
+          image || row[imageIndex],
+          date || row[dateIndex],
+          location || row[locationIndex],
+          category || row[categoryIndex],
+          row[headers.indexOf("totalPembaca")] || 0,
+          content || row[contentIndex],
+          author || row[authorIndex],
+          finalSlug,
+          destinasi || row[destinasiIndex] || ""
+        ];
+
+        // Update row
+        const range = sheet.getRange(i + 1, 1, 1, updateData.length);
+        range.setValues([updateData]);
+
+        return {
+          success: true,
+          message: 'Event berhasil diperbarui',
+          data: {
+            id: eventId,
+            title: title || row[titleIndex],
+            description: description || row[descriptionIndex],
+            image: image || row[imageIndex],
+            date: date || row[dateIndex],
+            location: location || row[locationIndex],
+            category: category || row[categoryIndex],
+            content: content || row[contentIndex],
+            author: author || row[authorIndex],
+            slug: finalSlug,
+            destinasi: destinasi ? destinasi.split(',').map(dest => dest.trim()).filter(dest => dest.length > 0) : []
+          }
+        };
+      }
+    }
+
+    return { success: false, error: "Event tidak ditemukan" };
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan: " + error.toString() };
+  }
+}
+
+// Fungsi untuk delete event berdasarkan ID
+function deleteEventById(eventId) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    if (!sheet) {
+      return { success: false, error: "Sheet 'Event' tidak ditemukan" };
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: false, error: "Tidak ada data event" };
+    }
+
+    const headers = data[0];
+    const idIndex = headers.indexOf("id");
+
+    // Cari baris dengan ID yang sesuai
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[idIndex] && row[idIndex].toString() === eventId.toString()) {
+        // Hapus baris
+        sheet.deleteRow(i + 1);
+        return { success: true, message: 'Event berhasil dihapus' };
+      }
+    }
+
+    return { success: false, error: "Event tidak ditemukan" };
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan: " + error.toString() };
+  }
+}
 
 function incrementTotalPembaca(eventId) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
     if (!sheet) {
-      return false;
+      return { success: false, error: "Sheet 'Event' tidak ditemukan" };
     }
 
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) {
-      return false;
+      return { success: false, error: "Tidak ada data event" };
     }
 
     const headers = data[0];
@@ -776,7 +1027,7 @@ function incrementTotalPembaca(eventId) {
     const totalPembacaIndex = headers.indexOf("totalPembaca");
 
     if (idIndex === -1 || totalPembacaIndex === -1) {
-      return false;
+      return { success: false, error: "Kolom 'id' atau 'totalPembaca' tidak ditemukan" };
     }
 
     // Cari baris dengan ID yang sesuai
@@ -801,13 +1052,13 @@ function incrementTotalPembaca(eventId) {
         // Update nilai di spreadsheet
         sheet.getRange(i + 1, totalPembacaIndex + 1).setValue(newTotal);
         
-        return true;
+        return { success: true, message: 'Total pembaca berhasil ditambah', newTotal: newTotal };
       }
     }
 
-    return false;
+    return { success: false, error: "Event tidak ditemukan" };
   } catch (error) {
-    return false;
+    return { success: false, error: "Terjadi kesalahan: " + error.toString() };
   }
 }
 
@@ -1416,8 +1667,4 @@ function setupSheet(sheetName, headers) {
   } catch(e) {
     Logger.log(`Gagal setup sheet "${sheetName}": ${e.toString()}`);
   }
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> 24efa4295a0332da5c2c9f58177747bd11ac2410
+} 

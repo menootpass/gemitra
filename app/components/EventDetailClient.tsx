@@ -12,6 +12,18 @@ export default function EventDetailClient({ slug }: { slug: string }) {
   const { event, loading, error } = useEventBySlug(slug);
   const { destinations } = useDestinations();
 
+  // Increment totalPembaca once on mount when event is available
+  // and id exists
+  if (event && (event as any).id) {
+    // Fire and forget; avoid blocking render
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      import('../services/api').then(({ eventsApiService }) => {
+        eventsApiService.incrementEventReader(String((event as any).id));
+      });
+    } catch {}
+  }
+
   // Find destinasi source from multiple possible keys (destinasiIds, destinasi, Destinasi)
   const rawDestinasiSource = useMemo(() => {
     const anyEvent: any = event as any;
@@ -117,13 +129,29 @@ export default function EventDetailClient({ slug }: { slug: string }) {
 
   // Enhanced content handling
   const getContent = (): string => {
+    let content = '';
     if (typeof event.content === 'string' && event.content.length > 0) {
-      return event.content;
+      content = event.content;
+    } else if (typeof event.description === 'string' && event.description.length > 0) {
+      content = event.description;
+    } else {
+      return 'Konten event tidak tersedia';
     }
-    if (typeof event.description === 'string' && event.description.length > 0) {
-      return event.description;
-    }
-    return 'Konten event tidak tersedia';
+
+    // Convert plain text to HTML with basic formatting
+    return content
+      .replace(/\n/g, '<br>') // Convert line breaks to HTML
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold: **text**
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic: *text*
+      .replace(/__(.*?)__/g, '<strong>$1</strong>') // Bold: __text__
+      .replace(/_(.*?)_/g, '<em>$1</em>') // Italic: _text_
+      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>') // Code: `text`
+      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-bold text-gray-900 mt-6 mb-3">$1</h3>') // H3: ### text
+      .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h2>') // H2: ## text
+      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold text-gray-900 mt-8 mb-4">$1</h1>') // H1: # text
+      .replace(/^- (.*$)/gm, '<li class="ml-4">$1</li>') // List items: - text
+      .replace(/(<li.*<\/li>)/g, '<ul class="list-disc list-inside space-y-2 my-4">$1</ul>') // Wrap lists
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>'); // Links: [text](url)
   };
 
   // Enhanced image handling for destinations
@@ -275,16 +303,16 @@ export default function EventDetailClient({ slug }: { slug: string }) {
               <div className="flex items-center gap-2">
                 <span>🔥</span>
             <span>{event.author}</span>
-              </div>
-            )}
           </div>
-
+            )}
+        </div>
+        
           {/* Event Content */}
           {getContent() && (
-            <div 
-              className="prose max-w-none text-gray-700"
+          <div 
+              className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: getContent() }}
-            />
+          />
           )}
         </div>
       </div>
@@ -300,7 +328,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
             {displayDestinations.map((dest: Destination) => (
               <Link 
                 key={dest.id} 
-                href={`/wisata/${dest.id}`}
+                href={`/wisata/${dest.slug}`}
                 className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
               >
                 {/* Destination Image */}
@@ -353,9 +381,6 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                     <button className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors">
                       Detail
                     </button>
-                    <button className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                      <span className="text-white font-bold">+</span>
-                    </button>
                   </div>
                 </div>
               </Link>
@@ -364,114 +389,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
         </div>
       )}
 
-      {/* Debug Info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">Debug Info - Destinasi Terkait:</h3>
-          <div className="text-sm text-yellow-700 space-y-1">
-            <p><strong>Event destinasi:</strong> {JSON.stringify(event.destinasi)}</p>
-            <p><strong>Destinations count:</strong> {destinations?.length || 0}</p>
-            <p><strong>Related destinations:</strong> {related.length}</p>
-            <p><strong>Has related destinations:</strong> {hasRelated ? 'Yes' : 'No'}</p>
-            {destinations && destinations.length > 0 && (
-              <div className="mt-2">
-                <p><strong>Available destination IDs:</strong></p>
-                <ul className="list-disc list-inside ml-4">
-                  {destinations.map(dest => (
-                    <li key={dest.id}>ID {dest.id}: {dest.nama}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {!hasRelated && (
-              <div className="mt-2 p-2 bg-yellow-100 rounded">
-                <p className="font-medium">💡 Cara menampilkan Destinasi Terkait:</p>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Tambah kolom <code>destinasi</code> di spreadsheet Event</li>
-                  <li>Isi dengan ID destinasi dari database Destinations, contoh: <code>1</code>, <code>2</code></li>
-                  <li>Pastikan ID di Event cocok dengan ID di spreadsheet Destinations</li>
-                  <li>Format: <code>1</code> untuk satu destinasi, <code>1, 2</code> untuk multiple destinasi</li>
-                  <li><strong>Tanpa tanda petik</strong> di dalam kolom, hanya angka dipisahkan koma</li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Destinasi Terkait */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-          <span className="mr-2">📍</span>
-          Destinasi Terkait
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayDestinations.map((dest) => (
-            <Link 
-              key={dest.id} 
-              href={`/wisata/${dest.id}`}
-              className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-            >
-              {/* Destination Image */}
-              <div className="relative h-48">
-                {dest.img && dest.img.length > 0 ? (
-                  <Image
-                    src={getImageSrc(Array.isArray(dest.img) ? dest.img[0] : dest.img)}
-                    alt={dest.nama || "Destination Image"}
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/images/brandman-transparant.png';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                    <div className="text-white text-center">
-                      <div className="text-4xl mb-2">🏔️</div>
-                      <div className="text-sm font-medium">No Image</div>
-                    </div>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              </div>
-              
-              {/* Destination Info */}
-              <div className="p-4 border-t border-gray-100">
-                {/* Title and Rating */}
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-blue-600 flex-1 mr-2">
-                    {dest.nama || "Destination Name"}
-                  </h3>
-                  <span className="text-green-500 text-sm font-medium flex-shrink-0">
-                    {dest.rating || 0}★
-                  </span>
-                </div>
-                
-                {/* Location and Category */}
-                <p className="text-gray-600 text-sm mb-3">
-                  {dest.lokasi || "Location"} · {dest.kategori || "Category"}
-                </p>
-                
-                {/* Price */}
-                <p className="text-green-600 font-semibold text-lg mb-4">
-                  Rp {dest.harga?.toLocaleString() || "0"}
-                </p>
-                
-                {/* Action Buttons */}
-                <div className="flex justify-between items-center">
-                  <button className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-colors">
-                    Detail
-                  </button>
-                  <button className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                    <span className="text-white font-bold">+</span>
-                  </button>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      
     </div>
   );
 } 
