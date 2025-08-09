@@ -4,7 +4,7 @@ import { useDestinations } from "../hooks/useDestinations";
 import LoadingSkeleton from "./LoadingSkeleton";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import type { SyntheticEvent } from "react";
 import type { Destination } from "../types";
 
@@ -12,17 +12,15 @@ export default function EventDetailClient({ slug }: { slug: string }) {
   const { event, loading, error } = useEventBySlug(slug);
   const { destinations } = useDestinations();
 
-  // Increment totalPembaca once on mount when event is available
-  // and id exists
-  if (event && (event as any).id) {
-    // Fire and forget; avoid blocking render
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      import('../services/api').then(({ eventsApiService }) => {
-        eventsApiService.incrementEventReader(String((event as any).id));
-      });
-    } catch {}
-  }
+  // Increment totalPembaca once when event.id is available
+  useEffect(() => {
+    const eventId = (event as any)?.id ? String((event as any).id) : '';
+    if (!eventId) return;
+    console.log('[Reader] Incrementing totalPembaca for event id:', eventId);
+    import('../services/api').then(({ eventsApiService }) => {
+      eventsApiService.incrementEventReader(eventId);
+    }).catch(() => {});
+  }, [Boolean((event as any)?.id)]);
 
   // Find destinasi source from multiple possible keys (destinasiIds, destinasi, Destinasi)
   const rawDestinasiSource = useMemo(() => {

@@ -21,7 +21,7 @@ export default function Home() {
     let isMounted = true;
     const fetchDestinations = async () => {
       try {
-        const base = process.env.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL || process.env.GEMITRA_MAIN_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec";
+        const base = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec";
         const res = await fetch(`${base}?endpoint=destinations`);
         const data = await res.json();
         const parsed = data.data.map((d: any) => ({

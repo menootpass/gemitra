@@ -2,10 +2,8 @@
 
 // URL utama dari environment variables (server/client aware)
 function getMainScriptUrl(): string {
-  const server = (process as any).env?.GEMITRA_MAIN_APP_SCRIPT_URL;
-  const client = (process as any).env?.NEXT_PUBLIC_GEMITRA_MAIN_APP_SCRIPT_URL;
-  const isBrowser = typeof window !== 'undefined';
-  return (isBrowser ? (client || server) : (server || client))
+  const url = (process as any).env?.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
+  return url
     || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
 }
 
@@ -180,11 +178,10 @@ class EventsApiService {
   }
 
   async incrementEventReader(eventId: string): Promise<void> {
-    const mainUrl = getMainScriptUrl();
-    await fetch(mainUrl, {
+    await fetch('/api/events/increment-reader', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'incrementReader', eventId })
+      body: JSON.stringify({ id: eventId })
     }).catch(() => {});
   }
 }
