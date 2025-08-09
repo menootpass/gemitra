@@ -2,9 +2,8 @@
 
 // URL utama dari environment variables (server/client aware)
 function getMainScriptUrl(): string {
-  const url = (process as any).env?.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
-  return url
-    || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
+  const url = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
+  return url || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
 }
 
 // Fungsi helper untuk menambahkan parameter endpoint ke URL utama
