@@ -70,6 +70,8 @@ export default function SidebarCart({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Min booking datetime: now + 3 days
   const now = new Date();
@@ -406,6 +408,118 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
       </div>
 
       <footer className="p-6 bg-gray-50 border-t mt-auto">
+        {/* Syarat dan ketentuan */}
+        <div className="mb-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-1 w-4 h-4 text-[#16A86E] bg-white border-2 border-[#16A86E] rounded focus:ring-[#16A86E] focus:ring-2"
+            />
+            <span className="text-sm text-gray-700 leading-relaxed">
+              Saya telah membaca dan setuju terhadap{" "}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTermsModal(true);
+                }}
+                className="text-[#16A86E] underline hover:text-[#213DFF] font-medium"
+              >
+                Syarat dan ketentuan pembelian tiket
+              </button>
+            </span>
+          </label>
+          {!termsAccepted && (
+            <p className="text-xs text-red-500 mt-2 ml-7">
+              Anda harus menyetujui syarat dan ketentuan untuk melanjutkan
+            </p>
+          )}
+        </div>
+
+        {/* Terms and Conditions Modal */}
+        {showTermsModal && (
+          <div className="fixed inset-0 bg-opacity-100 flex items-center justify-center z-50 p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-[#213DFF]">Syarat dan Ketentuan Pembelian Tiket</h3>
+                  <button
+                    onClick={() => setShowTermsModal(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4 text-sm text-gray-700 leading-relaxed">
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">1. Ketentuan Umum</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Pembelian tiket melalui Gemitra mengikat pelanggan untuk mematuhi semua syarat dan ketentuan yang berlaku.</li>
+                    <li>Gemitra berhak mengubah syarat dan ketentuan tanpa pemberitahuan terlebih dahulu.</li>
+                    <li>Dengan melakukan pembelian, pelanggan menyetujui semua ketentuan yang berlaku.</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">2. Ketentuan Pembayaran</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Pembayaran dilakukan melalui transfer bank atau metode pembayaran yang disediakan.</li>
+                    <li>Konfirmasi pembayaran harus dilakukan maksimal 24 jam setelah pemesanan.</li>
+                    <li>Pemesanan akan dibatalkan otomatis jika pembayaran tidak dikonfirmasi dalam waktu yang ditentukan.</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">3. Ketentuan Pembatalan</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Pembatalan dapat dilakukan maksimal 48 jam sebelum tanggal keberangkatan.</li>
+                    <li>Biaya pembatalan sebesar 25% dari total biaya pemesanan.</li>
+                    <li>Pembatalan kurang dari 48 jam tidak dapat dikembalikan.</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">4. Ketentuan Perjalanan</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Pelanggan wajib membawa identitas asli (KTP/SIM/Paspor).</li>
+                    <li>Keberangkatan tepat waktu sesuai jadwal yang telah ditentukan.</li>
+                    <li>Gemitra tidak bertanggung jawab atas keterlambatan akibat faktor cuaca atau bencana alam.</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">5. Ketentuan Kendaraan</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Kapasitas kendaraan sesuai dengan paket yang dipilih.</li>
+                    <li>Dilarang membawa barang berbahaya atau melanggar hukum.</li>
+                    <li>Merokok dan konsumsi alkohol dilarang di dalam kendaraan.</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold text-[#16A86E] mb-2">6. Tanggung Jawab</h4>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Gemitra bertanggung jawab atas keselamatan perjalanan sesuai standar keselamatan yang berlaku.</li>
+                    <li>Pelanggan bertanggung jawab atas barang bawaan dan dokumen pribadi.</li>
+                    <li>Gemitra tidak bertanggung jawab atas kehilangan barang berharga yang tidak disimpan dengan aman.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="p-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="w-full bg-[#16A86E] text-white font-bold py-3 rounded-xl hover:bg-[#213DFF] transition"
+                >
+                  Saya Mengerti
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Cost Breakdown */}
         <div className="mb-4 space-y-2">
           {cart.length > 0 && destinationTotal > 0 && (
@@ -428,7 +542,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
         {!whatsappUrl ? (
           <button
             onClick={handlePesan}
-            disabled={isSubmitting || cart.length === 0 || !nama || !tanggalBooking || !waktuBooking}
+            disabled={isSubmitting || cart.length === 0 || !nama || !tanggalBooking || !waktuBooking || !termsAccepted}
             className="w-full bg-[#16A86E] text-white font-bold py-3 rounded-xl shadow-lg hover:bg-[#213DFF] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
