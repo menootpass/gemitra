@@ -82,8 +82,8 @@ export default function SidebarCart({
   const minBookingTime = formatTime(minDateTime);
   const isOnMinDate = tanggalBooking === minBookingDate;
   
-  // Calculate destination prices
-  const destinationTotal = cart.reduce((sum, item) => sum + (item.harga || 0), 0);
+  // Calculate destination prices (price × number of passengers)
+  const destinationTotal = cart.reduce((sum, item) => sum + ((item.harga || 0) * jumlahPenumpang), 0);
   
   // Filter cars based on passenger capacity
   const availableCars = packageOptions.filter(car => car.maxPassengers >= jumlahPenumpang);

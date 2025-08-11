@@ -388,7 +388,7 @@ export default function WisataList() {
                       <span className="text-[#16A86E] font-bold text-lg">
                         Rp {item.harga.toLocaleString("id-ID")}
                       </span>
-                      {/* <span className="text-gray-500 text-sm">per destinasi</span> */}
+                      <span className="text-gray-500 text-sm">per person</span>
                     </div>
                   )}
                   <div className="flex gap-2 mt-2">
@@ -459,4 +459,4 @@ export default function WisataList() {
       />
     </div>
   );
-} 
+}
