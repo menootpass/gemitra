@@ -9,27 +9,83 @@ import Image from "next/image";
 
 const packageOptions = [
   {
-    key: "Mobil Brio",
-    label: "Mobil Brio",
-    harga: 920000,
+    key: "Brio",
+    label: "Brio",
+    harga: 747500,
     fasilitas: ["4 penumpang", "AC", "Driver"],
     maxPassengers: 4,
     image: "/images/mobilio.png",
   },
   {
-    key: "Mobil Innova Reborn",
+    key: "Mobilio",
+    label: "Mobilio",
+    harga: 747500,
+    fasilitas: ["4 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 4,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Innova Reborn",
     label: "Mobil Innova Reborn",
-    harga: 1320000,
-    fasilitas: ["6 penumpang", "AC", "Driver", "Lebih nyaman"],
-    maxPassengers: 6,
+    harga: 1035000,
+    fasilitas: ["7 penumpang", "AC", "Driver", "Lebih nyaman"],
+    maxPassengers: 7,
     image: "/images/innova.png",
   },
   {
     key: "HIACE",
     label: "HIACE",
-    harga: 1720000,
-    fasilitas: ["11 penumpang", "AC", "Driver", "Super nyaman"],
-    maxPassengers: 11,
+    harga: 1380000,
+    fasilitas: ["15 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 15,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Alphard",
+    label: "Alphard",
+    harga: 3795000,
+    fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 6,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Pajero",
+    label: "Pajero",
+    harga: 1725000,
+    fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 6,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Fortuner",
+    label: "Fortuner",
+    harga: 1610000,
+    fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 6,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Avanza",
+    label: "Avanza",
+    harga: 805000,
+    fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 6,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Elf Lonng",
+    label: "Elf Long",
+    harga: 1380000,
+    fasilitas: ["15 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 15,
+    image: "/images/hiace.png",
+  },
+  {
+    key: "Bus Medium & Long",
+    label: "Bus Medium & Big Bus",
+    harga: 2070000,
+    fasilitas: ["20 penumpang", "AC", "Driver", "Super nyaman"],
+    maxPassengers: 20,
     image: "/images/hiace.png",
   },
 ];
@@ -149,7 +205,7 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
 
       // Encode message for WhatsApp URL
       const encodedMessage = encodeURIComponent(whatsappMessage);
-      const whatsappUrl = `https://wa.me/6289606883082?text=${encodedMessage}`;
+      const whatsappUrl = `https://wa.me/6285701834668?text=${encodedMessage}`;
       
       // Set success message
       setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Silakan klik tombol WhatsApp di bawah.`);

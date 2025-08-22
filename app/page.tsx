@@ -9,6 +9,11 @@ import DestinationDetail from "./components/DestinationDetail";
 import LoadingSkeleton from "./components/LoadingSkeleton";
 import { Destination } from "./types";
 import FeedbackForm from "./components/FeedbackForm";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { MapPin, Star, MessageCircle, ArrowRight, Camera, Compass } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -61,10 +66,21 @@ export default function Home() {
     setSelectedDestination(destination);
   }
 
+  const whatsappMessage = `Halo! Saya ingin bertanya seputar Gemitra ini`;
+
+      // Encode message for WhatsApp URL
+      const encodedMessage = encodeURIComponent(whatsappMessage);
+      const whatsappUrl = `https://wa.me/6285701834668?text=${encodedMessage}`;
+
+      const handleWhatsapp = () => {
+        window.open(whatsappUrl, '_blank');
+      }
+
   return (
+    
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col items-center font-sans">
-      {/* Header */}
-      <header className="w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center py-6 px-4 sm:px-6 md:px-16 rounded-3xl mt-4 mb-2 gap-4 sm:gap-0">
+    {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center py-6 px-4 sm:px-6 md:px-16 rounded-3xl mt-4 mb-2 gap-4 sm:gap-0">
         <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
           <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={120} height={44} className="block" />
         </div>
@@ -98,7 +114,7 @@ export default function Home() {
             >
               Jelajahi Sekarang
             </button>
-            <button className="bg-white text-[#213DFF] font-bold px-6 py-2 rounded-full shadow-lg border-2 border-[#213DFF] hover:bg-[#213DFF] hover:text-white hover:glow-blue transition text-base sm:text-lg w-full sm:w-auto">Hubungi Kami</button>
+            <button onClick={handleWhatsapp} className="bg-white text-[#213DFF] font-bold px-6 py-2 rounded-full shadow-lg border-2 border-[#213DFF] hover:bg-[#213DFF] hover:text-white hover:glow-blue transition text-base sm:text-lg w-full sm:w-auto">Hubungi Kami</button>
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center relative w-full mt-8 md:mt-0">
