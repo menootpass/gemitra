@@ -68,8 +68,8 @@ async function getInvoiceData(kode: string): Promise<InvoiceData | null> {
 }
 
 // --- Komponen Utama Halaman Invoice ---
-export default async function InvoicePage({ params }: { params: { kode: string } }) {
-  const { kode } = params;
+export default async function InvoicePage({ params }: { params: Promise<{ kode: string }> }) {
+  const { kode } = await params;
   console.log(`🎯 Loading invoice for kode: ${kode}`);
   
   const invoice = await getInvoiceData(kode);
@@ -88,7 +88,7 @@ export default async function InvoicePage({ params }: { params: { kode: string }
           <div className="text-center p-10">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-bold text-red-600">Invoice Tidak Ditemukan</h2>
-            <p className="text-gray-500 mt-2">Kode invoice '{kode}' tidak valid atau data tidak ada.</p>
+            <p className="text-gray-500 mt-2">Kode invoice &apos;{kode}&apos; tidak valid atau data tidak ada.</p>
             <div className="text-sm text-gray-400 mt-4">
               <p>Debug Info:</p>
               <ul className="list-disc list-inside mt-2 text-left">
@@ -110,50 +110,52 @@ export default async function InvoicePage({ params }: { params: { kode: string }
     );
   }
 
-  console.log(`✅ Invoice loaded successfully:`, invoice);
-
   // Mapping data dari database ke format yang diinginkan
   const invoiceData = {
-    orderNumber: invoice.kode, // kode_invoice
-    date: `${invoice.tanggal_berangkat} ${invoice.waktu_berangkat}`, // tanggal_berangkat + waktu_berangkat
+    orderNumber: invoice.kode,
+    date: `${invoice.tanggal_berangkat} ${invoice.waktu_berangkat}`,
     cashier: "Online Booking",
-    customerName: invoice.nama, // nama
+    customerName: invoice.nama,
     items: [
-      { 
-        name: `Paket Wisata ${invoice.destinasi}`, 
-        description: `${invoice.penumpang} Pax`, 
-        price: invoice.total 
+      {
+        name: `Paket Wisata ${invoice.destinasi}`,
+        description: `${invoice.penumpang} Pax`,
+        price: invoice.total
       },
-      { 
-        name: `Sewa Kendaraan ${invoice.kendaraan}`, 
-        description: `1 Unit`, 
-        price: 0 // Tidak ada data biaya kendaraan terpisah
+      {
+        name: `Sewa Kendaraan ${invoice.kendaraan}`,
+        description: `1 Unit`,
+        price: 0
       }
     ],
-    subtotal: invoice.total, // total
-    discount: 0, // discount = 0
-    total: invoice.total, // total
+    subtotal: invoice.total,
+    discount: 0,
+    total: invoice.total,
     paymentMethod: "QRIS / Transfer",
-    amountPaid: invoice.total, // amountPaid = total
-    change: 0, // change = 0
-  };
+    amountPaid: invoice.total,
+    change: 0,
+  } as const;
 
   return (
     <div className="bg-gray-100 p-4 sm:p-8 font-sans min-h-screen">
-      {/* Container Invoice */}
       <div className="max-w-sm mx-auto bg-white rounded-xl shadow-lg p-6">
-        
         {/* Header */}
-        <header className="text-center mb-6">
+        <header className="text-center mb-4">
           <Image 
-            className='mx-auto' 
+            src="/svg/gemitra-logo.svg" 
+            alt="Gemitra Logo" 
+            width={60} 
+            height={60} 
+            className="mx-auto"
+          />
+          <Image 
             src="/svg/gemitra-text.svg" 
             alt="Gemitra" 
             width={100} 
             height={100} 
           />
           <h1 className="text-xl font-bold text-gray-800">e-Receipt</h1>
-          <p className="text-sm text-gray-600 mt-1">Gemitra Tour & Travel</p>
+          <p className="text-sm text-gray-600 mt-1">Gemitra Tour &amp; Travel</p>
           <p className="text-xs text-gray-500">gemitra.vercel.app</p>
           <p className="text-xs text-gray-500">+62 857-0183-4668</p>
         </header>
@@ -193,7 +195,7 @@ export default async function InvoicePage({ params }: { params: { kode: string }
                   <p className="text-xs text-gray-500">{item.description}</p>
                 </div>
                 <div className="text-right font-medium text-gray-800">
-                  {item.price > 0 ? `Rp ${formatCurrency(item.price)}` : 'Included'}
+                  {item.price > 0 ? `Rp ${new Intl.NumberFormat('id-ID').format(item.price)}` : 'Included'}
                 </div>
               </div>
             ))}
@@ -206,15 +208,15 @@ export default async function InvoicePage({ params }: { params: { kode: string }
         <section className="text-sm space-y-2">
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
-            <span>Rp {formatCurrency(invoiceData.subtotal)}</span>
+            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.subtotal)}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Diskon Promo</span>
-            <span>- {formatCurrency(invoiceData.discount)}</span>
+            <span>- {new Intl.NumberFormat('id-ID').format(invoiceData.discount)}</span>
           </div>
           <div className="flex justify-between text-lg font-bold text-gray-900 mt-2 pt-2 border-t border-gray-200">
             <span>TOTAL</span>
-            <span>Rp {formatCurrency(invoiceData.total)}</span>
+            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.total)}</span>
           </div>
         </section>
 
@@ -224,11 +226,11 @@ export default async function InvoicePage({ params }: { params: { kode: string }
         <section className="text-sm space-y-2">
           <div className="flex justify-between font-semibold text-gray-800">
             <span>{invoiceData.paymentMethod}</span>
-            <span>Rp {formatCurrency(invoiceData.amountPaid)}</span>
+            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.amountPaid)}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Kembalian</span>
-            <span>Rp {formatCurrency(invoiceData.change)}</span>
+            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.change)}</span>
           </div>
         </section>
 
@@ -260,7 +262,7 @@ Detail Pemesanan:
 👥 Jumlah Penumpang: ${invoiceData.items[0]?.description || 'Pax'}
 🚗 Kendaraan: ${invoiceData.items[1]?.name || 'Sewa Kendaraan'}
 📅 Tanggal: ${invoiceData.date}
-💰 Total: Rp ${formatCurrency(invoiceData.total)}
+💰 Total: Rp ${new Intl.NumberFormat('id-ID').format(invoiceData.total)}
 
 Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`)}`}
             target="_blank"
@@ -295,10 +297,12 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`)}`}
 
         {/* Footer */}
         <footer className="text-center mt-8">
-          <img 
+          <Image 
             src="https://placehold.co/150x150/png?text=QR+Code" 
             alt="QR Code" 
             className="mx-auto mb-4 rounded-lg" 
+            width={200}
+            height={200}
           />
           <p className="text-sm font-semibold text-gray-800">Terima Kasih!</p>
           <p className="text-xs text-gray-500 mt-1">Sampai jumpa di petualangan berikutnya.</p>

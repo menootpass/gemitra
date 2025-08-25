@@ -45,7 +45,7 @@ export default function DebugPage() {
               <li>Pastikan file <code className="bg-yellow-100 px-2 py-1 rounded">.env.local</code> ada di root project (bukan di folder app)</li>
               <li>Pastikan tidak ada spasi di sekitar tanda <code className="bg-yellow-100 px-2 py-1 rounded">=</code></li>
               <li>Pastikan Google Apps Script sudah di-deploy sebagai web app</li>
-              <li>Pastikan permission script set ke "Anyone"</li>
+              <li>Pastikan permission script set ke &quot;Anyone&quot;</li>
             </ul>
           </div>
         </div>

@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'lh6.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
       }
     ],
   },

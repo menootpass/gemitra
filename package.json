@@ -15,7 +15,7 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.539.0",
-    "next": "latest",
+    "next": "^15.5.1-canary.7",
     "next-intl": "^4.3.4",
     "phosphor-react": "^1.4.1",
     "react": "^19.0.0",

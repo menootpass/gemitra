@@ -441,7 +441,7 @@ export default function EventListPage() {
           {/* Results Count and Active Filters */}
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <p className="text-gray-600">
+            <p className="text-gray-600">
                 Menampilkan {sortedEvents.length} dari {events.length} event
                 {sortBy !== 'newest' && (
                   <span className="ml-2 text-sm text-[#16A86E] font-medium">
@@ -459,7 +459,7 @@ export default function EventListPage() {
                   <span className="text-sm text-gray-500">Filter Aktif:</span>
                   {searchTerm && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                      🔍 "{searchTerm}"
+                      🔍 &ldquo;{searchTerm}&rdquo;
                       <button
                         onClick={() => setSearchTerm('')}
                         className="ml-1 text-blue-600 hover:text-blue-800"
@@ -525,42 +525,42 @@ export default function EventListPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedEvents.slice(0, visibleCount).map((event) => (
-                  <Link key={event.id} href={`/event/${event.slug}`}>
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                      {/* Event Image */}
-                      <div className="relative w-full h-48">
-                        <Image
-                          src={getImageSrc(event)}
-                          alt={event.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                <Link key={event.id} href={`/event/${event.slug}`}>
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    {/* Event Image */}
+                    <div className="relative w-full h-48">
+                      <Image
+                        src={getImageSrc(event)}
+                        alt={event.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           priority={false}
                           placeholder='empty'
                           loading="lazy"
-                        />
-                        <div className="absolute top-3 left-3">
-                          <span className="bg-[#16A86E] text-white text-xs font-bold px-2 py-1 rounded-full">
-                            {event.category}
-                          </span>
-                        </div>
+                      />
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-[#16A86E] text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {event.category}
+                        </span>
                       </div>
+                    </div>
 
-                      {/* Event Content */}
-                      <div className="p-6">
-                        <h3 className="text-lg font-bold text-[#213DFF] mb-2 line-clamp-2">
-                          {event.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                          {event.description}
-                        </p>
+                    {/* Event Content */}
+                    <div className="p-6">
+                      <h3 className="text-lg font-bold text-[#213DFF] mb-2 line-clamp-2">
+                        {event.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                        {event.description}
+                      </p>
 
-                        {/* Event Metadata */}
-                        <div className="space-y-2 text-xs text-gray-500">
-                          <div className="flex items-center gap-2">
-                            <span>📅</span>
+                      {/* Event Metadata */}
+                      <div className="space-y-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <span>📅</span>
                             <span className={getDateStatus(event.date).color}>
                               {formatDate(event.date)}
                             </span>
@@ -572,28 +572,28 @@ export default function EventListPage() {
                             }`}>
                               {getDateStatus(event.date).label}
                             </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span>📍</span>
-                            <span className="truncate">{event.location}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span>👥</span>
-                            <span>{event.totalPembaca.toLocaleString()} pembaca</span>
-                          </div>
                         </div>
-
-                        {/* Read More Button */}
-                        <div className="mt-4">
-                          <span className="text-[#16A86E] font-semibold text-sm hover:text-[#213DFF] transition">
-                            Baca Selengkapnya →
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <span>📍</span>
+                          <span className="truncate">{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>👥</span>
+                          <span>{event.totalPembaca.toLocaleString()} pembaca</span>
                         </div>
                       </div>
+
+                      {/* Read More Button */}
+                      <div className="mt-4">
+                        <span className="text-[#16A86E] font-semibold text-sm hover:text-[#213DFF] transition">
+                          Baca Selengkapnya →
+                        </span>
+                      </div>
                     </div>
-                  </Link>
-                ))}
-              </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
               
               {/* Infinite Scroll Sentinel */}
               {visibleCount < sortedEvents.length && (
