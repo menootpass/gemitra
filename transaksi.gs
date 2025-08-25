@@ -8,12 +8,18 @@ const TRANSAKSI_SHEET_NAME = 'Transaksi';
 // =================== ENDPOINT UTAMA ===================
 
 /**
- * Menangani request GET untuk membaca semua data transaksi.
+ * Menangani request GET untuk membaca data transaksi.
  * @param {object} e - Event parameter dari request.
  * @returns {ContentService.TextOutput} - Response JSON.
  */
 function doGet(e) {
   try {
+    // Cek apakah ada parameter action
+    if (e.parameter.action === 'get-transaction') {
+      return getTransactionByKode(e.parameter.kode);
+    }
+    
+    // Default: ambil semua transaksi
     const sheet = SpreadsheetApp.openById(TRANSAKSI_SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     const headers = dataRange[0];
@@ -32,6 +38,66 @@ function doGet(e) {
 
   } catch (error) {
     const errorResponse = { success: false, error: error.toString() };
+    return createJsonResponse(errorResponse, 500);
+  }
+}
+
+/**
+ * Mengambil data transaksi berdasarkan kode.
+ * @param {string} kode - Kode transaksi yang dicari.
+ * @returns {ContentService.TextOutput} - Response JSON.
+ */
+function getTransactionByKode(kode) {
+  try {
+    if (!kode) {
+      return createJsonResponse({ 
+        success: false, 
+        message: 'Parameter kode diperlukan' 
+      }, 400);
+    }
+    
+    const sheet = SpreadsheetApp.openById(TRANSAKSI_SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange[0];
+    const rows = dataRange.slice(1);
+    
+    // Cari transaksi berdasarkan kode
+    let foundTransaction = null;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const kodeIndex = headers.indexOf('kode');
+      
+      if (kodeIndex !== -1 && row[kodeIndex] === kode) {
+        // Buat objek transaksi
+        foundTransaction = {};
+        headers.forEach((header, j) => {
+          foundTransaction[header] = row[j];
+        });
+        break;
+      }
+    }
+    
+    if (foundTransaction) {
+      const response = { 
+        success: true, 
+        data: foundTransaction,
+        message: 'Transaksi ditemukan'
+      };
+      return createJsonResponse(response);
+    } else {
+      const response = { 
+        success: false, 
+        message: `Transaksi dengan kode '${kode}' tidak ditemukan` 
+      };
+      return createJsonResponse(response, 404);
+    }
+    
+  } catch (error) {
+    const errorResponse = { 
+      success: false, 
+      error: error.toString(),
+      message: 'Terjadi kesalahan saat mencari transaksi'
+    };
     return createJsonResponse(errorResponse, 500);
   }
 }

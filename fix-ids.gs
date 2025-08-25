@@ -22,6 +22,12 @@ const VISITORS_SHEET_NAME = 'Visitors';
  * Contoh: ?endpoint=destinations, ?endpoint=events, ?endpoint=transactions, ?endpoint=feedback
  */
 function doGet(e) {
+  var action = e.parameter.action;
+
+  if (action == 'get-transaction') {
+    var kode = e.parameter.kode;
+    return getTransactionByCode(kode);
+  }
   // TAMBAHKAN INI: Cek 'e' untuk menghindari error saat dijalankan manual
   if (!e || !e.parameter) {
     // Berikan response default jika dijalankan dari editor
@@ -1452,6 +1458,81 @@ function incrementDestinationVisitors(destinasiNames) {
   });
 }
 
+/**
+ * Mengambil data transaksi berdasarkan kode.
+ * @param {string} kode - Kode transaksi yang dicari.
+ * @returns {ContentService.TextOutput} - Response JSON.
+ */
+function getTransactionByCode(kode) {
+  try {
+    if (!kode) {
+      return createJsonResponse({ 
+        success: false, 
+        message: 'Parameter kode diperlukan' 
+      });
+    }
+    
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
+    if (!sheet) {
+      return createJsonResponse({ 
+        success: false, 
+        message: 'Sheet Transaksi tidak ditemukan' 
+      });
+    }
+    
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange[0];
+    const rows = dataRange.slice(1);
+    
+    // Cari transaksi berdasarkan kode
+    let foundTransaction = null;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const kodeIndex = headers.indexOf('kode');
+      
+      if (kodeIndex !== -1 && row[kodeIndex] === kode) {
+        // Buat objek transaksi
+        foundTransaction = {};
+        headers.forEach((header, j) => {
+          foundTransaction[header] = row[j];
+        });
+        break;
+      }
+    }
+    
+    if (foundTransaction) {
+      // Convert data types
+      if (foundTransaction.total) {
+        foundTransaction.total = parseFloat(foundTransaction.total) || 0;
+      }
+      if (foundTransaction.penumpang) {
+        foundTransaction.penumpang = parseInt(foundTransaction.penumpang) || 0;
+      }
+      
+      const response = { 
+        success: true, 
+        data: foundTransaction,
+        message: 'Transaksi ditemukan'
+      };
+      return createJsonResponse(response);
+    } else {
+      const response = { 
+        success: false, 
+        message: `Transaksi dengan kode '${kode}' tidak ditemukan` 
+      };
+      return createJsonResponse(response);
+    }
+    
+  } catch (error) {
+    const errorResponse = { 
+      success: false, 
+      error: error.toString(),
+      message: 'Terjadi kesalahan saat mencari transaksi'
+    };
+    return createJsonResponse(errorResponse);
+  }
+}
+
 
 // =================================================================
 // ============== FUNGSI-FUNGSI UNTUK FEEDBACK =====================
@@ -1492,7 +1573,7 @@ function createFeedback(data) {
 // Fungsi untuk mengupdate feedback
 function updateFeedback(data) {
   try {
-    const sheet = SpreadsheetApp.openById(FEEDBACK_SPREADSHEET_ID).getSheetByName(FEEDBACK_SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(FEEDBACK_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     
     // Cari row berdasarkan ID
@@ -1541,7 +1622,7 @@ function updateFeedback(data) {
 // Fungsi untuk menghapus feedback
 function deleteFeedback(data) {
   try {
-    const sheet = SpreadsheetApp.openById(FEEDBACK_SPREADSHEET_ID).getSheetByName(FEEDBACK_SHEET_NAME);
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(FEEDBACK_SHEET_NAME);
     const dataRange = sheet.getDataRange().getValues();
     
     // Cari row berdasarkan ID

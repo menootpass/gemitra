@@ -5,6 +5,7 @@ import { CartItem } from "../types";
 import { apiService } from "../services/api";
 import { mutate } from "swr";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 
 const packageOptions = [
@@ -122,6 +123,7 @@ export default function SidebarCart({
   onCartUpdate,
 }: SidebarCartProps) {
 
+  const router = useRouter();
   const [nama, setNama] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -187,28 +189,10 @@ export default function SidebarCart({
       // Single API call - transaction data includes destination names for visitor increment
       const result = await apiService.createTransaction(transactionData);
       
-      // Generate WhatsApp message
-      const whatsappMessage = `Halo! Saya ingin memesan paket wisata dengan detail berikut:
-
-*Detail Pemesanan:*
-👤 Nama: ${nama}
-🗺️ Destinasi: ${cart.map(item => item.nama).join(', ')}
-👥 Jumlah Penumpang: ${jumlahPenumpang} orang
-🚗 Kendaraan: ${kendaraan}
-📅 Tanggal Berangkat: ${tanggalBooking}
-⏰ Waktu: ${waktuBooking}
-💰 Total Biaya: Rp ${totalBiaya.toLocaleString("id-ID")}
-
-*Kode Invoice: ${result.kode}*
-
-Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
-
-      // Encode message for WhatsApp URL
-      const encodedMessage = encodeURIComponent(whatsappMessage);
-      const whatsappUrl = `https://wa.me/6285701834668?text=${encodedMessage}`;
-      
       // Set success message
-      setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Silakan klik tombol WhatsApp di bawah.`);
+      setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Anda akan diarahkan ke halaman invoice.`);
+      
+      // Clear form and cart
       setNama('');
       onCartUpdate([]);
       
@@ -220,8 +204,14 @@ Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`;
       mutate('/api/destinations');
       mutate('/api/destinations?limit=6');
       
-      // Store WhatsApp URL in state for the anchor link
-      setWhatsappUrl(whatsappUrl);
+      // Close sidebar
+      onClose();
+      
+      // Redirect to invoice page after a short delay
+      setTimeout(() => {
+        router.push(`/invoice/${result.kode}`);
+      }, 1500);
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
       setSubmitMessage(`Gagal: ${errorMessage}`);
