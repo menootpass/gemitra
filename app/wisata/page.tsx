@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import SidebarCart from "../components/SidebarCart";
 import GemitraMap from "../components/GemitraMap";
 import DestinationDetail from "../components/DestinationDetail";
@@ -71,6 +71,8 @@ export default function WisataList() {
   // Data state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [visibleCount, setVisibleCount] = useState(9);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Use destinations hook with SWR
   const { 
@@ -277,14 +279,45 @@ export default function WisataList() {
     setSelectedDestination(destination);
   }
 
-  // Ganti data/filtering dari custom hook ke state polling
-  const filteredData = destinations.filter(item => {
-    const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.lokasi.toLowerCase().includes(searchTerm.toLowerCase());
-    const mappedCategory = mapToNewCategory(item);
-    const matchesCategory = !selectedCategory || mappedCategory === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Ganti data/filtering dari custom hook ke state polling (memoized)
+  const filteredData = useMemo(() => {
+    return destinations.filter(item => {
+      const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           item.lokasi.toLowerCase().includes(searchTerm.toLowerCase());
+      const mappedCategory = mapToNewCategory(item);
+      const matchesCategory = !selectedCategory || mappedCategory === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [destinations, searchTerm, selectedCategory]);
+
+  // Infinite scroll handler
+  const loadMore = useCallback(() => {
+    if (visibleCount < filteredData.length && !isLoadingMore) {
+      setIsLoadingMore(true);
+      setTimeout(() => {
+        setVisibleCount(prev => Math.min(prev + 6, filteredData.length));
+        setIsLoadingMore(false);
+      }, 250);
+    }
+  }, [visibleCount, filteredData.length, isLoadingMore]);
+
+  // Intersection Observer sentinel
+  useEffect(() => {
+    const sentinel = document.getElementById('wisata-scroll-sentinel');
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        loadMore();
+      }
+    }, { threshold: 0.1 });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  // Reset visible count saat filter berubah
+  useEffect(() => {
+    setVisibleCount(9);
+  }, [searchTerm, selectedCategory]);
   const categories = NEW_CATEGORIES as readonly string[];
 
   if (!hydrated || loading) return (
@@ -366,15 +399,16 @@ export default function WisataList() {
         )}
 
         {viewMode === "list" ? (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredData.map((item, index) => (
+            {filteredData.slice(0, visibleCount).map((item, index) => (
               <div key={item.id} className="rounded-3xl overflow-hidden shadow-xl bg-glass">
                 <div className="relative w-full h-48">
                   <ImageSlider 
                     images={processImageData(item) || []}
                     alt={item.nama}
                     className="w-full h-full"
-                    priority={index === 0}
+                    priority={index < 1}
                   />
                 </div>
                 <div className="p-6 flex flex-col gap-3">
@@ -410,6 +444,31 @@ export default function WisataList() {
               </div>
             ))}
           </div>
+          {/* Sentinel untuk infinite scroll */}
+          {visibleCount < filteredData.length && (
+            <div id="wisata-scroll-sentinel" className="py-8 text-center">
+              {isLoadingMore ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#16A86E]"></div>
+                  <span className="text-gray-600">Memuat destinasi lainnya...</span>
+                </div>
+              ) : (
+                <button
+                  onClick={loadMore}
+                  className="bg-[#16A86E] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#213DFF] transition-all transform hover:scale-105"
+                >
+                  📄 Muat Lebih Banyak
+                </button>
+              )}
+            </div>
+          )}
+          {visibleCount >= filteredData.length && filteredData.length > 0 && (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">🎉</div>
+              <p className="text-gray-600">Semua destinasi telah ditampilkan</p>
+            </div>
+          )}
+          </>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <GemitraMap
