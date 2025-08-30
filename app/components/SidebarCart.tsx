@@ -15,7 +15,7 @@ const packageOptions = [
     harga: 747500,
     fasilitas: ["4 penumpang", "AC", "Driver"],
     maxPassengers: 4,
-    image: "/images/mobilio.png",
+    image: "/images/brio.jpg",
   },
   {
     key: "Mobilio",
@@ -23,7 +23,7 @@ const packageOptions = [
     harga: 747500,
     fasilitas: ["4 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 4,
-    image: "/images/hiace.png",
+    image: "/images/mobilio.png",
   },
   {
     key: "Innova Reborn",
@@ -47,7 +47,7 @@ const packageOptions = [
     harga: 3795000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 6,
-    image: "/images/hiace.png",
+    image: "/images/alphard.jpg",
   },
   {
     key: "Pajero",
@@ -55,7 +55,7 @@ const packageOptions = [
     harga: 1725000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 6,
-    image: "/images/hiace.png",
+    image: "/images/pajero.jpg",
   },
   {
     key: "Fortuner",
@@ -63,7 +63,7 @@ const packageOptions = [
     harga: 1610000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 6,
-    image: "/images/hiace.png",
+    image: "/images/fortuner.jpg",
   },
   {
     key: "Avanza",
@@ -71,7 +71,7 @@ const packageOptions = [
     harga: 805000,
     fasilitas: ["6 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 6,
-    image: "/images/hiace.png",
+    image: "/images/avanza.jpg",
   },
   {
     key: "Elf Lonng",
@@ -79,7 +79,7 @@ const packageOptions = [
     harga: 1380000,
     fasilitas: ["15 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 15,
-    image: "/images/hiace.png",
+    image: "/images/elfLong.jpg",
   },
   {
     key: "Bus Medium & Long",
@@ -87,7 +87,7 @@ const packageOptions = [
     harga: 2070000,
     fasilitas: ["20 penumpang", "AC", "Driver", "Super nyaman"],
     maxPassengers: 20,
-    image: "/images/hiace.png",
+    image: "/images/busMedLong.jpg",
   },
 ];
 
