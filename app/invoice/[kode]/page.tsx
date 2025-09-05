@@ -17,6 +17,15 @@ type InvoiceData = {
   kode: string;
   waktu_transaksi: string;
   tanggal_transaksi: string;
+  rincian_destinasi: string; // Format: "slug:harga, slug:harga, slug:harga"
+  rincian_mobil: number; // Harga mobil saja
+};
+
+// --- Tipe Data untuk Item Destinasi ---
+type DestinationItem = {
+  slug: string;
+  harga: number;
+  nama: string;
 };
 
 // --- Fungsi untuk Fetch Data dari Google Apps Script ---
@@ -26,21 +35,23 @@ async function getInvoiceData(kode: string): Promise<InvoiceData | null> {
     return null;
   }
 
-  const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
-  if (!SCRIPT_URL) {
-    console.error("❌ Google Apps Script URL is not defined in environment variables.");
-    console.error("❌ NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL tidak ditemukan");
-    return null;
-  }
+  const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || "https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec";
+  console.log("Using SCRIPT_URL:", SCRIPT_URL);
   
   const url = `${SCRIPT_URL}?action=get-transaction&kode=${kode}`;
   console.log(`🔍 Fetching data from: ${url}`);
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(url, {
       method: 'GET',
-      next: { revalidate: 10 } 
+      next: { revalidate: 10 },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
 
     console.log(`📡 Response status: ${response.status} ${response.statusText}`);
 
@@ -62,8 +73,73 @@ async function getInvoiceData(kode: string): Promise<InvoiceData | null> {
       return null;
     }
   } catch (error) {
-    console.error('❌ Failed to fetch invoice data:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('❌ Request timed out after 10 seconds');
+    } else {
+      console.error('❌ Failed to fetch invoice data:', error);
+    }
     return null;
+  }
+}
+
+// --- Fungsi untuk Parse Rincian Destinasi ---
+function parseRincianDestinasi(rincianDestinasi: string): DestinationItem[] {
+  if (!rincianDestinasi) {
+    console.warn('⚠️ Rincian destinasi kosong');
+    return [];
+  }
+
+  try {
+    // Try to parse as JSON first (new format)
+    let destinationPricing: Record<string, string> = {};
+    
+    try {
+      destinationPricing = JSON.parse(rincianDestinasi);
+      console.log('✅ Parsed as JSON format:', destinationPricing);
+    } catch (jsonError) {
+      console.log('⚠️ Not JSON format, trying legacy format');
+      
+      // Fallback to legacy format (slug:harga, slug:harga)
+      const destinations = rincianDestinasi.split(',').map(item => item.trim());
+      
+      destinations.forEach(dest => {
+        const [slug, hargaStr] = dest.split(':').map(part => part.trim());
+        if (slug && hargaStr) {
+          destinationPricing[slug] = hargaStr;
+        }
+      });
+    }
+    
+    const parsedDestinations: DestinationItem[] = [];
+    
+    Object.entries(destinationPricing).forEach(([slug, hargaStr]) => {
+      const harga = parseInt(hargaStr);
+      if (!isNaN(harga)) {
+        // Convert slug ke nama yang lebih readable
+        const nama = slug
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+          .replace(/\(/g, ' (')
+          .replace(/\)/g, ') ');
+        
+        parsedDestinations.push({
+          slug,
+          harga,
+          nama
+        });
+        
+        console.log(`✅ Parsed destinasi: ${nama} (${slug}) - Rp ${harga}`);
+      } else {
+        console.warn(`⚠️ Harga invalid untuk destinasi ${slug}: ${hargaStr}`);
+      }
+    });
+    
+    return parsedDestinations;
+    
+  } catch (error) {
+    console.error('❌ Error parsing rincian destinasi:', error);
+    return [];
   }
 }
 
@@ -110,6 +186,21 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
     );
   }
 
+  // Parse rincian destinasi dari database
+  const destinasiItems = parseRincianDestinasi(invoice.rincian_destinasi || '');
+  
+  // Harga mobil dari database
+  const hargaMobil = invoice.rincian_mobil || 0;
+  
+  // Hitung total harga destinasi
+  const totalHargaDestinasi = destinasiItems.reduce((total, item) => total + item.harga, 0);
+  
+  // Total yang seharusnya
+  const totalSeharusnya = totalHargaDestinasi + hargaMobil;
+  
+  // Diskon = 0 (tidak ada diskon)
+  const diskon = 0;
+
   // Mapping data dari database ke format yang diinginkan
   const invoiceData = {
     orderNumber: invoice.kode,
@@ -117,19 +208,25 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
     cashier: "Online Booking",
     customerName: invoice.nama,
     items: [
-      {
-        name: `Paket Wisata ${invoice.destinasi}`,
-        description: `${invoice.penumpang} Pax`,
-        price: invoice.total
-      },
+      // Item destinasi
+      ...destinasiItems.map(item => ({
+        name: `Paket Wisata ${item.nama}`,
+        description: `1 Pax × Rp ${formatCurrency(item.harga)}`,
+        price: item.harga,
+        unitPrice: item.harga,
+        quantity: 1
+      })),
+      // Item kendaraan
       {
         name: `Sewa Kendaraan ${invoice.kendaraan}`,
-        description: `1 Unit`,
-        price: 0
+        description: `1 Unit × Rp ${formatCurrency(hargaMobil)}`,
+        price: hargaMobil,
+        unitPrice: hargaMobil,
+        quantity: 1
       }
     ],
-    subtotal: invoice.total,
-    discount: 0,
+    subtotal: totalSeharusnya,
+    discount: diskon,
     total: invoice.total,
     paymentMethod: "QRIS / Transfer",
     amountPaid: invoice.total,
@@ -147,12 +244,6 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
             width={60} 
             height={60} 
             className="mx-auto"
-          />
-          <Image 
-            src="/svg/gemitra-text.svg" 
-            alt="Gemitra" 
-            width={100} 
-            height={100} 
           />
           <h1 className="text-xl font-bold text-gray-800">e-Receipt</h1>
           <p className="text-sm text-gray-600 mt-1">Gemitra Tour &amp; Travel</p>
@@ -185,38 +276,92 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
 
         <div className="border-t-2 border-dashed border-gray-300 my-4"></div>
 
-        {/* Daftar Item */}
+        {/* Daftar Item dengan Harga Transparan */}
         <main>
-          <div className="space-y-3 text-sm">
-            {invoiceData.items.map((item, index) => (
-              <div key={index} className="flex">
-                <div className="flex-grow">
-                  <p className="font-semibold text-gray-800">{item.name}</p>
-                  <p className="text-xs text-gray-500">{item.description}</p>
+          <div className="space-y-4 text-sm">
+            {/* Destinasi Items */}
+            {destinasiItems.map((item, index) => (
+              <div key={`dest-${index}`} className="border border-gray-200 rounded-lg p-3">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-grow">
+                    <p className="font-semibold text-gray-800">Paket Wisata {item.nama}</p>
+                    <p className="text-xs text-gray-500">1 Pax × Rp {formatCurrency(item.harga)}</p>
+                  </div>
+                  <div className="text-right font-medium text-gray-800">
+                    Rp {formatCurrency(item.harga)}
+                  </div>
                 </div>
-                <div className="text-right font-medium text-gray-800">
-                  {item.price > 0 ? `Rp ${new Intl.NumberFormat('id-ID').format(item.price)}` : 'Included'}
+                {/* Detail harga per unit */}
+                <div className="bg-gray-50 rounded p-2 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Harga per pax:</span>
+                    <span>Rp {formatCurrency(item.harga)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Jumlah pax:</span>
+                    <span>{invoice.penumpang}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span>Subtotal:</span>
+                    <span>Rp {formatCurrency(item.harga * invoice.penumpang)}</span>
+                  </div>
                 </div>
               </div>
             ))}
+            
+            {/* Kendaraan Item */}
+            <div className="border border-gray-200 rounded-lg p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex-grow">
+                  <p className="font-semibold text-gray-800">Sewa Kendaraan {invoice.kendaraan}</p>
+                  <p className="text-xs text-gray-500">1 Unit × Rp {formatCurrency(hargaMobil)}</p>
+                </div>
+                <div className="text-right font-medium text-gray-800">
+                  Rp {formatCurrency(hargaMobil)}
+                </div>
+              </div>
+              {/* Detail harga per unit */}
+              <div className="bg-gray-50 rounded p-2 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Harga per unit:</span>
+                  <span>Rp {formatCurrency(hargaMobil)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Jumlah unit:</span>
+                  <span>1</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Subtotal:</span>
+                  <span>Rp {formatCurrency(hargaMobil)}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
 
         <div className="border-t-2 border-dashed border-gray-300 my-4"></div>
 
-        {/* Rincian Pembayaran */}
+        {/* Rincian Pembayaran yang Transparan */}
         <section className="text-sm space-y-2">
           <div className="flex justify-between text-gray-600">
-            <span>Subtotal</span>
-            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.subtotal)}</span>
+            <span>Subtotal Destinasi ({destinasiItems.length} item)</span>
+            <span>Rp {formatCurrency(totalHargaDestinasi * invoice.penumpang)}</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>Subtotal Kendaraan</span>
+            <span>Rp {formatCurrency(hargaMobil)}</span>
+          </div>
+          <div className="flex justify-between text-gray-600 font-medium">
+            <span>Total Sebelum Diskon</span>
+            <span>Rp {formatCurrency((totalHargaDestinasi * invoice.penumpang) + hargaMobil)}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Diskon Promo</span>
-            <span>- {new Intl.NumberFormat('id-ID').format(invoiceData.discount)}</span>
+            <span>- Rp {formatCurrency(diskon)}</span>
           </div>
           <div className="flex justify-between text-lg font-bold text-gray-900 mt-2 pt-2 border-t border-gray-200">
-            <span>TOTAL</span>
-            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.total)}</span>
+            <span>TOTAL BAYAR</span>
+            <span>Rp {formatCurrency(invoice.total)}</span>
           </div>
         </section>
 
@@ -226,11 +371,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
         <section className="text-sm space-y-2">
           <div className="flex justify-between font-semibold text-gray-800">
             <span>{invoiceData.paymentMethod}</span>
-            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.amountPaid)}</span>
+            <span>Rp {formatCurrency(invoiceData.amountPaid)}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Kembalian</span>
-            <span>Rp {new Intl.NumberFormat('id-ID').format(invoiceData.change)}</span>
+            <span>Rp {formatCurrency(invoiceData.change)}</span>
           </div>
         </section>
 
@@ -254,15 +399,20 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
         <div className="border-t-2 border-dashed border-gray-300 my-4"></div>
         <section className="text-center mb-6">
           <a
-            href={`https://wa.me/6285701834668?text=${encodeURIComponent(`Halo! Saya ingin konfirmasi pembayaran untuk invoice ${invoiceData.orderNumber}.
+            href={`https://wa.me/6285701834668?text=${encodeURIComponent(`Halo! Saya ingin konfirmasi pembayaran untuk invoice ${invoice.kode}.
 
 Detail Pemesanan:
-👤 Nama: ${invoiceData.customerName}
-🗺️ Destinasi: ${invoiceData.items[0]?.name || 'Paket Wisata'}
-👥 Jumlah Penumpang: ${invoiceData.items[0]?.description || 'Pax'}
-🚗 Kendaraan: ${invoiceData.items[1]?.name || 'Sewa Kendaraan'}
-📅 Tanggal: ${invoiceData.date}
-💰 Total: Rp ${new Intl.NumberFormat('id-ID').format(invoiceData.total)}
+👤 Nama: ${invoice.nama}
+🗺️ Destinasi: ${destinasiItems.map(item => `${item.nama} (Rp ${formatCurrency(item.harga)})`).join(', ')}
+👥 Jumlah Penumpang: ${invoice.penumpang} Pax
+🚗 Kendaraan: ${invoice.kendaraan} (Rp ${formatCurrency(hargaMobil)})
+📅 Tanggal: ${invoice.tanggal_berangkat} ${invoice.waktu_berangkat}
+
+Rincian Harga:
+${destinasiItems.map(item => `• ${item.nama}: Rp ${formatCurrency(item.harga)} × ${invoice.penumpang} = Rp ${formatCurrency(item.harga * invoice.penumpang)}`).join('\n')}
+• Kendaraan: Rp ${formatCurrency(hargaMobil)}
+────────────────────────
+💰 TOTAL: Rp ${formatCurrency(invoice.total)}
 
 Mohon informasi lebih lanjut untuk proses pembayaran. Terima kasih! 🙏`)}`}
             target="_blank"

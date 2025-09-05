@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
       waktu_berangkat, 
       kendaraan, 
       kendaraan_harga, 
-      total 
+      total,
+      cart // New: cart data for detailed pricing
     } = body;
 
     // Validate required fields
@@ -26,6 +27,27 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Create detailed pricing JSON for destinations
+    let rincianDestinasi = "{}";
+    console.log('Cart data received:', cart);
+    if (cart && Array.isArray(cart) && cart.length > 0) {
+      const destinationPricing: Record<string, string> = {};
+      cart.forEach((item: any) => {
+        console.log('Processing cart item:', item);
+        if (item.slug && item.harga) {
+          destinationPricing[item.slug] = item.harga.toString();
+        }
+      });
+      rincianDestinasi = JSON.stringify(destinationPricing);
+      console.log('Generated rincianDestinasi:', rincianDestinasi);
+    } else {
+      console.log('No cart data or empty cart');
+    }
+
+    // Generate unique transaction code
+    const timestamp = new Date();
+    const kode = `TRX${timestamp.getFullYear()}${String(timestamp.getMonth() + 1).padStart(2, '0')}${String(timestamp.getDate()).padStart(2, '0')}${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}${String(timestamp.getSeconds()).padStart(2, '0')}`;
 
     const payload = {
       action: 'createTransaction',
@@ -38,7 +60,13 @@ export async function POST(request: NextRequest) {
       kendaraan,
       kendaraan_harga,
       total,
-      timestamp: new Date().toISOString(),
+      rincian_destinasi: rincianDestinasi,
+      rincian_mobil: kendaraan_harga,
+      status: 'pending',
+      kode,
+      waktu_transaksi: timestamp.toISOString(),
+      tanggal_transaksi: timestamp.toISOString().split('T')[0],
+      timestamp: timestamp.toISOString(),
     };
 
     console.log('Sending payload to Google Apps Script:', payload);
@@ -66,7 +94,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Transaksi berhasil dibuat",
-        kode: data.kode || data.kodeInvoice || `TRX${Date.now()}`,
+        kode: data.kode || kode,
+        data: {
+          nama,
+          destinasi,
+          penumpang,
+          tanggal_berangkat,
+          waktu_berangkat,
+          kendaraan,
+          total,
+          rincian_destinasi: rincianDestinasi,
+          rincian_mobil: kendaraan_harga,
+          status: 'pending',
+          kode: data.kode || kode,
+          waktu_transaksi: timestamp.toISOString(),
+          tanggal_transaksi: timestamp.toISOString().split('T')[0],
+        }
       });
     } else {
       return NextResponse.json(

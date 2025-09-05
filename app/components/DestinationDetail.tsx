@@ -114,8 +114,16 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
         </div>
       <div className="p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-[#213DFF]">{destination.nama}</h3>
-          <span className="text-[#16A86E] font-bold">{destination.rating}★</span>
+          <h3 className="text-lg font-bold text-[#213DFF] flex-1">{destination.nama}</h3>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/wisata/${destination.slug}`}
+              className="bg-[#16A86E] text-white text-xs px-3 py-1 rounded-md hover:bg-[#213DFF] transition-colors whitespace-nowrap"
+            >
+              Detail
+            </Link>
+            <span className="text-[#16A86E] font-bold">{destination.rating}★</span>
+          </div>
         </div>
         <span className="text-black/60 text-sm">{destination.lokasi} &middot; {destination.kategori}</span>
         {destination.harga && (

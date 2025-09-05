@@ -26,6 +26,7 @@ export interface CartItem {
   id: number;
   nama: string;
   harga?: number; // Added harga field for destination pricing
+  slug?: string; // Added slug field for JSON pricing
 }
 
 export interface LeafletInstance {

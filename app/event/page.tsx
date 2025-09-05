@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEvents } from '../hooks/useEvents';
 import HeaderNavigation from '../components/HeaderNavigation';
+import StickySearchBar from '../components/StickySearchBar';
 
 export default function EventListPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -322,6 +323,15 @@ export default function EventListPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       <HeaderNavigation />
+      <StickySearchBar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        categories={categories}
+        placeholder="🔍 Cari event berdasarkan judul, deskripsi, atau lokasi..."
+        showViewToggle={false}
+      />
       
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

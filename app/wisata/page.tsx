@@ -8,6 +8,7 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import ImageSlider from "../components/ImageSlider";
 import EventsSlider from "../components/EventsSlider";
 import HeaderNavigation from "../components/HeaderNavigation";
+import StickySearchBar from "../components/StickySearchBar";
 import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
 import { useDestinationsSWR } from "../hooks/useDestinationsSWR";
@@ -264,10 +265,10 @@ export default function WisataList() {
     if (hydrated) localStorage.setItem("gemitra_penumpang", jumlahPenumpang.toString());
   }, [jumlahPenumpang, hydrated]);
 
-  function handleAddToCart(id: number, nama: string, harga?: number) {
+  function handleAddToCart(id: number, nama: string, harga?: number, slug?: string) {
     if (cart.find(item => item.id == id)) return;
     if (cart.length >= 3) return;
-    setCart([...cart, { id, nama, harga }]);
+    setCart([...cart, { id, nama, harga, slug }]);
   }
   function handleRemoveFromCart(id: number) {
     setCart(cart.filter(item => item.id !== id));
@@ -330,6 +331,17 @@ export default function WisataList() {
   return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10 pt-24">
       <HeaderNavigation />
+      <StickySearchBar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        categories={[...categories]}
+        placeholder="Cari destinasi..."
+        showViewToggle={true}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
       
       {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
@@ -434,7 +446,7 @@ export default function WisataList() {
                     </Link>
                     <button
                       className="bg-[#213DFF] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#16A86E] transition disabled:opacity-50"
-                      onClick={() => handleAddToCart(item.id, item.nama, item.harga)}
+                      onClick={() => handleAddToCart(item.id, item.nama, item.harga, item.slug)}
                       disabled={cart.length >= 3 || !!cart.find(cartItem => cartItem.id == item.id)}
                     >
                       +

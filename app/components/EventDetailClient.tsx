@@ -3,6 +3,7 @@ import { useEventBySlug } from "../hooks/useEvents";
 import { useDestinations } from "../hooks/useDestinations";
 import LoadingSkeleton from "./LoadingSkeleton";
 import Image from "next/image";
+import { handleImageError } from "../utils/imageUtils";
 import Link from "next/link";
 import { useMemo, useEffect } from "react";
 import type { SyntheticEvent } from "react";
@@ -260,8 +261,8 @@ export default function EventDetailClient({ slug }: { slug: string }) {
               className="object-cover"
               priority
               onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                console.log('Image load error:', e);
-                e.currentTarget.src = '/images/brandman-transparant.png';
+                console.warn('Image load error:', e);
+                handleImageError(e);
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -338,7 +339,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                       fill
                       className="object-cover"
                       onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                        e.currentTarget.src = '/images/brandman-transparant.png';
+                        handleImageError(e);
                       }}
                     />
                   ) : (

@@ -3,11 +3,16 @@ import { useState, useEffect } from "react";
 import { useEvents } from "../hooks/useEvents";
 import Link from "next/link";
 import Image from "next/image";
+import { handleImageError } from "../utils/imageUtils";
 
 export default function EventsSlider() {
   const { events, loading, error } = useEvents();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Limit to only show latest 6 events to reduce API load and improve performance
+  // This prevents loading too many events on the homepage slider
+  const limitedEvents = events.slice(0, 6);
   
   // Detect mobile screen
   useEffect(() => {
@@ -21,21 +26,21 @@ export default function EventsSlider() {
   }, []);
 
   const cardsPerView = isMobile ? 1 : 3; // 1 card on mobile, 3 on desktop
-  const maxIndex = Math.max(0, events.length - cardsPerView);
+  const maxIndex = Math.max(0, limitedEvents.length - cardsPerView);
 
   // Auto-advance slider
   useEffect(() => {
-    if (events.length === 0) return;
+    if (limitedEvents.length === 0) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
-        const currentMaxIndex = Math.max(0, events.length - cardsPerView);
+        const currentMaxIndex = Math.max(0, limitedEvents.length - cardsPerView);
         return prevIndex >= currentMaxIndex ? 0 : prevIndex + 1;
       });
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [events.length, cardsPerView]);
+  }, [limitedEvents.length, cardsPerView]);
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => 
@@ -134,7 +139,7 @@ export default function EventsSlider() {
     );
   }
 
-  if (error || events.length === 0) {
+  if (error || limitedEvents.length === 0) {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -179,10 +184,10 @@ export default function EventsSlider() {
           className="flex gap-4 sm:gap-6 transition-transform duration-500 ease-in-out px-12 sm:px-16"
           style={{
             transform: `translateX(-${currentIndex * (isMobile ? 288 + 16 : 320 + 24)}px)`, // Responsive card width + gap
-            width: `${events.length * (isMobile ? 288 + 16 : 320 + 24) - (isMobile ? 16 : 24)}px` // Total width minus last gap
+            width: `${limitedEvents.length * (isMobile ? 288 + 16 : 320 + 24) - (isMobile ? 16 : 24)}px` // Total width minus last gap
           }}
         >
-            {events.map((event, index) => (
+            {limitedEvents.map((event, index) => (
               <div 
                 key={event.id} 
               className={`flex-shrink-0 ${isMobile ? 'w-72' : 'w-80'}`}
@@ -195,10 +200,10 @@ export default function EventsSlider() {
                     width={isMobile ? 288 : 320}
                     height={isMobile ? 128 : 160}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    style={{ width: "auto", height: "auto" }}
                     onError={(e) => {
                       // Fallback to placeholder if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80';
+                      handleImageError(e as React.SyntheticEvent<HTMLImageElement>);
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -252,7 +257,7 @@ export default function EventsSlider() {
         
         {/* Enhanced Dots Indicator */}
         <div className="flex justify-center mt-4 sm:mt-6 gap-2 sm:gap-3">
-          {Array.from({ length: Math.ceil(events.length / cardsPerView) }, (_, index) => (
+          {Array.from({ length: Math.ceil(limitedEvents.length / cardsPerView) }, (_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index * cardsPerView)}

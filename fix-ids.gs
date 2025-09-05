@@ -22,12 +22,6 @@ const VISITORS_SHEET_NAME = 'Visitors';
  * Contoh: ?endpoint=destinations, ?endpoint=events, ?endpoint=transactions, ?endpoint=feedback
  */
 function doGet(e) {
-  var action = e.parameter.action;
-
-  if (action == 'get-transaction') {
-    var kode = e.parameter.kode;
-    return getTransactionByCode(kode);
-  }
   // TAMBAHKAN INI: Cek 'e' untuk menghindari error saat dijalankan manual
   if (!e || !e.parameter) {
     // Berikan response default jika dijalankan dari editor
@@ -37,8 +31,18 @@ function doGet(e) {
       info: "Coba akses URL deployment Anda dan tambahkan parameter, contoh: ?endpoint=destinations"
     });
   }
-  
+
   const params = e.parameter || {};
+  const action = params.action;
+
+  // Handle specific actions first - PRIORITAS TERTINGGI
+  if (action && action === 'get-transaction') {
+    const kode = params.kode;
+    Logger.log("🔍 GET transaction dengan kode: " + kode);
+    return getTransactionByCode(kode);
+  }
+
+  // Jika tidak ada action get-transaction, lanjut ke endpoint routing
   const endpoint = params.endpoint || 'destinations'; // Default ke destinations
 
   try {
@@ -1400,6 +1404,8 @@ function handleGetTransactions(e) {
 
 function handleTransaction(data) {
   try {
+    Logger.log("🚀 Memulai proses transaksi dengan data: " + JSON.stringify(data));
+    
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
     const newId = getNextTransactionId();
     const kodeTransaksi = `INV-${new Date().getTime()}`;
@@ -1407,22 +1413,85 @@ function handleTransaction(data) {
     const tanggalTransaksi = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     const waktuTransaksi = Utilities.formatDate(now, Session.getScriptTimeZone(), 'HH:mm:ss');
     
+    // Gunakan rincian_destinasi yang sudah dibuat di API route, atau buat dari cart jika tidak ada
+    let rincianDestinasi = data.rincian_destinasi || '{}';
+    
+    // Fallback: jika rincian_destinasi kosong, buat dari cart
+    if (rincianDestinasi === '{}' && data.cart && Array.isArray(data.cart) && data.cart.length > 0) {
+      const destinationPricing = {};
+      data.cart.forEach(item => {
+        if (item.slug && item.harga) {
+          destinationPricing[item.slug] = item.harga.toString();
+        }
+      });
+      rincianDestinasi = JSON.stringify(destinationPricing);
+    }
+    
+    // Pastikan rincian_mobil ada
+    const rincianMobil = data.rincian_mobil || data.kendaraan_harga || 0;
+    
+    Logger.log("📊 Data yang akan disimpan:");
+    Logger.log("- rincian_destinasi: " + rincianDestinasi);
+    Logger.log("- rincian_mobil: " + rincianMobil);
+    Logger.log("- cart data: " + JSON.stringify(data.cart));
+    Logger.log("- data.rincian_destinasi: " + data.rincian_destinasi);
+    
     const newRow = [
-      newId, data.nama || '', data.destinasi || '', data.penumpang || 0,
-      data.tanggal_berangkat || '', data.waktu_berangkat || '',
-      data.kendaraan || '', data.total || 0, 'pending', kodeTransaksi,
-      waktuTransaksi, tanggalTransaksi
+      newId, 
+      data.nama || '', 
+      data.destinasi || '', 
+      data.penumpang || 0,
+      data.tanggal_berangkat || '', 
+      data.waktu_berangkat || '',
+      data.kendaraan || '', 
+      data.total || 0, 
+      'pending', 
+      kodeTransaksi,
+      waktuTransaksi, 
+      tanggalTransaksi,
+      rincianDestinasi,  // Format: "slug:harga, slug:harga, slug:harga"
+      rincianMobil      // Harga mobil saja (number)
     ];
     
+    Logger.log("📝 Row yang akan ditambahkan: " + JSON.stringify(newRow));
+    
+    // Pastikan sheet memiliki kolom yang cukup
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    Logger.log("📋 Header yang ada: " + headers.join(", "));
+    Logger.log("📏 Jumlah kolom yang ada: " + headers.length);
+    Logger.log("📏 Jumlah data yang akan disimpan: " + newRow.length);
+    
+    // Jika kolom kurang, tambahkan kolom yang hilang
+    if (headers.length < newRow.length) {
+      Logger.log("⚠️ Jumlah kolom kurang, menambahkan kolom yang hilang...");
+      for (let i = headers.length; i < newRow.length; i++) {
+        sheet.getRange(1, i + 1).setValue(`kolom_${i + 1}`);
+      }
+      Logger.log("✅ Kolom tambahan berhasil ditambahkan");
+    }
+    
     sheet.appendRow(newRow);
+    Logger.log("✅ Data berhasil disimpan ke sheet");
     
     if (data.destinasi) {
       const destinasiNames = data.destinasi.split(',').map(name => name.trim());
       incrementDestinationVisitors(destinasiNames);
     }
     
-    return { success: true, message: 'Transaksi berhasil ditambahkan', id: newId, kode: kodeTransaksi };
+    const response = { 
+      success: true, 
+      message: 'Transaksi berhasil ditambahkan', 
+      id: newId, 
+      kode: kodeTransaksi,
+      rincian_destinasi: rincianDestinasi,
+      rincian_mobil: rincianMobil
+    };
+    
+    Logger.log("🎉 Response yang akan dikirim: " + JSON.stringify(response));
+    return response;
+    
   } catch (error) {
+    Logger.log("❌ Error dalam handleTransaction: " + error.toString());
     return { success: false, error: error.toString() };
   }
 }
@@ -1705,7 +1774,7 @@ function setupSheets() {
   const transaksiHeaders = [
     'id', 'nama', 'destinasi', 'penumpang', 'tanggal_berangkat', 
     'waktu_berangkat', 'kendaraan', 'total', 'status', 'kode', 
-    'waktu_transaksi', 'tanggal_transaksi'
+    'waktu_transaksi', 'tanggal_transaksi', 'rincian_destinasi', 'rincian_mobil'
   ];
   setupSheet(TRANSAKSI_SHEET_NAME, transaksiHeaders);
   
@@ -1721,6 +1790,76 @@ function setupSheets() {
   setupSheet(VISITORS_SHEET_NAME, visitorsHeaders);
 
   Logger.log("✅ Semua sheet berhasil disetup!");
+}
+
+/**
+ * Fungsi khusus untuk menambahkan kolom rincian_destinasi dan rincian_mobil 
+ * ke sheet Transaksi yang sudah ada. Jalankan fungsi ini jika kolom belum ada.
+ */
+function addMissingColumnsToTransaksi() {
+  try {
+    Logger.log("🔧 Menambahkan kolom yang hilang ke sheet Transaksi...");
+    
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(TRANSAKSI_SHEET_NAME);
+    if (!sheet) {
+      Logger.log("❌ Sheet Transaksi tidak ditemukan!");
+      return;
+    }
+    
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    Logger.log("📋 Header yang ada: " + headers.join(", "));
+    
+    // Cek apakah kolom rincian_destinasi sudah ada
+    const rincianDestinasiIndex = headers.indexOf('rincian_destinasi');
+    const rincianMobilIndex = headers.indexOf('rincian_mobil');
+    
+    let lastColumn = sheet.getLastColumn();
+    
+    // Tambahkan kolom rincian_destinasi jika belum ada
+    if (rincianDestinasiIndex === -1) {
+      Logger.log("➕ Menambahkan kolom rincian_destinasi...");
+      sheet.getRange(1, lastColumn + 1).setValue('rincian_destinasi');
+      lastColumn++;
+      Logger.log("✅ Kolom rincian_destinasi berhasil ditambahkan");
+    } else {
+      Logger.log("ℹ️ Kolom rincian_destinasi sudah ada di posisi " + (rincianDestinasiIndex + 1));
+    }
+    
+    // Tambahkan kolom rincian_mobil jika belum ada
+    if (rincianMobilIndex === -1) {
+      Logger.log("➕ Menambahkan kolom rincian_mobil...");
+      sheet.getRange(1, lastColumn + 1).setValue('rincian_mobil');
+      Logger.log("✅ Kolom rincian_mobil berhasil ditambahkan");
+    } else {
+      Logger.log("ℹ️ Kolom rincian_mobil sudah ada di posisi " + (rincianMobilIndex + 1));
+    }
+    
+    // Update semua row yang ada dengan nilai default
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      Logger.log("🔄 Mengupdate " + (lastRow - 1) + " row dengan nilai default...");
+      
+      // Update kolom rincian_destinasi
+      if (rincianDestinasiIndex === -1) {
+        const rincianDestinasiCol = lastColumn; // Kolom yang baru ditambahkan
+        sheet.getRange(2, rincianDestinasiCol, lastRow - 1, 1).setValue('');
+        Logger.log("✅ Row rincian_destinasi diupdate dengan nilai default");
+      }
+      
+      // Update kolom rincian_mobil
+      if (rincianMobilIndex === -1) {
+        const rincianMobilCol = lastColumn + 1; // Kolom yang baru ditambahkan
+        sheet.getRange(2, rincianMobilCol, lastRow - 1, 1).setValue(0);
+        Logger.log("✅ Row rincian_mobil diupdate dengan nilai default");
+      }
+    }
+    
+    Logger.log("🎉 Proses penambahan kolom selesai!");
+    Logger.log("📊 Struktur sheet Transaksi sekarang: " + sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].join(", "));
+    
+  } catch (error) {
+    Logger.log("❌ Error saat menambahkan kolom: " + error.toString());
+  }
 }
 
 /**

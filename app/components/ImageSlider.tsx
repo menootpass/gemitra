@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { normalizeImageUrls, handleImageError } from "../utils/imageUtils";
 
 type ImageSliderProps = {
   images: string[];
@@ -12,25 +13,8 @@ type ImageSliderProps = {
 export default function ImageSlider({ images, alt, className = "", priority = false }: ImageSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Normalize images: flatten nested stringified arrays and filter valid URLs
-  const normalized: string[] = Array.isArray(images)
-    ? images.flatMap((src) => {
-        if (typeof src !== 'string') return [];
-        const s = src.trim();
-        if (s.startsWith('[') && s.endsWith(']')) {
-          try {
-            const parsed = JSON.parse(s);
-            if (Array.isArray(parsed)) {
-              return parsed.filter((u: any) => typeof u === 'string');
-            }
-          } catch {
-            // ignore
-          }
-        }
-        return [s];
-      })
-      .filter((u) => typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('/')))
-    : [];
+  // Normalize images using utility function
+  const normalized: string[] = normalizeImageUrls(images);
 
   if (!normalized || normalized.length === 0) {
     return (
@@ -59,22 +43,16 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
         alt={`${alt} ${currentIndex + 1}`}
         fill 
         priority={priority}
-        className="object-cover w-full h-full"
+        className="object-cover"
         onError={(e) => {
-          console.error('Image failed to load:', normalized[currentIndex]);
-          // Fallback to "No Image" display
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          const parent = target.parentElement;
-          if (parent) {
-            parent.innerHTML = `
-              <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                <div class="text-gray-500 text-center">
-                  <div class="text-4xl mb-2">🏞️</div>
-                  <div class="text-sm">Image Error</div>
-                </div>
-              </div>
-            `;
+          console.warn('Image failed to load:', normalized[currentIndex]);
+          // Try to load next image if available
+          if (normalized.length > 1) {
+            const nextIndex = (currentIndex + 1) % normalized.length;
+            setCurrentIndex(nextIndex);
+          } else {
+            // Fallback to placeholder image
+            handleImageError(e as React.SyntheticEvent<HTMLImageElement>);
           }
         }}
       />

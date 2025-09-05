@@ -82,7 +82,7 @@ export default function Home() {
     {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center py-6 px-4 sm:px-6 md:px-16 rounded-3xl mt-4 mb-2 gap-4 sm:gap-0">
         <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-          <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={120} height={44} className="block" />
+          <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={120} height={44} className="block" style={{ width: "auto", height: "auto" }} />
         </div>
         <nav className="hidden sm:flex gap-6 md:gap-10 text-[#213DFF] font-bold text-base tracking-wide">
               <a href="#about" className="hover:text-[#16A86E] transition">Tentang Kami</a>
@@ -119,10 +119,10 @@ export default function Home() {
         </div>
         <div className="flex-1 flex flex-col items-center relative w-full mt-8 md:mt-0">
           <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-[#213DFF22] bg-glass w-full max-w-xs mx-auto">
-            <Image src="/images/brandman-transparant.png" alt="Hero Person" width={320} height={320} className="object-cover w-full h-80" />
+            <Image src="/images/brandman-transparant.png" alt="Hero Person" width={320} height={320} className="object-cover w-full h-80" style={{ width: "auto", height: "auto" }} />
           </div>
           <div className="absolute -top-6 -right-6 hidden md:block">
-            <Image src="/svg/cursor-click.svg" alt="Decorative Pointer" width={48} height={48} />
+            <Image src="/svg/cursor-click.svg" alt="Decorative Pointer" width={48} height={48} style={{ width: "auto", height: "auto" }} />
           </div>
           <div className="absolute bottom-0 left-0 bg-white/90 rounded-xl px-4 py-2 shadow text-[#16A86E] font-bold text-sm flex items-center gap-2 mt-4">
             <span>★ 5+ Tahun</span> <span className="text-xs font-normal text-black/60">Eksplorasi Lokal</span>
@@ -155,13 +155,13 @@ export default function Home() {
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#213DFF] mb-6 md:mb-8 text-center md:text-left">Jelajahi Keindahan Tersembunyi</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full">
-            <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=facearea&w=400&q=80" alt="Pantai Rahasia" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" />
+            <Image src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=facearea&w=400&q=80" alt="Pantai Rahasia" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
             <div className="relative z-10 p-4 md:p-6">
               <span className="bg-[#16A86E] text-white px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-base font-bold shadow">Pantai Rahasia di Timur</span>
             </div>
           </div>
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full mt-4 md:mt-0">
-            <Image src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=facearea&w=400&q=80" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" />
+            <Image src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=facearea&w=400&q=80" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
             
           </div>
         </div>
@@ -191,11 +191,11 @@ export default function Home() {
           </div>
           <div className="relative flex flex-col items-center justify-center mt-6 md:mt-0 w-full">
             <div className="rounded-2xl overflow-hidden shadow-xl border-4 border-[#16A86E22] bg-glass w-full max-w-xs mx-auto">
-              <Image src="/images/brandman-transparant.png" alt="Expert" width={320} height={220} className="object-cover w-full h-56" />
+              <Image src="/images/brandman-transparant.png" alt="Expert" width={320} height={220} className="object-cover w-full h-56" style={{ width: "auto", height: "auto" }} />
             </div>
             <div className="absolute bottom-4 right-4 bg-[#16A86E] text-white px-4 md:px-5 py-2 rounded-full shadow font-bold text-sm md:text-base flex items-center gap-2">
               <span>Konsultasi Trip Gratis!</span>
-              <Image src="/svg/cursor-click.svg" alt="Pointer" width={24} height={24} />
+              <Image src="/svg/cursor-click.svg" alt="Pointer" width={24} height={24} style={{ width: "auto", height: "auto" }} />
             </div>
           </div>
         </div>

@@ -119,7 +119,7 @@ export default function WisataDetail() {
     if (!data) return;
     if (cart.find(item => item.id == data.id)) return;
     if (cart.length >= 3) return;
-    setCart([...cart, { id: data.id, nama: data.nama, harga: data.harga }]);
+    setCart([...cart, { id: data.id, nama: data.nama, harga: data.harga, slug: data.slug }]);
   }
   function handleRemoveFromCart(id: number) {
     setCart(cart.filter(item => item.id !== id));

@@ -42,27 +42,25 @@ type GemitraMapProps = {
   selectedDestination?: Destination | null;
 };
 
-export default function GemitraMap({ destinations, onDestinationClick }: GemitraMapProps) {
+export default function GemitraMap({ destinations, onDestinationClick, selectedDestination }: GemitraMapProps) {
   const [isMapReady, setIsMapReady] = useState(false);
   const [gemitraIcon, setGemitraIcon] = useState<any>(null);
-  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   // Handle map ready event
   const handleMapReady = () => {
-    // Add a small delay to ensure DOM is fully ready
-    setTimeout(() => {
+    try {
       setIsMapReady(true);
-      // Create custom icon after map is ready
-      setTimeout(() => {
-        createGemitraIcon();
-      }, 300);
-    }, 100);
+      // Create custom icon immediately
+      createGemitraIcon();
+    } catch (error) {
+      console.warn('Error in handleMapReady:', error);
+    }
   };
 
 
 
-  // Set client-side flag
+  // Set client-side flag immediately
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -72,7 +70,6 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
     return () => {
       setIsMapReady(false);
       setGemitraIcon(null);
-      setSelectedDestination(null);
     };
   }, []);
 
@@ -83,22 +80,26 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
         const L = (window as any).L;
         
         // Fix for default markers in react-leaflet
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-        });
+        if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) {
+          delete (L.Icon.Default.prototype as any)._getIconUrl;
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+            iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+            shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          });
+        }
 
         // Custom icon for Gemitra destinations
-        const icon = L.divIcon({
-          className: "custom-div-icon",
-          html: `<div style="background-color: #16A86E; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #213DFF; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px;">G</div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
-        });
+        if (L.divIcon) {
+          const icon = L.divIcon({
+            className: "custom-div-icon",
+            html: `<div style="background-color: #16A86E; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #213DFF; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px;">G</div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          });
 
-        setGemitraIcon(icon);
+          setGemitraIcon(icon);
+        }
       }
     } catch (error) {
       console.warn('Error creating map icon:', error);
@@ -111,32 +112,35 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
   // Filter destinations with valid positions
   const validDestinations = destinations.filter(dest => dest.posisi && Array.isArray(dest.posisi) && dest.posisi.length === 2);
 
-  // Don't render map until client-side
-  if (!isClient) {
-    return (
-      <div className="w-full h-96 rounded-xl overflow-hidden shadow-xl border-2 border-[#213DFF22] bg-gray-200 animate-pulse flex items-center justify-center">
-        <div className="text-gray-500">Loading map...</div>
-      </div>
-    );
-  }
-
   return (
     <MapErrorBoundary>
       <div className="w-full h-96 rounded-xl overflow-hidden shadow-xl border-2 border-[#213DFF22]">
-        <MapContainer
-          center={yogyakartaCenter}
-          zoom={10}
-          style={{ height: "100%", width: "100%" }}
-          className="z-0"
-          whenReady={handleMapReady}
-          zoomControl={true}
-          doubleClickZoom={false}
-          scrollWheelZoom={true}
-          dragging={true}
-          touchZoom={true}
-          boxZoom={false}
-          keyboard={false}
-        >
+        {!isClient ? (
+          <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-gray-500">Loading map...</div>
+          </div>
+        ) : (
+          <div className="w-full h-full relative">
+            {!isMapReady && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
+                <div className="text-gray-500">Loading map...</div>
+              </div>
+            )}
+            <MapContainer
+              center={yogyakartaCenter}
+              zoom={10}
+              style={{ height: "100%", width: "100%" }}
+              className="z-0"
+              whenReady={handleMapReady}
+              zoomControl={true}
+              doubleClickZoom={false}
+              scrollWheelZoom={true}
+              dragging={true}
+              touchZoom={true}
+              boxZoom={false}
+              keyboard={false}
+              preferCanvas={true}
+            >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -155,21 +159,31 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
                    icon={gemitraIcon}
                    eventHandlers={{
                      click: () => {
-                       setSelectedDestination(destination);
                        onDestinationClick(destination);
                      },
                    }}
                  >
                  <Popup>
-                       <div className="text-center p-2">
-                         <h3 className="font-bold text-[#213DFF] text-sm">{destination.nama}</h3>
-                         <p className="text-xs text-gray-600">{destination.lokasi}</p>
-                         <p className="text-xs text-[#16A86E] font-bold">{destination.rating}★</p>
-                         {destination.pengunjung !== undefined && (
-                           <p className="text-xs text-[#213DFF] font-semibold mt-1">
-                             👥 {destination.pengunjung.toLocaleString()}
-                           </p>
-                         )}
+                       <div className="text-center p-3 min-w-[200px]">
+                         <div className="flex items-center justify-between mb-2">
+                           <h3 className="font-bold text-[#213DFF] text-sm flex-1 text-left">{destination.nama}</h3>
+                           <Link
+                             href={`/wisata/${destination.slug}`}
+                             className="bg-[#16A86E] text-white text-xs px-2 py-1 rounded-md hover:bg-[#213DFF] transition-colors ml-2 whitespace-nowrap"
+                             onClick={(e) => e.stopPropagation()}
+                           >
+                             Detail
+                           </Link>
+                         </div>
+                         <p className="text-xs text-gray-600 text-left">{destination.lokasi}</p>
+                         <div className="flex items-center justify-between mt-1">
+                           <p className="text-xs text-[#16A86E] font-bold">{destination.rating}★</p>
+                           {destination.pengunjung !== undefined && (
+                             <p className="text-xs text-[#213DFF] font-semibold">
+                               👥 {destination.pengunjung.toLocaleString()}
+                             </p>
+                           )}
+                         </div>
                        </div>
                  </Popup>
                    
@@ -180,13 +194,15 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
                return null;
              }
            })}
-        </MapContainer>
+            </MapContainer>
+          </div>
+        )}
         
         {/* Detail Button - appears below map when destination is selected */}
         {selectedDestination && (
           <div className="mt-4 flex justify-center">
             <Link
-              href={`/wisata/${selectedDestination.slug || selectedDestination.id}`}
+              href={`/wisata/${selectedDestination.slug}`}
               className="bg-[#16A86E] text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-[#213DFF] transition flex items-center gap-2"
             >
               <span>🗺️</span>
@@ -194,6 +210,7 @@ export default function GemitraMap({ destinations, onDestinationClick }: Gemitra
             </Link>
           </div>
         )}
+        
       </div>
     </MapErrorBoundary>
   );

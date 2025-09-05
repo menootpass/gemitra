@@ -1,7 +1,7 @@
 // Test script untuk endpoint invoice
 // Jalankan dengan: node test-invoice.js
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // Ganti dengan URL script Anda
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
 
 async function testInvoiceEndpoint() {
   console.log('🧪 Testing Invoice Endpoint...\n');
@@ -9,7 +9,7 @@ async function testInvoiceEndpoint() {
   // Test 1: Get transaction by kode
   console.log('1. Testing get-transaction endpoint...');
   try {
-    const testKode = 'INV-1703123456789'; // Ganti dengan kode yang ada di spreadsheet
+    const testKode = 'INV-1756589376528'; // Kode yang ada di database
     const url = `${SCRIPT_URL}?action=get-transaction&kode=${testKode}`;
     
     console.log(`   URL: ${url}`);
