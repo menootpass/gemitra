@@ -84,7 +84,7 @@ export default function Home() {
     <HeaderNavigation />
 
       {/* Hero Section */}
-      <section id="about" className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-14 mt-4 md:mt-12 px-4 sm:px-6">
+      <section id="about" className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between gap-10 md:gap-14 mt-20 md:mt-28 px-4 sm:px-6">
         <div className="flex-1 flex flex-col gap-6 md:gap-8 items-center md:items-start w-full">
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-[#213DFF] leading-tight text-center md:text-left">
             Temukan Hidden Gems<br />
