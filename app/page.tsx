@@ -141,13 +141,13 @@ export default function Home() {
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#213DFF] mb-6 md:mb-8 text-center md:text-left">Jelajahi Keindahan Tersembunyi</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full">
-            <Image src="/images/klangon.jpeg" alt="Pantai Rahasia" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
+            <Image src="/images/klangon.jpg" alt="Pantai Rahasia" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
             <div className="relative z-10 p-4 md:p-6">
               <span className="bg-[#16A86E] text-white px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-base font-bold shadow">Bukit Rahasia di Utara</span>
             </div>
           </div>
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full mt-4 md:mt-0">
-            <Image src="/images/kemah.jpeg" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
+            <Image src="/images/kemah.jpg" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
             
           </div>
         </div>
