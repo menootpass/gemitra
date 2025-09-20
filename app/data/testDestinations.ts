@@ -1,0 +1,78 @@
+// Test data for development when API is not available
+export const testDestinations = [
+  {
+    id: 1,
+    nama: "Taman Sari Yogyakarta",
+    lokasi: "Yogyakarta",
+    rating: 4.5,
+    kategori: "Budaya & Sejarah",
+    img: ["https://images.unsplash.com/photo-1555400229-7e5a1b3d6e4d"],
+    deskripsi: "Kompleks bekas taman kerajaan Kesultanan Yogyakarta",
+    fasilitas: ["Parkir", "Toilet", "Mushola"],
+    komentar: [],
+    posisi: [-7.8102, 110.3599],
+    pengunjung: 1500,
+    harga: 15000,
+    slug: "taman-sari-yogyakarta"
+  },
+  {
+    id: 2,
+    nama: "Malioboro Street",
+    lokasi: "Yogyakarta",
+    rating: 4.8,
+    kategori: "Kuliner Tersembunyi",
+    img: ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"],
+    deskripsi: "Jalan legendaris di pusat kota Yogyakarta",
+    fasilitas: ["ATM", "Restoran", "Toko Souvenir"],
+    komentar: [],
+    posisi: [-7.7956, 110.3695],
+    pengunjung: 5000,
+    harga: 0,
+    slug: "malioboro-street"
+  },
+  {
+    id: 3,
+    nama: "Candi Borobudur",
+    lokasi: "Magelang",
+    rating: 4.9,
+    kategori: "Budaya & Sejarah",
+    img: ["https://images.unsplash.com/photo-1555992336-fb0d29498b13"],
+    deskripsi: "Candi Buddha terbesar di dunia",
+    fasilitas: ["Parkir", "Museum", "Restoran"],
+    komentar: [],
+    posisi: [-7.6079, 110.2038],
+    pengunjung: 10000,
+    harga: 50000,
+    slug: "candi-borobudur"
+  },
+  {
+    id: 4,
+    nama: "Pantai Parangtritis",
+    lokasi: "Bantul",
+    rating: 4.3,
+    kategori: "Alam",
+    img: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4"],
+    deskripsi: "Pantai terkenal dengan legenda Ratu Kidul",
+    fasilitas: ["Parkir", "Warung", "ATV"],
+    komentar: [],
+    posisi: [-8.0250, 110.3294],
+    pengunjung: 3000,
+    harga: 10000,
+    slug: "pantai-parangtritis"
+  },
+  {
+    id: 5,
+    nama: "Hutan Pinus Mangunan",
+    lokasi: "Bantul",
+    rating: 4.6,
+    kategori: "Alam",
+    img: ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e"],
+    deskripsi: "Hutan pinus dengan pemandangan indah",
+    fasilitas: ["Parkir", "Spot Foto", "Warung"],
+    komentar: [],
+    posisi: [-7.9391, 110.4564],
+    pengunjung: 2000,
+    harga: 5000,
+    slug: "hutan-pinus-mangunan"
+  }
+];

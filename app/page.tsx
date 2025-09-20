@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Star, MessageCircle, ArrowRight, Camera, Compass } from "lucide-react";
 import { useLanguage } from "./contexts/LanguageContext";
 import { useRobustDestinations } from "./hooks/useRobustDestinations";
+import MapDiagnostics from "./components/MapDiagnostics";
 
 export default function Home() {
   const router = useRouter();
@@ -185,7 +186,7 @@ export default function Home() {
           </p>
         </div>
         
-        
+        <MapDiagnostics destinations={destinations} />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {loading ? (

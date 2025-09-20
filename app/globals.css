@@ -3,6 +3,82 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Leaflet Map Fixes */
+.leaflet-container {
+  position: relative !important;
+  overflow: hidden !important;
+  z-index: 0 !important;
+}
+
+.leaflet-marker-icon {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.leaflet-marker-shadow {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Gemitra "G" Logo Icon Styles */
+.custom-div-icon div {
+  transition: all 0.3s ease !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+
+.custom-div-icon:hover div {
+  transform: scale(1.15) !important;
+  box-shadow: 0 6px 20px rgba(33, 61, 255, 0.6) !important;
+}
+
+/* Pulse animation for active marker */
+@keyframes gemitra-pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(33, 61, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(33, 61, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(33, 61, 255, 0.4);
+  }
+}
+
+.custom-div-icon.active div {
+  animation: gemitra-pulse 2s infinite !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+}
+
+/* Fix for marker positioning issues */
+.leaflet-marker-pane {
+  position: relative !important;
+}
+
+.leaflet-overlay-pane {
+  position: relative !important;
+}
+
 :root {
   /* Updated color tokens to match tourism design brief */
   --background: oklch(1 0 0); /* #ffffff - Clean white background */

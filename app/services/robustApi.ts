@@ -28,25 +28,38 @@ function getFallbackUrls(): string[] {
 }
 
 function getUrlWithEndpoint(endpoint: string) {
-  // For events, use internal API route to avoid CORS issues
-  if (endpoint === 'events') {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-    const finalUrl = `${baseUrl}/api/events`;
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🔗 [Robust API] Using internal API route for "${endpoint}":`, finalUrl);
-    }
-    
-    return finalUrl;
-  }
+  // Use internal API routes for all endpoints to avoid CORS issues in development
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
   
-  // For other endpoints, use direct Google Apps Script URL
-  const base = getMainScriptUrl();
-  const finalUrl = `${base}?endpoint=${endpoint}`;
+  let finalUrl: string;
+  
+  // Route all endpoints through internal API
+  switch (endpoint) {
+    case 'events':
+      finalUrl = `${baseUrl}/api/events`;
+      break;
+    case 'destinations':
+      finalUrl = `${baseUrl}/api/destinations`;
+      break;
+    case 'transactions':
+      finalUrl = `${baseUrl}/api/transactions`;
+      break;
+    case 'feedback':
+      finalUrl = `${baseUrl}/api/feedback`;
+      break;
+    case 'comments':
+      finalUrl = `${baseUrl}/api/comments`;
+      break;
+    default:
+      // Fallback to direct Google Apps Script URL for unknown endpoints
+      const base = getMainScriptUrl();
+      finalUrl = `${base}?endpoint=${endpoint}`;
+      break;
+  }
   
   // Debug logging untuk memastikan URL yang benar
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🔗 [Robust API] Building URL for endpoint "${endpoint}":`, finalUrl);
+    console.log(`🔗 [Robust API] Using internal API route for "${endpoint}":`, finalUrl);
   }
   
   return finalUrl;
@@ -233,7 +246,7 @@ class RobustApiService {
   private async performFetch(url: string): Promise<any> {
     // Debug logging untuk tracking URL yang dipanggil
     if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 Making request to:', url);
+      console.log('🚀 [Robust API] Making request to:', url);
     }
     
     // Check rate limit
@@ -269,13 +282,18 @@ class RobustApiService {
               headers: {
                 'Accept': 'application/json',
                 'Cache-Control': 'no-cache',
+                'User-Agent': 'Gemitra-App/1.0',
               },
+              // Add mode for development
+              ...(process.env.NODE_ENV === 'development' && currentUrl.includes('localhost') ? {
+                mode: 'cors' as RequestMode
+              } : {})
             }),
             this.REQUEST_TIMEOUT
           );
           
           if (!response.ok) {
-            console.error(`❌ Request failed: ${currentUrl} - Status: ${response.status}`);
+            console.error(`❌ [Robust API] Request failed: ${currentUrl} - Status: ${response.status}`);
             if (response.status === 429) {
               throw new Error('Rate limit exceeded. Please wait a moment and try again.');
             }
@@ -344,14 +362,37 @@ class RobustApiService {
       const data = await this.fetchWithAdvancedCache(url, enableCache);
       return data.data || [];
     } catch (error) {
-      console.error('Failed to fetch destinations:', error);
+      console.error('❌ [Robust API] Failed to fetch destinations:', error);
       
       // Return cached data if available (even if stale)
       if (enableCache) {
         const cached = this.cache.get(getUrlWithEndpoint('destinations'));
         if (cached) {
-          console.warn('Returning stale cached data due to fetch failure');
+          console.warn('⚠️ [Robust API] Returning stale cached data due to fetch failure');
           return cached.data.data || [];
+        }
+      }
+      
+      // In development, try direct Google Apps Script URL as fallback
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 [Robust API] Trying direct Google Apps Script URL as fallback...');
+        try {
+          const directUrl = `${getMainScriptUrl()}?endpoint=destinations`;
+          const fallbackData = await this.performFetch(directUrl);
+          console.log('✅ [Robust API] Fallback successful');
+          return fallbackData.data || [];
+        } catch (fallbackError) {
+          console.error('❌ [Robust API] Fallback also failed:', fallbackError);
+          
+          // Last resort: return test data for development
+          console.log('🧪 [Robust API] Using test data as final fallback...');
+          try {
+            const { testDestinations } = await import('../data/testDestinations');
+            console.log('✅ [Robust API] Test data loaded successfully');
+            return testDestinations;
+          } catch (testError) {
+            console.error('❌ [Robust API] Failed to load test data:', testError);
+          }
         }
       }
       
@@ -711,7 +752,7 @@ class RobustEventsApiService {
 // Connection health monitoring
 class ConnectionMonitor {
   private static instance: ConnectionMonitor;
-  private isOnline = navigator.onLine;
+  private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   private listeners: Array<(online: boolean) => void> = [];
 
   static getInstance(): ConnectionMonitor {
@@ -723,15 +764,25 @@ class ConnectionMonitor {
 
   constructor() {
     if (typeof window !== 'undefined') {
+      // Initial check
+      this.isOnline = navigator.onLine;
+      
       window.addEventListener('online', () => {
+        console.log('🌐 [Connection Monitor] Connection restored');
         this.isOnline = true;
         this.notifyListeners(true);
       });
       
       window.addEventListener('offline', () => {
+        console.log('📵 [Connection Monitor] Connection lost');
         this.isOnline = false;
         this.notifyListeners(false);
       });
+      
+      // In development, assume we're always online for localhost
+      if (process.env.NODE_ENV === 'development') {
+        this.isOnline = true;
+      }
     }
   }
 

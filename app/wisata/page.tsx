@@ -13,6 +13,7 @@ import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
 import { useRobustDestinations } from "../hooks/useRobustDestinations";
 import { useLanguage } from "../contexts/LanguageContext";
+import MapDiagnostics from "../components/MapDiagnostics";
 
 const NEW_CATEGORIES = [
   "Alam",
@@ -522,6 +523,7 @@ export default function WisataList() {
           </>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MapDiagnostics destinations={filteredData} />
             <GemitraMap
               destinations={filteredData}
               onDestinationClick={handleDestinationClick}

@@ -45,7 +45,14 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
   }, [error, enableRetry]);
 
   const fetchDestinations = useCallback(async (showLoading = true) => {
+    console.log('🚀 [useRobustDestinations] Starting fetch...', {
+      isOnline,
+      showLoading,
+      lastFetchTime: new Date(lastFetchTime).toISOString()
+    });
+
     if (!isOnline) {
+      console.warn('📵 [useRobustDestinations] No internet connection detected');
       setError('No internet connection. Please check your network.');
       setLoading(false);
       return;
@@ -53,6 +60,7 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
 
     const now = Date.now();
     if (now - lastFetchTime < 2000) {
+      console.log('⏰ [useRobustDestinations] Skipping fetch - too soon since last fetch');
       return;
     }
 
@@ -61,6 +69,8 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
         setLoading(true);
       }
       setError(null);
+      
+      console.log('📡 [useRobustDestinations] Calling robustApiService.fetchDestinations...');
       
       let data: any[];
       
@@ -75,23 +85,65 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
         data = await robustApiService.fetchDestinations();
       }
       
-      // Process destinations data
+      console.log('✅ [useRobustDestinations] Data received:', {
+        dataLength: data?.length || 0,
+        firstItem: data?.[0]?.nama || 'No data',
+        dataType: typeof data,
+        isArray: Array.isArray(data)
+      });
+      
+      // Process destinations data with enhanced position handling
       const processedData = data.map((d: any) => ({
         ...d,
         posisi: d.posisi ? (() => {
-          try {
-            const parsed = JSON.parse(d.posisi);
-            if (Array.isArray(parsed) && parsed.length === 2 && 
-                typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
-              return parsed;
+          // Handle already parsed arrays
+          if (Array.isArray(d.posisi)) {
+            if (d.posisi.length === 2 && 
+                typeof d.posisi[0] === 'number' && typeof d.posisi[1] === 'number' &&
+                !isNaN(d.posisi[0]) && !isNaN(d.posisi[1])) {
+              const [lat, lng] = d.posisi;
+              // Validate coordinate ranges for Indonesia
+              if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                return [lat, lng];
+              } else {
+                console.warn(`Invalid coordinates for ${d.nama}: [${lat}, ${lng}]`);
+                return null;
+              }
             }
             return null;
-          } catch {
-            console.warn('Invalid position data for destination:', d.nama, d.posisi);
-            return null;
           }
+          
+          // Handle string format
+          if (typeof d.posisi === 'string') {
+            try {
+              const parsed = JSON.parse(d.posisi);
+              if (Array.isArray(parsed) && parsed.length === 2 && 
+                  typeof parsed[0] === 'number' && typeof parsed[1] === 'number' &&
+                  !isNaN(parsed[0]) && !isNaN(parsed[1])) {
+                const [lat, lng] = parsed;
+                // Validate coordinate ranges for Indonesia
+                if (lat >= -11 && lat <= 6 && lng >= 95 && lng <= 141) {
+                  return [lat, lng];
+                } else {
+                  console.warn(`Invalid coordinates for ${d.nama}: [${lat}, ${lng}]`);
+                  return null;
+                }
+              }
+              return null;
+            } catch (e) {
+              console.warn(`Failed to parse position data for ${d.nama}:`, d.posisi, e);
+              return null;
+            }
+          }
+          
+          return null;
         })() : null,
       }));
+      
+      console.log('🔄 [useRobustDestinations] Processing completed:', {
+        processedLength: processedData.length,
+        validPositions: processedData.filter(d => d.posisi).length
+      });
       
       setDestinations(processedData);
       setLastFetchTime(now);
