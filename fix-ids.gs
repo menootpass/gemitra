@@ -614,29 +614,12 @@ function fillEmptySlugs() {
 // ============== FUNGSI-FUNGSI UNTUK EVENT ========================
 // =================================================================
 
-function handleGetEvents(e) {
-  const params = e.parameter || {};
-  if (params.slug) return createJsonResponse(getEventBySlug(params.slug));
-  if (params.category) return createJsonResponse({ success: true, data: getEventsByCategory(params.category) });
-  
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const events = data.slice(1).map(row => {
-    let event = {};
-    headers.forEach((header, i) => {
-      event[header] = row[i];
-    });
-    return event;
-  });
-
-  return createJsonResponse({ success: true, data: events });
-}
+// Removed duplicate handleGetEvents function - using the more complete one below
 
 function getEventBySlug(slug) {
   // ... (Logika dari event.gs)
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return null;
     }
@@ -762,7 +745,7 @@ function getEventBySlug(slug) {
 function getEventsByCategory(category) {
   // ... (Logika dari event.gs)
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return [];
     }
@@ -897,7 +880,7 @@ function getEventsByCategory(category) {
 // Fungsi untuk update event berdasarkan ID
 function updateEventById(eventId, title, description, image, date, location, category, content, author, destinasi) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return { success: false, error: "Sheet 'Event' tidak ditemukan" };
     }
@@ -991,7 +974,7 @@ function updateEventById(eventId, title, description, image, date, location, cat
 // Fungsi untuk delete event berdasarkan ID
 function deleteEventById(eventId) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return { success: false, error: "Sheet 'Event' tidak ditemukan" };
     }
@@ -1022,7 +1005,7 @@ function deleteEventById(eventId) {
 
 function incrementTotalPembaca(eventId) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return { success: false, error: "Sheet 'Event' tidak ditemukan" };
     }
@@ -1086,7 +1069,7 @@ function generateSlug(title) {
 
 function addNewEvent(title, description, image, date, location, category, content, author, destinasi) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return { success: false, error: "Sheet 'Event' tidak ditemukan" };
     }
@@ -1165,7 +1148,7 @@ function addNewEvent(title, description, image, date, location, category, conten
 // Function untuk update slug jika title berubah
 function updateSlugForEvent(eventId, newTitle) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return false;
     }
@@ -1222,7 +1205,7 @@ function updateSlugForEvent(eventId, newTitle) {
 // Function untuk mendapatkan event berdasarkan ID
 function getEventById(eventId) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Event");
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
       return null;
     }

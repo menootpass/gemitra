@@ -15,13 +15,32 @@ const TRANSAKSI_SHEET_NAME = 'Transaksi';
  */
 function doGet(e) {
   try {
-    // Cek apakah ada parameter action
-    if (e.parameter.action === 'get-transaction') {
-      return getTransactionByCode(e.parameter.kode);
-    }
+    const params = e.parameter || {};
+    const endpoint = params.endpoint || '';
     
-    // Default: ambil semua transaksi
-    return getAllTransactions();
+    // Route berdasarkan endpoint
+    switch (endpoint.toLowerCase()) {
+      case 'destinations':
+        return handleDestinationsRequest(params);
+      
+      case 'events':
+        return handleEventsRequest(params);
+      
+      case 'feedback':
+        return handleFeedbackRequest(params);
+      
+      case 'comments':
+        return handleCommentsRequest(params);
+      
+      default:
+        // Legacy support untuk parameter action
+        if (params.action === 'get-transaction') {
+          return getTransactionByCode(params.kode);
+        }
+        
+        // Default: ambil semua transaksi
+        return getAllTransactions();
+    }
     
   } catch (error) {
     return createJsonResponse({ 
@@ -51,6 +70,119 @@ function doPost(e) {
     return createJsonResponse({ 
       success: false, 
       error: error.toString() 
+    });
+  }
+}
+
+// =================================================================
+// ============== ENDPOINT HANDLERS ===============================
+// =================================================================
+
+/**
+ * Menangani request untuk destinations
+ */
+function handleDestinationsRequest(params) {
+  try {
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Destinasi');
+    if (!sheet) {
+      return createJsonResponse({
+        success: false,
+        error: "Sheet 'Destinasi' tidak ditemukan"
+      });
+    }
+
+    // Jika ada parameter slug, cari berdasarkan slug
+    if (params.slug) {
+      return getDestinationBySlug(params.slug);
+    }
+
+    // Jika ada parameter id, cari berdasarkan id
+    if (params.id) {
+      return getDestinationById(params.id);
+    }
+
+    // Default: ambil semua destinasi
+    return getAllDestinations();
+    
+  } catch (error) {
+    return createJsonResponse({
+      success: false,
+      error: error.toString()
+    });
+  }
+}
+
+/**
+ * Menangani request untuk events
+ */
+function handleEventsRequest(params) {
+  try {
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Event');
+    if (!sheet) {
+      return createJsonResponse({
+        success: false,
+        error: "Sheet 'Event' tidak ditemukan"
+      });
+    }
+
+    // Jika ada parameter slug, cari berdasarkan slug
+    if (params.slug) {
+      return getEventBySlug(params.slug);
+    }
+
+    // Jika ada parameter id, cari berdasarkan id
+    if (params.id) {
+      return getEventById(params.id);
+    }
+
+    // Jika ada parameter category, filter berdasarkan kategori
+    if (params.category) {
+      return getEventsByCategory(params.category);
+    }
+
+    // Default: ambil semua events
+    return getAllEvents();
+    
+  } catch (error) {
+    return createJsonResponse({
+      success: false,
+      error: error.toString()
+    });
+  }
+}
+
+/**
+ * Menangani request untuk feedback
+ */
+function handleFeedbackRequest(params) {
+  try {
+    // Implementasi untuk feedback jika diperlukan
+    return createJsonResponse({
+      success: false,
+      error: "Feedback endpoint belum diimplementasi"
+    });
+  } catch (error) {
+    return createJsonResponse({
+      success: false,
+      error: error.toString()
+    });
+  }
+}
+
+/**
+ * Menangani request untuk comments
+ */
+function handleCommentsRequest(params) {
+  try {
+    // Implementasi untuk comments jika diperlukan
+    return createJsonResponse({
+      success: false,
+      error: "Comments endpoint belum diimplementasi"
+    });
+  } catch (error) {
+    return createJsonResponse({
+      success: false,
+      error: error.toString()
     });
   }
 }

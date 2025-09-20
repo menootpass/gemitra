@@ -3,12 +3,25 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useLanguage } from '@/app/contexts/LanguageContext';
+import { ChevronDown, Globe } from 'lucide-react';
 
 export default function HeaderNavigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const { locale, dictionary, setLocale } = useLanguage();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleLanguage = () => {
+    setIsLanguageOpen(!isLanguageOpen);
+  };
+
+  const handleLanguageChange = (newLocale: 'id' | 'en') => {
+    setLocale(newLocale);
+    setIsLanguageOpen(false);
   };
 
   return (
@@ -22,11 +35,46 @@ export default function HeaderNavigation() {
         </div>
         
         {/* Desktop Navigation */}
-        <nav className="hidden sm:flex gap-6 md:gap-10 text-[#213DFF] font-bold text-base tracking-wide">
-          <Link href="/" className="hover:text-[#16A86E] transition">Beranda</Link>
-          <Link href="/wisata" className="hover:text-[#16A86E] transition">Destinasi</Link>
-          <Link href="/event" className="hover:text-[#16A86E] transition">Event</Link>
-        </nav>
+        <div className="hidden sm:flex items-center gap-6 md:gap-10">
+          <nav className="flex gap-6 md:gap-10 text-[#213DFF] font-bold text-base tracking-wide">
+            <Link href="/" className="hover:text-[#16A86E] transition">{dictionary.navigation.home}</Link>
+            <Link href="/wisata" className="hover:text-[#16A86E] transition">{dictionary.navigation.destinations}</Link>
+            <Link href="/event" className="hover:text-[#16A86E] transition">{dictionary.navigation.events}</Link>
+          </nav>
+          
+          {/* Language Dropdown */}
+          <div className="relative">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 text-[#213DFF] hover:text-[#16A86E] transition font-medium"
+            >
+              <Globe size={18} />
+              <span className="uppercase text-sm font-bold">{locale}</span>
+              <ChevronDown size={16} className={`transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {isLanguageOpen && (
+              <div className="absolute top-full right-0 mt-2 bg-white shadow-lg rounded-lg border border-gray-200 py-2 min-w-[120px] z-50">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition ${
+                    locale === 'id' ? 'text-[#16A86E] font-bold' : 'text-gray-700'
+                  }`}
+                >
+                  🇮🇩 Bahasa
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition ${
+                    locale === 'en' ? 'text-[#16A86E] font-bold' : 'text-gray-700'
+                  }`}
+                >
+                  🇺🇸 English
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Mobile Hamburger Menu */}
         <button
@@ -47,22 +95,48 @@ export default function HeaderNavigation() {
             className="px-6 py-3 text-[#213DFF] font-bold text-base hover:bg-gray-50 hover:text-[#16A86E] transition"
             onClick={() => setIsMenuOpen(false)}
           >
-            Beranda
+            {dictionary.navigation.home}
           </Link>
           <Link 
             href="/wisata" 
             className="px-6 py-3 text-[#213DFF] font-bold text-base hover:bg-gray-50 hover:text-[#16A86E] transition"
             onClick={() => setIsMenuOpen(false)}
           >
-            Destinasi
+            {dictionary.navigation.destinations}
           </Link>
           <Link 
             href="/event" 
             className="px-6 py-3 text-[#213DFF] font-bold text-base hover:bg-gray-50 hover:text-[#16A86E] transition"
             onClick={() => setIsMenuOpen(false)}
           >
-            Event
+            {dictionary.navigation.events}
           </Link>
+          
+          {/* Mobile Language Selector */}
+          <div className="px-6 py-3 border-t border-gray-100 mt-2">
+            <div className="flex items-center gap-2 mb-2 text-gray-600 text-sm">
+              <Globe size={16} />
+              <span>Language</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleLanguageChange('id')}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${
+                  locale === 'id' ? 'bg-[#16A86E] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🇮🇩 Bahasa
+              </button>
+              <button
+                onClick={() => handleLanguageChange('en')}
+                className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${
+                  locale === 'en' ? 'bg-[#16A86E] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🇺🇸 English
+              </button>
+            </div>
+          </div>
         </nav>
       </div>
     </header>

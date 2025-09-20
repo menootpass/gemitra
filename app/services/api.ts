@@ -3,11 +3,27 @@
 // URL utama dari environment variables (server/client aware)
 function getMainScriptUrl(): string {
   const url = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
-  return url || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
+  const finalUrl = url || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
+  
+  // Debug logging untuk memastikan URL yang benar
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔗 [Original API] Environment URL:', url);
+    console.log('🔗 [Original API] Final URL:', finalUrl);
+  }
+  
+  // Return the URL from environment or fallback
+  return finalUrl;
 }
 
 // Fungsi helper untuk menambahkan parameter endpoint ke URL utama
 function getUrlWithEndpoint(endpoint: string) {
+  // For events, use internal API route to avoid CORS issues
+  if (endpoint === 'events') {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    return `${baseUrl}/api/events`;
+  }
+  
+  // For other endpoints, use direct Google Apps Script URL
   const base = getMainScriptUrl();
   return `${base}?endpoint=${endpoint}`;
 }
@@ -142,20 +158,53 @@ class EventsApiService {
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit
 
   private async fetchWithCache(url: string, enableCache = true): Promise<any> {
-    // ... (Logika fetchWithCache sama seperti di atas)
     if (enableCache) {
       const cached = this.cache.get(url);
       if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
         return cached.data;
       }
     }
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-    if (enableCache) {
-      this.cache.set(url, { data, timestamp: Date.now() });
+    
+    // Enhanced fetch dengan retry logic
+    let lastError: Error;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        console.log(`🚀 [EventsAPI] Attempt ${attempt + 1}: ${url}`);
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (enableCache) {
+          this.cache.set(url, { data, timestamp: Date.now() });
+        }
+        
+        console.log(`✅ [EventsAPI] Success: ${url}`);
+        return data;
+        
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ [EventsAPI] Attempt ${attempt + 1} failed:`, error);
+        
+        if (attempt < 2) {
+          const delay = 1000 * Math.pow(2, attempt);
+          console.log(`⏳ [EventsAPI] Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
     }
-    return data;
+    
+    throw lastError!;
   }
 
   async fetchEvents(): Promise<any[]> {

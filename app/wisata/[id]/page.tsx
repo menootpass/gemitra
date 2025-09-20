@@ -6,13 +6,15 @@ import LoadingSkeleton from "../../components/LoadingSkeleton";
 import CommentForm from "../../components/CommentForm";
 import ImageSlider from "../../components/ImageSlider";
 import { CartItem } from "../../types";
-import { useDestinationDetailBySlug } from "../../hooks/useDestinations";
+import { useRobustDestinationBySlug } from "../../hooks/useRobustDestinations";
 import useSWR from "swr";
 import { ShoppingCartSimple } from "phosphor-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function WisataDetail() {
   const params = useParams();
   const slug = params.id; // This will be the slug from URL
+  const { dictionary } = useLanguage();
 
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -25,8 +27,8 @@ export default function WisataDetail() {
   const [waktuBooking, setWaktuBooking] = useState("");
   const [jumlahPenumpang, setJumlahPenumpang] = useState(1);
 
-  // Data state
-  const { destination: data, loading, error } = useDestinationDetailBySlug(slug as string);
+  // Data state dengan robust API
+  const { destination: data, loading, error, refresh, isOnline } = useRobustDestinationBySlug(slug as string);
   
   // Real-time comments state
   const [localComments, setLocalComments] = useState<any[]>([]);
@@ -133,7 +135,7 @@ export default function WisataDetail() {
     });
     
     // Show toast notification
-    setToastMessage("Komentar berhasil ditambahkan!");
+    setToastMessage(dictionary.wisataDetail.commentAdded);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     
@@ -156,8 +158,32 @@ export default function WisataDetail() {
       </div>
     </div>
   );
-  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
-  if (!data) return <div className="min-h-screen flex items-center justify-center text-black/60">Wisata tidak ditemukan.</div>;
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center p-6 max-w-md">
+        <div className="text-red-500 mb-4">
+          <span className="text-4xl">⚠️</span>
+        </div>
+        <h2 className="text-red-800 font-semibold mb-2">Failed to Load Destination</h2>
+        <p className="text-red-600 text-sm mb-4">{error}</p>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Retrying...' : 'Try Again'}
+          </button>
+          {!isOnline && (
+            <span className="text-red-500 text-sm">
+              📶 Check your internet connection
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+  if (!data) return <div className="min-h-screen flex items-center justify-center text-black/60">{dictionary.wisataDetail.notFound}</div>;
 
   return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
@@ -261,7 +287,7 @@ export default function WisataDetail() {
               onClick={handleAddToCart}
               disabled={cart.length >= 3 || !!cart.find(item => item.id == data.id)}
             >
-              Tambahkan destinasi wisata
+              {dictionary.wisataDetail.addDestination}
             </button>
           </div>
           <div className="p-6 flex flex-col gap-3">
@@ -291,7 +317,7 @@ export default function WisataDetail() {
                 <span className="text-[#16A86E] font-bold text-xl">
                   Rp {data.harga.toLocaleString("id-ID")}
                 </span>
-                <span className="text-gray-500 text-sm">per destinasi</span>
+                <span className="text-gray-500 text-sm">{dictionary.wisataDetail.perDestination}</span>
               </div>
             )}
             <p className="text-black/80 text-base mb-2">{data.deskripsi}</p>
@@ -301,12 +327,12 @@ export default function WisataDetail() {
               <div className="flex items-center gap-2 text-sm mb-2">
                 <span className="text-[#213DFF] font-semibold">👥</span>
                 <span className="text-black/70">
-                  {data.pengunjung.toLocaleString()} pengunjung
+                  {data.pengunjung.toLocaleString()} {dictionary.wisataDetail.visitors}
                 </span>
               </div>
             )}
             <div className="mb-2">
-              <h2 className="font-bold text-[#16A86E] mb-1">Fasilitas</h2>
+              <h2 className="font-bold text-[#16A86E] mb-1">{dictionary.wisataDetail.facilities}</h2>
               <ul className="flex flex-wrap gap-2">
                 {data.fasilitas.map((f: string) => (
                   <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
@@ -314,7 +340,7 @@ export default function WisataDetail() {
               </ul>
             </div>
             <div className="comments-container">
-              <h2 className="font-bold text-[#16A86E] mb-1">Komentar ({localComments.length})</h2>
+              <h2 className="font-bold text-[#16A86E] mb-1">{dictionary.wisataDetail.comments} ({localComments.length})</h2>
               <ul className="flex flex-col gap-2 mb-4">
                 {localComments.length > 0 ? (
                   localComments.map((k, i: number) => (
@@ -357,7 +383,7 @@ export default function WisataDetail() {
                     </li>
                   ))
                 ) : (
-                  <li className="text-gray-500 text-sm italic">Belum ada komentar</li>
+                  <li className="text-gray-500 text-sm italic">{dictionary.wisataDetail.noComments}</li>
                 )}
               </ul>
             </div>
@@ -378,7 +404,7 @@ export default function WisataDetail() {
           className="fixed right-4 bottom-4 z-40 bg-[#213DFF] text-white p-4 rounded-full shadow-lg hover:bg-[#16A86E] transition flex items-center justify-center cursor-pointer"
           style={{ boxShadow: "0 4px 24px 0 #213DFF22" }}
           onClick={() => setVisibleSidebar(true)}
-          aria-label="Tampilkan Cart"
+          aria-label={dictionary.wisata.showCart}
         >
           <ShoppingCartSimple size={28} weight="bold" />
           {cart.length > 0 && (

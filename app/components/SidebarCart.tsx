@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { XSquare, FileText, Eye } from "phosphor-react";
 import { CartItem } from "../types";
-import { apiService } from "../services/api";
+import { robustApiService } from "../services/robustApi";
 import { mutate } from "swr";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -194,7 +194,7 @@ export default function SidebarCart({
 
     try {
       // Single API call - transaction data includes destination names for visitor increment
-      const result = await apiService.createTransaction(transactionData);
+      const result = await robustApiService.createTransaction(transactionData);
       
       // Set success message
       setSubmitMessage(`Transaksi berhasil! Kode Booking: ${result.kode}. Anda akan diarahkan ke halaman invoice.`);

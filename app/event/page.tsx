@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEvents } from '../hooks/useEvents';
+import { Event } from '../types';
+import { eventsApiService } from '../services/api';
 import HeaderNavigation from '../components/HeaderNavigation';
 import StickySearchBar from '../components/StickySearchBar';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function EventListPage() {
+  const { dictionary } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDateRange, setSelectedDateRange] = useState('');
@@ -15,7 +18,31 @@ export default function EventListPage() {
   const [visibleCount, setVisibleCount] = useState(9); // Show 9 events initially
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
-  const { events, loading, error } = useEvents();
+  // Direct API state management
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch events with enhanced error handling
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('🚀 Fetching events...');
+        const data = await eventsApiService.fetchEvents();
+        console.log('✅ Events loaded:', data.length);
+        setEvents(data);
+      } catch (err) {
+        console.error('❌ Events fetch failed:', err);
+        setError(err instanceof Error ? err.message : 'Gagal mengambil data events');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // Memoized filtered and sorted events for performance
   const sortedEvents = useMemo(() => {
@@ -170,9 +197,9 @@ export default function EventListPage() {
     
     // Check if it's today or tomorrow
     if (date.toDateString() === today.toDateString()) {
-      return 'Hari Ini';
+      return dictionary.events.dateLabels.today;
     } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Besok';
+      return dictionary.events.dateLabels.tomorrow;
     }
     
     // Check if it's this week
@@ -208,11 +235,11 @@ export default function EventListPage() {
     today.setHours(0, 0, 0, 0);
     
     if (date < today) {
-      return { status: 'past', label: 'Event Selesai', color: 'text-gray-400' };
+      return { status: 'past', label: dictionary.events.dateLabels.eventFinished, color: 'text-gray-400' };
     } else if (date.toDateString() === today.toDateString()) {
-      return { status: 'today', label: 'Hari Ini', color: 'text-green-600' };
+      return { status: 'today', label: dictionary.events.dateLabels.today, color: 'text-green-600' };
     } else if (date.getTime() - today.getTime() <= 7 * 24 * 60 * 60 * 1000) {
-      return { status: 'soon', label: 'Minggu Ini', color: 'text-blue-600' };
+      return { status: 'soon', label: dictionary.events.dateLabels.soon, color: 'text-blue-600' };
     } else {
       return { status: 'upcoming', label: 'Mendatang', color: 'text-gray-600' };
     }
@@ -270,10 +297,10 @@ export default function EventListPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF] mb-4">
-                Daftar Event
+                {dictionary.events.title}
               </h1>
               <p className="text-lg text-gray-600">
-                Temukan event menarik di Yogyakarta
+                {dictionary.events.subtitle}
               </p>
             </div>
             
@@ -302,7 +329,7 @@ export default function EventListPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-red-600 mb-4">
-                Gagal Memuat Data Event
+                {dictionary.events.failedToLoad}
               </h1>
               <p className="text-gray-600 mb-6">
                 {error}
@@ -311,7 +338,7 @@ export default function EventListPage() {
                 onClick={() => window.location.reload()}
                 className="bg-[#16A86E] text-white font-bold py-2 px-6 rounded-xl hover:bg-[#213DFF] transition"
               >
-                Coba Lagi
+                {dictionary.events.tryAgain}
               </button>
             </div>
           </div>
@@ -338,10 +365,10 @@ export default function EventListPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF] mb-4">
-              Daftar Event
+              {dictionary.events.title}
             </h1>
             <p className="text-lg text-gray-600">
-              Temukan event menarik di Yogyakarta
+              {dictionary.events.subtitle}
             </p>
           </div>
 
@@ -352,7 +379,7 @@ export default function EventListPage() {
               <div className="lg:col-span-2">
                 <input
                   type="text"
-                  placeholder="🔍 Cari event berdasarkan judul, deskripsi, atau lokasi..."
+                  placeholder={dictionary.events.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#16A86E] focus:border-transparent"
@@ -366,7 +393,7 @@ export default function EventListPage() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#16A86E] focus:border-transparent"
                 >
-                  <option value="">📂 Semua Kategori</option>
+                  <option value="">{dictionary.events.allCategories}</option>
                   {categories.map(category => (
                     <option key={category} value={category}>
                       {category}
@@ -382,14 +409,14 @@ export default function EventListPage() {
                   onChange={(e) => setSelectedDateRange(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#16A86E] focus:border-transparent"
                 >
-                  <option value="">📅 Semua Waktu</option>
-                  <option value="today">Hari Ini</option>
-                  <option value="tomorrow">Besok</option>
-                  <option value="this-week">Minggu Ini</option>
-                  <option value="this-month">Bulan Ini</option>
-                  <option value="next-month">Bulan Depan</option>
-                  <option value="upcoming">Event Mendatang</option>
-                  <option value="past">Event Lampau</option>
+                  <option value="">{dictionary.events.allTime}</option>
+                  <option value="today">{dictionary.events.dateLabels.today}</option>
+                  <option value="tomorrow">{dictionary.events.dateLabels.tomorrow}</option>
+                  <option value="this-week">{dictionary.events.dateLabels.thisWeek}</option>
+                  <option value="this-month">{dictionary.events.dateLabels.thisMonth}</option>
+                  <option value="next-month">{dictionary.events.dateLabels.nextMonth}</option>
+                  <option value="upcoming">{dictionary.events.dateLabels.upcoming}</option>
+                  <option value="past">{dictionary.events.dateLabels.past}</option>
                 </select>
               </div>
             </div>
@@ -397,7 +424,7 @@ export default function EventListPage() {
             {/* Sort Options */}
             <div className="mt-4 flex flex-wrap gap-3">
               <span className="text-sm font-medium text-gray-700 flex items-center">
-                🎯 Urutkan:
+                {dictionary.events.sortBy}
               </span>
               {[
                 { value: 'newest', label: 'Terbaru', icon: '🆕' },
@@ -405,7 +432,18 @@ export default function EventListPage() {
                 { value: 'popular', label: 'Terpopuler', icon: '🔥' },
                 { value: 'alphabetical', label: 'A-Z', icon: '🔤' },
                 { value: 'location', label: 'Lokasi', icon: '📍' }
-              ].map(option => (
+              ].map(option => {
+                const getTranslatedLabel = (value: string) => {
+                  switch(value) {
+                    case 'newest': return dictionary.events.sortOptions.newest;
+                    case 'oldest': return dictionary.events.sortOptions.oldest;
+                    case 'popular': return dictionary.events.sortOptions.popular;
+                    case 'alphabetical': return dictionary.events.sortOptions.alphabetical;
+                    case 'location': return dictionary.events.sortOptions.location;
+                    default: return option.label;
+                  }
+                };
+                return (
                 <button
                   key={option.value}
                   onClick={() => setSortBy(option.value)}
@@ -416,21 +454,21 @@ export default function EventListPage() {
                   }`}
                 >
                   <span className="mr-1">{option.icon}</span>
-                  {option.label}
+                  {getTranslatedLabel(option.value)}
                 </button>
-              ))}
+              )})}
             </div>
             
             {/* Quick Filter Buttons */}
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="text-sm font-medium text-gray-700 flex items-center">
-                ⚡ Quick Filter:
+                {dictionary.events.quickFilter}
               </span>
               {[
-                { dateRange: 'today', label: 'Hari Ini', icon: '📅' },
-                { dateRange: 'this-week', label: 'Minggu Ini', icon: '📆' },
-                { dateRange: 'this-month', label: 'Bulan Ini', icon: '🗓️' },
-                { dateRange: 'upcoming', label: 'Event Mendatang', icon: '🚀' }
+                { dateRange: 'today', label: dictionary.events.dateLabels.today, icon: '📅' },
+                { dateRange: 'this-week', label: dictionary.events.dateLabels.thisWeek, icon: '📆' },
+                { dateRange: 'this-month', label: dictionary.events.dateLabels.thisMonth, icon: '🗓️' },
+                { dateRange: 'upcoming', label: dictionary.events.dateLabels.upcoming, icon: '🚀' }
               ].map(option => (
                 <button
                   key={option.dateRange}
@@ -452,13 +490,14 @@ export default function EventListPage() {
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="text-gray-600">
-                Menampilkan {sortedEvents.length} dari {events.length} event
+                {dictionary.events.showingResults.replace('{count}', sortedEvents.length.toString()).replace('{total}', events.length.toString())}
                 {sortBy !== 'newest' && (
                   <span className="ml-2 text-sm text-[#16A86E] font-medium">
-                    (Diurutkan berdasarkan {sortBy === 'oldest' ? 'terlama' : 
-                     sortBy === 'popular' ? 'terpopuler' : 
-                     sortBy === 'alphabetical' ? 'A-Z' : 
-                     sortBy === 'location' ? 'lokasi' : 'terbaru'})
+                    {dictionary.events.sortedBy.replace('{sortType}', 
+                      sortBy === 'oldest' ? dictionary.events.sortOptions.oldest : 
+                      sortBy === 'popular' ? dictionary.events.sortOptions.popular : 
+                      sortBy === 'alphabetical' ? dictionary.events.sortOptions.alphabetical : 
+                      sortBy === 'location' ? dictionary.events.sortOptions.location : dictionary.events.sortOptions.newest)}
                   </span>
                 )}
               </p>
@@ -466,7 +505,7 @@ export default function EventListPage() {
               {/* Active Filters Display */}
               {(searchTerm || selectedCategory || selectedDateRange) && (
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-gray-500">Filter Aktif:</span>
+                  <span className="text-sm text-gray-500">{dictionary.events.activeFilters}</span>
                   {searchTerm && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                       🔍 &ldquo;{searchTerm}&rdquo;
@@ -491,13 +530,13 @@ export default function EventListPage() {
                   )}
                   {selectedDateRange && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                      📅 {selectedDateRange === 'today' ? 'Hari Ini' :
-                          selectedDateRange === 'tomorrow' ? 'Besok' :
-                          selectedDateRange === 'this-week' ? 'Minggu Ini' :
-                          selectedDateRange === 'this-month' ? 'Bulan Ini' :
-                          selectedDateRange === 'next-month' ? 'Bulan Depan' :
-                          selectedDateRange === 'upcoming' ? 'Event Mendatang' :
-                          selectedDateRange === 'past' ? 'Event Lampau' : selectedDateRange}
+                      📅 {selectedDateRange === 'today' ? dictionary.events.dateLabels.today :
+                          selectedDateRange === 'tomorrow' ? dictionary.events.dateLabels.tomorrow :
+                          selectedDateRange === 'this-week' ? dictionary.events.dateLabels.thisWeek :
+                          selectedDateRange === 'this-month' ? dictionary.events.dateLabels.thisMonth :
+                          selectedDateRange === 'next-month' ? dictionary.events.dateLabels.nextMonth :
+                          selectedDateRange === 'upcoming' ? dictionary.events.dateLabels.upcoming :
+                          selectedDateRange === 'past' ? dictionary.events.dateLabels.past : selectedDateRange}
                       <button
                         onClick={() => setSelectedDateRange('')}
                         className="ml-1 text-purple-600 hover:text-purple-800"
@@ -516,10 +555,10 @@ export default function EventListPage() {
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
               <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                Event Tidak Ditemukan
+                {dictionary.events.noEventsFound}
               </h2>
               <p className="text-gray-500 mb-6">
-                Coba ubah kata kunci pencarian atau pilih filter yang berbeda
+                {dictionary.events.tryDifferentFilters}
               </p>
               <button
                 onClick={() => {
@@ -530,7 +569,7 @@ export default function EventListPage() {
                 }}
                 className="bg-[#16A86E] text-white font-bold py-2 px-6 rounded-xl hover:bg-[#213DFF] transition"
               >
-                Reset Semua Filter
+                {dictionary.events.resetAllFilters}
               </button>
             </div>
           ) : (
@@ -589,14 +628,14 @@ export default function EventListPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span>👥</span>
-                          <span>{event.totalPembaca.toLocaleString()} pembaca</span>
+                          <span>{event.totalPembaca.toLocaleString()} {dictionary.events.readers}</span>
                         </div>
                       </div>
 
                       {/* Read More Button */}
                       <div className="mt-4">
                         <span className="text-[#16A86E] font-semibold text-sm hover:text-[#213DFF] transition">
-                          Baca Selengkapnya →
+                          {dictionary.events.readMore}
                         </span>
                       </div>
                     </div>
@@ -611,14 +650,14 @@ export default function EventListPage() {
                   {isLoadingMore ? (
                     <div className="flex items-center justify-center gap-3">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#16A86E]"></div>
-                      <span className="text-gray-600">Memuat event lainnya...</span>
+                      <span className="text-gray-600">{dictionary.events.loadingMore}</span>
                     </div>
                   ) : (
                     <button
                       onClick={loadMore}
                       className="bg-[#16A86E] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#213DFF] transition-all transform hover:scale-105"
                     >
-                      📄 Muat Lebih Banyak Event
+                      {dictionary.events.loadMoreButton}
                     </button>
                   )}
                 </div>
@@ -629,10 +668,10 @@ export default function EventListPage() {
                 <div className="text-center py-8">
                   <div className="text-4xl mb-4">🎉</div>
                   <p className="text-gray-600 font-medium">
-                    Semua event telah ditampilkan!
+                    {dictionary.events.allEventsShown}
                   </p>
                   <p className="text-gray-500 text-sm mt-2">
-                    Total: {sortedEvents.length} event
+                    {dictionary.events.totalEvents.replace('{count}', sortedEvents.length.toString())}
                   </p>
                 </div>
               )}

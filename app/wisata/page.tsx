@@ -11,7 +11,8 @@ import HeaderNavigation from "../components/HeaderNavigation";
 import StickySearchBar from "../components/StickySearchBar";
 import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
-import { useDestinationsSWR } from "../hooks/useDestinationsSWR";
+import { useRobustDestinations } from "../hooks/useRobustDestinations";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const NEW_CATEGORIES = [
   "Alam",
@@ -58,6 +59,8 @@ function mapToNewCategory(destination: Destination): NewCategory | null {
 }
 
 export default function WisataList() {
+  const { dictionary } = useLanguage();
+  
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [kendaraan, setKendaraan] = useState("Mobilio");
@@ -75,16 +78,18 @@ export default function WisataList() {
   const [visibleCount, setVisibleCount] = useState(9);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
-  // Use destinations hook with SWR
+  // Use robust destinations hook
   const { 
     destinations, 
     loading, 
     error, 
-    mutate: refresh
-  } = useDestinationsSWR({
-    refreshInterval: 10000, // Update setiap 10 detik
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true
+    refresh,
+    isOnline,
+    retryCount
+  } = useRobustDestinations({
+    enablePolling: true,
+    pollingInterval: 15000, // 15 seconds untuk wisata list
+    enableRetry: true
   });
 
   // Map state
@@ -280,16 +285,26 @@ export default function WisataList() {
     setSelectedDestination(destination);
   }
 
+  // Map translated category back to original category
+  const getOriginalCategory = useCallback((translatedCategory: string) => {
+    if (translatedCategory === dictionary.wisata.categories.nature) return "Alam";
+    if (translatedCategory === dictionary.wisata.categories.cultureHistory) return "Budaya & Sejarah";
+    if (translatedCategory === dictionary.wisata.categories.creativeEducation) return "Kreatif & Edukasi";
+    if (translatedCategory === dictionary.wisata.categories.hiddenCulinary) return "Kuliner Tersembunyi";
+    return translatedCategory;
+  }, [dictionary]);
+
   // Ganti data/filtering dari custom hook ke state polling (memoized)
   const filteredData = useMemo(() => {
     return destinations.filter(item => {
       const matchesSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.lokasi.toLowerCase().includes(searchTerm.toLowerCase());
       const mappedCategory = mapToNewCategory(item);
-      const matchesCategory = !selectedCategory || mappedCategory === selectedCategory;
+      const originalSelectedCategory = getOriginalCategory(selectedCategory);
+      const matchesCategory = !selectedCategory || mappedCategory === originalSelectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [destinations, searchTerm, selectedCategory]);
+  }, [destinations, searchTerm, selectedCategory, dictionary, getOriginalCategory]);
 
   // Infinite scroll handler
   const loadMore = useCallback(() => {
@@ -319,7 +334,18 @@ export default function WisataList() {
   useEffect(() => {
     setVisibleCount(9);
   }, [searchTerm, selectedCategory]);
-  const categories = NEW_CATEGORIES as readonly string[];
+  
+  // Get translated categories
+  const getTranslatedCategories = () => {
+    return [
+      dictionary.wisata.categories.nature,
+      dictionary.wisata.categories.cultureHistory,
+      dictionary.wisata.categories.creativeEducation,
+      dictionary.wisata.categories.hiddenCulinary,
+    ];
+  };
+  
+  const categories = getTranslatedCategories();
 
   if (!hydrated || loading) return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10">
@@ -337,7 +363,7 @@ export default function WisataList() {
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         categories={[...categories]}
-        placeholder="Cari destinasi..."
+        placeholder={dictionary.wisata.searchPlaceholder}
         showViewToggle={true}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -351,7 +377,7 @@ export default function WisataList() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF]">Destinasi Wisata</h1>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#213DFF]">{dictionary.wisata.title}</h1>
             </div>
             <div className="flex gap-2">
               <button
@@ -362,7 +388,7 @@ export default function WisataList() {
                     : "bg-white text-[#213DFF] border border-[#213DFF]"
                 }`}
               >
-                List
+                {dictionary.wisata.listView}
               </button>
               <button
                 onClick={() => setViewMode("map")}
@@ -372,14 +398,14 @@ export default function WisataList() {
                     : "bg-white text-[#213DFF] border border-[#213DFF]"
                 }`}
               >
-                Peta
+                {dictionary.wisata.mapView}
               </button>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="text"
-              placeholder="Cari destinasi..."
+              placeholder={dictionary.wisata.searchPlaceholder}
               className="flex-1 rounded-xl px-4 py-2 border border-[#16A86E33] bg-white shadow text-base"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -389,7 +415,7 @@ export default function WisataList() {
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
             >
-              <option value="">Semua Kategori</option>
+              <option value="">{dictionary.wisata.allCategories}</option>
               {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -399,14 +425,27 @@ export default function WisataList() {
 
         {error && (
           <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            <p className="font-bold">Error:</p>
+            <p className="font-bold">{dictionary.wisata.error}</p>
             <p>{error}</p>
-            <button 
-              onClick={() => refresh()}
-              className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-            >
-              Coba Lagi
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+              <button 
+                onClick={refresh}
+                disabled={loading}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {loading ? 'Retrying...' : dictionary.wisata.tryAgain}
+              </button>
+              {!isOnline && (
+                <span className="text-red-500 text-sm self-center">
+                  📶 Check your internet connection
+                </span>
+              )}
+            </div>
+            {retryCount > 0 && (
+              <p className="text-red-500 text-xs mt-2">
+                Retry attempt: {retryCount}/3
+              </p>
+            )}
           </div>
         )}
 
@@ -434,7 +473,7 @@ export default function WisataList() {
                       <span className="text-[#16A86E] font-bold text-lg">
                         Rp {item.harga.toLocaleString("id-ID")}
                       </span>
-                      <span className="text-gray-500 text-sm">per person</span>
+                      <span className="text-gray-500 text-sm">{dictionary.wisata.perPerson}</span>
                     </div>
                   )}
                   <div className="flex gap-2 mt-2">
@@ -442,14 +481,14 @@ export default function WisataList() {
                       href={`/wisata/${item.slug || item.id}`}
                       className="flex-1 bg-[#16A86E] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#213DFF] transition text-center"
                     >
-                      Detail
+                      {dictionary.wisata.detailButton}
                     </Link>
                     <button
                       className="bg-[#213DFF] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#16A86E] transition disabled:opacity-50"
                       onClick={() => handleAddToCart(item.id, item.nama, item.harga, item.slug)}
                       disabled={cart.length >= 3 || !!cart.find(cartItem => cartItem.id == item.id)}
                     >
-                      +
+                      {dictionary.wisata.addToCart}
                     </button>
                   </div>
                 </div>
@@ -462,14 +501,14 @@ export default function WisataList() {
               {isLoadingMore ? (
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#16A86E]"></div>
-                  <span className="text-gray-600">Memuat destinasi lainnya...</span>
+                  <span className="text-gray-600">{dictionary.wisata.loadingMore}</span>
                 </div>
               ) : (
                 <button
                   onClick={loadMore}
                   className="bg-[#16A86E] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#213DFF] transition-all transform hover:scale-105"
                 >
-                  📄 Muat Lebih Banyak
+                  {dictionary.wisata.loadMoreButton}
                 </button>
               )}
             </div>
@@ -477,7 +516,7 @@ export default function WisataList() {
           {visibleCount >= filteredData.length && filteredData.length > 0 && (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">🎉</div>
-              <p className="text-gray-600">Semua destinasi telah ditampilkan</p>
+              <p className="text-gray-600">{dictionary.wisata.allDestinationsShown}</p>
             </div>
           )}
           </>
@@ -502,7 +541,7 @@ export default function WisataList() {
           className="fixed right-4 bottom-4 z-40 bg-[#213DFF] text-white p-4 rounded-full shadow-lg hover:bg-[#16A86E] transition flex items-center justify-center cursor-pointer"
           style={{ boxShadow: "0 4px 24px 0 #213DFF22" }}
           onClick={() => setVisibleSidebar(true)}
-          aria-label="Tampilkan Cart"
+          aria-label={dictionary.wisata.showCart}
         >
           <ShoppingCartSimple size={28} weight="bold" />
           {cart.length > 0 && (

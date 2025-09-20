@@ -5,6 +5,9 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import Script from "next/script";
 import VisitorTracker from "./components/VisitorTracker";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import ConnectionStatus from "./components/ConnectionStatus";
+import CacheCleanup from "./components/CacheCleanup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning={true}>
       <head>{/* Google Analytics */}
         <Script src={`https://www.googletagmanager.com/gtag/js?id=G-4NEX9PWWFQ`} strategy="afterInteractive"/>
         <Script id="google-analytics" strategy="afterInteractive">
@@ -36,8 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body>
-        <VisitorTracker />
-        {children}
+        <LanguageProvider>
+          <CacheCleanup />
+          <ConnectionStatus />
+          <VisitorTracker />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

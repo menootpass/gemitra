@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ChatCircle, Star } from "phosphor-react";
-import { apiService } from "../services/api";
+import { robustApiService } from "../services/robustApi";
 import { mutate } from "swr";
 
 interface CommentFormProps {
@@ -51,7 +51,7 @@ export default function CommentForm({ destinationId, onCommentAdded }: CommentFo
     setMessage(null);
 
     try {
-      const result = await apiService.createComment({
+      const result = await robustApiService.createComment({
         ...formData,
         destinationId,
       });
