@@ -34,6 +34,9 @@ export default function WisataDetail() {
   const [localComments, setLocalComments] = useState<any[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  
+  // Cart notification state
+  const [showCartNotification, setShowCartNotification] = useState(false);
    
   useEffect(() => {
     try {
@@ -121,7 +124,14 @@ export default function WisataDetail() {
     if (!data) return;
     if (cart.find(item => item.id == data.id)) return;
     if (cart.length >= 3) return;
+    
     setCart([...cart, { id: data.id, nama: data.nama, harga: data.harga, slug: data.slug }]);
+    
+    // Show cart notification
+    setShowCartNotification(true);
+    setTimeout(() => {
+      setShowCartNotification(false);
+    }, 4000);
   }
   function handleRemoveFromCart(id: number) {
     setCart(cart.filter(item => item.id !== id));
@@ -334,9 +344,38 @@ export default function WisataDetail() {
             <div className="mb-2">
               <h2 className="font-bold text-[#16A86E] mb-1">{dictionary.wisataDetail.facilities}</h2>
               <ul className="flex flex-wrap gap-2">
-                {data.fasilitas.map((f: string) => (
-                  <li key={f} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
-                ))}
+                {(() => {
+                  // Handle different fasilitas data formats
+                  let fasilitasArray: string[] = [];
+                  
+                  if (data.fasilitas) {
+                    if (Array.isArray(data.fasilitas)) {
+                      fasilitasArray = data.fasilitas;
+                    } else if (typeof data.fasilitas === 'string') {
+                      try {
+                        // Try to parse JSON string
+                        const parsed = JSON.parse(data.fasilitas);
+                        if (Array.isArray(parsed)) {
+                          fasilitasArray = parsed;
+                        } else {
+                          // If not array, split by comma
+                          fasilitasArray = (data.fasilitas as string).split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+                        }
+                      } catch (e) {
+                        // If JSON parsing fails, split by comma
+                        fasilitasArray = (data.fasilitas as string).split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+                      }
+                    }
+                  }
+                  
+                  return fasilitasArray.length > 0 ? (
+                    fasilitasArray.map((f: string, index: number) => (
+                      <li key={`${f}-${index}`} className="px-3 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">{f}</li>
+                    ))
+                  ) : (
+                    <li className="text-gray-500 text-sm italic">No facilities information available</li>
+                  );
+                })()}
               </ul>
             </div>
             <div className="comments-container">
@@ -437,6 +476,19 @@ export default function WisataDetail() {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             {toastMessage}
+          </div>
+        </div>
+      )}
+      
+      {/* Cart Notification */}
+      {showCartNotification && (
+        <div className="fixed top-4 left-4 z-50 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 animate-bounce">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="flex flex-col">
+              <span className="font-semibold">{dictionary.wisata.addToCartNotification}</span>
+              <span className="text-xs opacity-90">{dictionary.wisata.checkoutNotification}</span>
+            </div>
           </div>
         </div>
       )}

@@ -617,19 +617,24 @@ function fillEmptySlugs() {
 // Removed duplicate handleGetEvents function - using the more complete one below
 
 function getEventBySlug(slug) {
-  // ... (Logika dari event.gs)
   try {
+    console.log('getEventBySlug called with slug:', slug);
+    
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(EVENT_SHEET_NAME);
     if (!sheet) {
+      console.log('ERROR: Event sheet not found');
       return null;
     }
 
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) {
+      console.log('ERROR: No data in event sheet');
       return null;
     }
 
     const headers = data[0];
+    console.log('Event sheet headers:', headers);
+    
     const idIndex = headers.indexOf("id");
     const titleIndex = headers.indexOf("title");
     const descriptionIndex = headers.indexOf("description");
@@ -643,10 +648,17 @@ function getEventBySlug(slug) {
     const slugIndex = headers.indexOf("slug");
     const destinasiIndex = headers.indexOf("destinasi");
 
+    console.log('Slug index:', slugIndex);
+    console.log('Total rows in event sheet:', data.length);
+
     // Cari event dengan slug yang sesuai
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[slugIndex] && row[slugIndex].toString().toLowerCase() === slug.toLowerCase()) {
+      const rowSlug = row[slugIndex] ? row[slugIndex].toString().toLowerCase() : '';
+      console.log(`Checking row ${i}: slug="${rowSlug}" vs target="${slug.toLowerCase()}"`);
+      
+      if (row[slugIndex] && rowSlug === slug.toLowerCase()) {
+        console.log('✅ Event found! Building response...');
         
         // Parse totalPembaca
         let totalPembaca = 0;
@@ -736,8 +748,10 @@ function getEventBySlug(slug) {
       }
     }
 
+    console.log('❌ No event found with slug:', slug);
     return null;
   } catch (error) {
+    console.log('❌ Error in getEventBySlug:', error.toString());
     return null;
   }
 }
@@ -1333,19 +1347,29 @@ function handleGetEvents(e) {
   const params = e.parameter || {};
   const action = (params.action || '').toString().toLowerCase();
 
-  // Routing berdasarkan parameter
-  if ((action === 'slug' || params.slug) && params.slug) {
+  // Debug logging
+  console.log('handleGetEvents called with params:', params);
+  console.log('Action:', action);
+
+  // Routing berdasarkan parameter - prioritaskan slug parameter
+  if (params.slug) {
+    console.log('Looking for event by slug:', params.slug);
     const bySlug = getEventBySlug(params.slug);
+    console.log('Event found by slug:', bySlug ? 'YES' : 'NO');
     return createJsonResponse({ success: true, data: bySlug });
   }
 
-  if ((action === 'id' || params.id) && params.id) {
+  if (params.id) {
+    console.log('Looking for event by id:', params.id);
     const byId = getEventById(params.id);
+    console.log('Event found by id:', byId ? 'YES' : 'NO');
     return createJsonResponse({ success: true, data: byId });
   }
 
-  if (action === 'category' && params.category) {
+  if (params.category) {
+    console.log('Looking for events by category:', params.category);
     const byCategory = getEventsByCategory(params.category);
+    console.log('Events found by category:', byCategory.length);
     return createJsonResponse({ success: true, data: byCategory });
   }
 

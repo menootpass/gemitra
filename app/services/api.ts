@@ -19,7 +19,7 @@ function getMainScriptUrl(): string {
 function getUrlWithEndpoint(endpoint: string) {
   // For events, use internal API route to avoid CORS issues
   if (endpoint === 'events') {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
     return `${baseUrl}/api/events`;
   }
   
@@ -74,37 +74,37 @@ class ApiService {
   }
 
   async fetchDestinationById(id: number): Promise<any> {
-    const url = `${getUrlWithEndpoint('destinations')}&id=${id}`;
+    const url = `${getUrlWithEndpoint('destinations')}?id=${id}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || null;
   }
 
   async fetchDestinationsWithLimit(limit: number): Promise<any[]> {
-    const url = `${getUrlWithEndpoint('destinations')}&limit=${limit}`;
+    const url = `${getUrlWithEndpoint('destinations')}?limit=${limit}`;
     const data = await this.fetchWithCache(url, false); // SWR handles caching
     return data.data || [];
   }
 
   async fetchEventsByCategory(category: string): Promise<any[]> {
-    const url = `${getUrlWithEndpoint('events')}&category=${encodeURIComponent(category)}`;
+    const url = `${getUrlWithEndpoint('events')}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }
 
   async fetchDestinationsByCategory(category: string): Promise<any[]> {
-    const url = `${getUrlWithEndpoint('destinations')}&category=${encodeURIComponent(category)}`;
+    const url = `${getUrlWithEndpoint('destinations')}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false); // SWR handles caching
     return data.data || [];
   }
 
   async searchDestinations(query: string): Promise<any[]> {
-    const url = `${getUrlWithEndpoint('destinations')}&search=${encodeURIComponent(query)}`;
+    const url = `${getUrlWithEndpoint('destinations')}?search=${encodeURIComponent(query)}`;
     const data = await this.fetchWithCache(url, false); // SWR handles caching
     return data.data || [];
   }
 
   async fetchDestinationBySlug(slug: string): Promise<any> {
-    const url = `${getUrlWithEndpoint('destinations')}&slug=${encodeURIComponent(slug)}`;
+    const url = `${getUrlWithEndpoint('destinations')}?slug=${encodeURIComponent(slug)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || null;
   }
@@ -210,17 +210,54 @@ class EventsApiService {
   async fetchEvents(): Promise<any[]> {
     const url = getUrlWithEndpoint('events');
     const data = await this.fetchWithCache(url, true);
-    return data.data || [];
+    
+    console.log('🔍 [API Service] fetchEvents response:', {
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      hasDataKey: 'data' in data,
+      length: Array.isArray(data) ? data.length : (data?.data ? data.data.length : 0)
+    });
+    
+    // Handle different response structures
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && typeof data === 'object' && data.data) {
+      return Array.isArray(data.data) ? data.data : [];
+    }
+    
+    return [];
   }
 
   async fetchEventBySlug(slug: string): Promise<any> {
-    const url = `${getUrlWithEndpoint('events')}&slug=${encodeURIComponent(slug)}`;
+    const url = `${getUrlWithEndpoint('events')}?slug=${encodeURIComponent(slug)}`;
     const data = await this.fetchWithCache(url, false);
-    return data.data || null;
+    
+    console.log('🔍 [API Service] fetchEventBySlug response:', {
+      slug,
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      hasDataKey: 'data' in data
+    });
+    
+    // Handle different response structures
+    if (Array.isArray(data)) {
+      return data.length > 0 ? data[0] : null;
+    } else if (data && typeof data === 'object') {
+      if (data.data) {
+        if (Array.isArray(data.data)) {
+          return data.data.length > 0 ? data.data[0] : null;
+        } else {
+          return data.data;
+        }
+      }
+      return data;
+    }
+    
+    return null;
   }
 
   async fetchEventsByCategory(category: string): Promise<any[]> {
-    const url = `${getUrlWithEndpoint('events')}&category=${encodeURIComponent(category)}`;
+    const url = `${getUrlWithEndpoint('events')}?category=${encodeURIComponent(category)}`;
     const data = await this.fetchWithCache(url, false);
     return data.data || [];
   }

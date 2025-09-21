@@ -80,6 +80,8 @@ export type Dictionary = {
     mapView: string;
     detailButton: string;
     addToCart: string;
+    addToCartNotification: string;
+    checkoutNotification: string;
     perPerson: string;
     loadingMore: string;
     loadMoreButton: string;
@@ -103,6 +105,49 @@ export type Dictionary = {
     noComments: string;
     commentAdded: string;
     notFound: string;
+  };
+  invoice: {
+    title: string;
+    companyName: string;
+    website: string;
+    phone: string;
+    orderNumber: string;
+    date: string;
+    cashier: string;
+    customer: string;
+    tourPackage: string;
+    vehicleRental: string;
+    unit: string;
+    pax: string;
+    pricePerPax: string;
+    quantity: string;
+    subtotal: string;
+    subtotalDestinations: string;
+    subtotalVehicle: string;
+    totalBeforeDiscount: string;
+    discount: string;
+    totalToPay: string;
+    paymentMethod: string;
+    change: string;
+    status: {
+      paid: string;
+      pending: string;
+      cancelled: string;
+    };
+    whatsappButton: string;
+    screenshotInstruction: string;
+    screenshotTitle: string;
+    screenshotDescription: string;
+    screenshotTips: string;
+    thankYou: string;
+    poweredBy: string;
+    invoiceNotFound: string;
+    invalidCode: string;
+    debugInfo: string;
+    ensureCode: string;
+    ensureData: string;
+    ensureScript: string;
+    ensureEnv: string;
   };
   events: {
     title: string;
@@ -157,7 +202,7 @@ const dictionaries = {
     hero: {
       title: "Temukan Hidden Gems\nWisata Lokal Bersama Gemitra",
       subtitle: "Gemitra menghubungkanmu dengan destinasi wisata lokal tersembunyi yang belum banyak dijelajahi. Rasakan pengalaman unik, autentik, dan penuh inspirasi di setiap perjalananmu bersama kami.",
-      exploreNow: "Jelajahi Sekarang",
+      exploreNow: "Pesan Disini",
       contactUs: "Hubungi Kami",
       yearsExperience: "★ 5+ Tahun",
       localExploration: "Eksplorasi Lokal",
@@ -229,7 +274,9 @@ const dictionaries = {
       listView: "List",
       mapView: "Peta",
       detailButton: "Detail",
-      addToCart: "+",
+      addToCart: "Tambahkan ke Keranjang",
+      addToCartNotification: "Destinasi ditambahkan ke keranjang!",
+      checkoutNotification: "Silakan checkout di keranjang sebelah kanan bawah",
       perPerson: "per person",
       loadingMore: "Memuat destinasi lainnya...",
       loadMoreButton: "📄 Muat Lebih Banyak",
@@ -253,6 +300,49 @@ const dictionaries = {
       noComments: "Belum ada komentar",
       commentAdded: "Komentar berhasil ditambahkan!",
       notFound: "Wisata tidak ditemukan.",
+    },
+    invoice: {
+      title: "e-Receipt",
+      companyName: "Gemitra Tour & Travel",
+      website: "gemitra.vercel.app",
+      phone: "+62 857-0183-4668",
+      orderNumber: "No. Pesanan:",
+      date: "Tanggal:",
+      cashier: "Kasir:",
+      customer: "Pelanggan:",
+      tourPackage: "Paket Wisata",
+      vehicleRental: "Sewa Kendaraan",
+      unit: "Unit",
+      pax: "Pax",
+      pricePerPax: "Harga per pax:",
+      quantity: "Jumlah pax:",
+      subtotal: "Subtotal:",
+      subtotalDestinations: "Subtotal Destinasi",
+      subtotalVehicle: "Subtotal Kendaraan",
+      totalBeforeDiscount: "Total Sebelum Diskon",
+      discount: "Diskon Promo",
+      totalToPay: "TOTAL BAYAR",
+      paymentMethod: "QRIS / Transfer",
+      change: "Kembalian",
+      status: {
+        paid: "✅ LUNAS",
+        pending: "⏳ MENUNGGU PEMBAYARAN",
+        cancelled: "❌ DIBATALKAN"
+      },
+      whatsappButton: "Lanjutkan ke WhatsApp",
+      screenshotInstruction: "Screenshot Invoice Ini",
+      screenshotTitle: "Screenshot Invoice Ini",
+      screenshotDescription: "Simpan screenshot invoice ini sebagai bukti pembelian. Kirimkan screenshot ke WhatsApp untuk konfirmasi pembayaran.",
+      screenshotTips: "Tips Screenshot:",
+      thankYou: "Terima Kasih!",
+      poweredBy: "Powered by Gemitra",
+      invoiceNotFound: "Invoice Tidak Ditemukan",
+      invalidCode: "Kode invoice tidak valid atau data tidak ada.",
+      debugInfo: "Debug Info:",
+      ensureCode: "Kode invoice sudah benar",
+      ensureData: "Data ada di database",
+      ensureScript: "Google Apps Script sudah di-deploy",
+      ensureEnv: "Environment variable sudah dikonfigurasi"
     },
     events: {
       title: "Daftar Event",
@@ -305,7 +395,7 @@ const dictionaries = {
     hero: {
       title: "Discover Hidden Gems\nLocal Tourism with Gemitra",
       subtitle: "Gemitra connects you with hidden local tourist destinations that haven't been widely explored. Experience unique, authentic, and inspiring journeys with us on every trip.",
-      exploreNow: "Explore Now",
+      exploreNow: "Booking Here",
       contactUs: "Contact Us",
       yearsExperience: "★ 5+ Years",
       localExploration: "Local Exploration",
@@ -377,7 +467,9 @@ const dictionaries = {
       listView: "List",
       mapView: "Map",
       detailButton: "Details",
-      addToCart: "+",
+      addToCart: "Add to Cart",
+      addToCartNotification: "Destination added to cart!",
+      checkoutNotification: "Please checkout in the cart on the bottom right",
       perPerson: "per person",
       loadingMore: "Loading more destinations...",
       loadMoreButton: "📄 Load More",
@@ -401,6 +493,49 @@ const dictionaries = {
       noComments: "No comments yet",
       commentAdded: "Comment successfully added!",
       notFound: "Destination not found.",
+    },
+    invoice: {
+      title: "e-Receipt",
+      companyName: "Gemitra Tour & Travel",
+      website: "gemitra.vercel.app",
+      phone: "+62 857-0183-4668",
+      orderNumber: "Order No.:",
+      date: "Date:",
+      cashier: "Cashier:",
+      customer: "Customer:",
+      tourPackage: "Tour Package",
+      vehicleRental: "Vehicle Rental",
+      unit: "Unit",
+      pax: "Pax",
+      pricePerPax: "Price per pax:",
+      quantity: "Quantity:",
+      subtotal: "Subtotal:",
+      subtotalDestinations: "Destinations Subtotal",
+      subtotalVehicle: "Vehicle Subtotal",
+      totalBeforeDiscount: "Total Before Discount",
+      discount: "Promo Discount",
+      totalToPay: "TOTAL TO PAY",
+      paymentMethod: "QRIS / Transfer",
+      change: "Change",
+      status: {
+        paid: "✅ PAID",
+        pending: "⏳ PENDING PAYMENT",
+        cancelled: "❌ CANCELLED"
+      },
+      whatsappButton: "Continue to WhatsApp",
+      screenshotInstruction: "Screenshot This Invoice",
+      screenshotTitle: "Screenshot This Invoice",
+      screenshotDescription: "Save a screenshot of this invoice as proof of purchase. Send the screenshot to WhatsApp for payment confirmation.",
+      screenshotTips: "Screenshot Tips:",
+      thankYou: "Thank You!",
+      poweredBy: "Powered by Gemitra",
+      invoiceNotFound: "Invoice Not Found",
+      invalidCode: "Invalid invoice code or data not found.",
+      debugInfo: "Debug Info:",
+      ensureCode: "Invoice code is correct",
+      ensureData: "Data exists in database",
+      ensureScript: "Google Apps Script is deployed",
+      ensureEnv: "Environment variable is configured"
     },
     events: {
       title: "Event List",

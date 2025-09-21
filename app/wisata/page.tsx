@@ -67,6 +67,10 @@ export default function WisataList() {
   const [kendaraan, setKendaraan] = useState("Mobilio");
   const [visibleSidebar, setVisibleSidebar] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   // Booking state
   const [tanggalBooking, setTanggalBooking] = useState("");
@@ -274,7 +278,17 @@ export default function WisataList() {
   function handleAddToCart(id: number, nama: string, harga?: number, slug?: string) {
     if (cart.find(item => item.id == id)) return;
     if (cart.length >= 3) return;
+    
     setCart([...cart, { id, nama, harga, slug }]);
+    
+    // Show notification
+    setNotificationMessage(dictionary.wisata.addToCartNotification);
+    setShowNotification(true);
+    
+    // Auto hide notification after 3 seconds
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
   }
   function handleRemoveFromCart(id: number) {
     setCart(cart.filter(item => item.id !== id));
@@ -477,15 +491,15 @@ export default function WisataList() {
                       <span className="text-gray-500 text-sm">{dictionary.wisata.perPerson}</span>
                     </div>
                   )}
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-col gap-2 mt-2">
                     <Link
                       href={`/wisata/${item.slug || item.id}`}
-                      className="flex-1 bg-[#16A86E] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#213DFF] transition text-center"
+                      className="w-full bg-[#16A86E] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#213DFF] transition text-center"
                     >
                       {dictionary.wisata.detailButton}
                     </Link>
                     <button
-                      className="bg-[#213DFF] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#16A86E] transition disabled:opacity-50"
+                      className="w-full bg-[#213DFF] text-white font-bold px-4 py-2 rounded-full shadow hover:bg-[#16A86E] transition disabled:opacity-50 text-sm"
                       onClick={() => handleAddToCart(item.id, item.nama, item.harga, item.slug)}
                       disabled={cart.length >= 3 || !!cart.find(cartItem => cartItem.id == item.id)}
                     >
@@ -569,6 +583,19 @@ export default function WisataList() {
         onPenumpangChange={setJumlahPenumpang}
         onCartUpdate={setCart}
       />
+      
+      {/* Notification Toast */}
+      {showNotification && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 animate-bounce">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="flex flex-col">
+              <span className="font-semibold">{notificationMessage}</span>
+              <span className="text-xs opacity-90">{dictionary.wisata.checkoutNotification}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

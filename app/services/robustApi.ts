@@ -402,7 +402,7 @@ class RobustApiService {
 
   async fetchDestinationById(id: number): Promise<any> {
     try {
-      const url = `${getUrlWithEndpoint('destinations')}&id=${id}`;
+      const url = `${getUrlWithEndpoint('destinations')}?id=${id}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       return data.data || null;
     } catch (error) {
@@ -413,7 +413,7 @@ class RobustApiService {
 
   async fetchDestinationBySlug(slug: string): Promise<any> {
     try {
-      const url = `${getUrlWithEndpoint('destinations')}&slug=${encodeURIComponent(slug)}`;
+      const url = `${getUrlWithEndpoint('destinations')}?slug=${encodeURIComponent(slug)}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       return data.data || null;
     } catch (error) {
@@ -424,7 +424,7 @@ class RobustApiService {
 
   async fetchDestinationsWithLimit(limit: number): Promise<any[]> {
     try {
-      const url = `${getUrlWithEndpoint('destinations')}&limit=${limit}`;
+      const url = `${getUrlWithEndpoint('destinations')}?limit=${limit}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       return data.data || [];
     } catch (error) {
@@ -435,7 +435,7 @@ class RobustApiService {
 
   async fetchDestinationsByCategory(category: string): Promise<any[]> {
     try {
-      const url = `${getUrlWithEndpoint('destinations')}&category=${encodeURIComponent(category)}`;
+      const url = `${getUrlWithEndpoint('destinations')}?category=${encodeURIComponent(category)}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       return data.data || [];
     } catch (error) {
@@ -446,7 +446,7 @@ class RobustApiService {
 
   async searchDestinations(query: string): Promise<any[]> {
     try {
-      const url = `${getUrlWithEndpoint('destinations')}&search=${encodeURIComponent(query)}`;
+      const url = `${getUrlWithEndpoint('destinations')}?search=${encodeURIComponent(query)}`;
       const data = await this.fetchWithAdvancedCache(url, false); // Search results shouldn't be cached long
       return data.data || [];
     } catch (error) {
@@ -706,18 +706,62 @@ class RobustEventsApiService {
 
   async fetchEventBySlug(slug: string): Promise<any> {
     try {
-      const url = `${getUrlWithEndpoint('events')}&slug=${encodeURIComponent(slug)}`;
+      const url = `${getUrlWithEndpoint('events')}?slug=${encodeURIComponent(slug)}`;
       const data = await this.fetchWithAdvancedCache(url, true);
-      return data.data || null;
+      
+      console.log('🔍 [Robust API] fetchEventBySlug response:', {
+        slug,
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        hasDataKey: 'data' in data,
+        dataKeys: typeof data === 'object' ? Object.keys(data) : 'not object'
+      });
+      
+      // Handle different response structures
+      if (Array.isArray(data)) {
+        // If data is directly an array, return first item
+        return data.length > 0 ? data[0] : null;
+      } else if (data && typeof data === 'object') {
+        // If data has a data property
+        if (data.data) {
+          if (Array.isArray(data.data)) {
+            return data.data.length > 0 ? data.data[0] : null;
+          } else {
+            return data.data;
+          }
+        }
+        // If data is a single event object
+        return data;
+      }
+      
+      return null;
     } catch (error) {
-      console.error(`Failed to fetch event by slug ${slug}:`, error);
+      console.error(`❌ [Robust API] Failed to fetch event by slug ${slug}:`, error);
+      
+      // In development, try test data as fallback
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🧪 [Robust API] Trying test events data as fallback...');
+        try {
+          const { testEvents } = await import('../data/testEvents');
+          const testEvent = testEvents.find(event => event.slug === slug);
+          if (testEvent) {
+            console.log('✅ [Robust API] Test event found:', testEvent.title);
+            return testEvent;
+          } else {
+            console.log('❌ [Robust API] Test event not found for slug:', slug);
+          }
+        } catch (testError) {
+          console.error('❌ [Robust API] Failed to load test events:', testError);
+        }
+      }
+      
       throw error;
     }
   }
 
   async fetchEventsByCategory(category: string): Promise<any[]> {
     try {
-      const url = `${getUrlWithEndpoint('events')}&category=${encodeURIComponent(category)}`;
+      const url = `${getUrlWithEndpoint('events')}?category=${encodeURIComponent(category)}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       return data.data || [];
     } catch (error) {
