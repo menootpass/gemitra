@@ -400,7 +400,6 @@ export default function SidebarCart({
                             className="w-24 h-12 object-cover rounded-lg"
                             width={200}
                             height={200}
-                            style={{ width: "20", height: "10" }}
                           />
                           <span className="font-bold text-sm md:text-base text-[#213DFF]">{pkg.label}</span>
                         </div>

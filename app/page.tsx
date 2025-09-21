@@ -4,20 +4,74 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import GemitraMap from "./components/GemitraMap";
-import DestinationDetail from "./components/DestinationDetail";
-import LoadingSkeleton from "./components/LoadingSkeleton";
+import dynamic from "next/dynamic";
 import { Destination } from "./types";
-import FeedbackForm from "./components/FeedbackForm";
 import HeaderNavigation from "./components/HeaderNavigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { MapPin, Star, MessageCircle, ArrowRight, Camera, Compass } from "lucide-react";
+
+// Dynamic imports for better code splitting
+const DestinationDetail = dynamic(() => import("./components/DestinationDetail"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-32"></div>,
+});
+
+const LoadingSkeleton = dynamic(() => import("./components/LoadingSkeleton"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-32"></div>,
+});
+
+const LazyMap = dynamic(() => import("./components/LazyMap"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-96"></div>,
+});
+
+const LazyFeedbackForm = dynamic(() => import("./components/LazyFeedbackForm"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-64"></div>,
+});
+
+// Lazy load UI components
+const Button = dynamic(() => import("@/components/ui/button").then(mod => ({ default: mod.Button })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-10 w-24"></div>,
+});
+
+const Card = dynamic(() => import("@/components/ui/card").then(mod => ({ default: mod.Card })), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-32"></div>,
+});
+
+const CardContent = dynamic(() => import("@/components/ui/card").then(mod => ({ default: mod.CardContent })), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-24"></div>,
+});
+
+const Badge = dynamic(() => import("@/components/ui/badge").then(mod => ({ default: mod.Badge })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded-full h-6 w-16"></div>,
+});
+
+const Input = dynamic(() => import("@/components/ui/input").then(mod => ({ default: mod.Input })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-10"></div>,
+});
+
+// Lazy load icons
+const MapPin = dynamic(() => import("lucide-react").then(mod => ({ default: mod.MapPin })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const Star = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Star })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const MessageCircle = dynamic(() => import("lucide-react").then(mod => ({ default: mod.MessageCircle })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const ArrowRight = dynamic(() => import("lucide-react").then(mod => ({ default: mod.ArrowRight })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const Camera = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Camera })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const Compass = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Compass })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
 import { useLanguage } from "./contexts/LanguageContext";
 import { useRobustDestinations } from "./hooks/useRobustDestinations";
-import MapDiagnostics from "./components/MapDiagnostics";
 
 export default function Home() {
   const router = useRouter();
@@ -84,10 +138,10 @@ export default function Home() {
         </div>
         <div className="flex-1 flex flex-col items-center relative w-full mt-8 md:mt-0">
           <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-[#213DFF22] bg-glass w-full max-w-xs mx-auto">
-            <Image src="/images/brandman-transparant.png" alt="Hero Person" width={320} height={320} className="object-cover w-full h-80" style={{ width: "auto", height: "auto" }} />
+            <Image src="/images/brandman-transparant.png" alt="Hero Person" width={320} height={320} className="object-cover w-full h-80" priority />
           </div>
           <div className="absolute -top-6 -right-6 hidden md:block">
-            <Image src="/svg/cursor-click.svg" alt="Decorative Pointer" width={48} height={48} style={{ width: "auto", height: "auto" }} />
+            <Image src="/svg/cursor-click.svg" alt="Decorative Pointer" width={48} height={48} />
           </div>
           <div className="absolute bottom-0 left-0 bg-white/90 rounded-xl px-4 py-2 shadow text-[#16A86E] font-bold text-sm flex items-center gap-2 mt-4">
             <span>{dictionary.hero.yearsExperience}</span> <span className="text-xs font-normal text-black/60">{dictionary.hero.localExploration}</span>
@@ -120,13 +174,13 @@ export default function Home() {
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#213DFF] mb-6 md:mb-8 text-center md:text-left">{dictionary.sections.exploreHiddenBeauty}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full">
-            <Image src="/images/klangon.jpg" alt="Secret Beach" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
+            <Image src="/images/klangon.jpg" alt="Secret Beach" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" sizes="(max-width: 768px) 100vw, 50vw" />
             <div className="relative z-10 p-4 md:p-6">
               <span className="bg-[#16A86E] text-white px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-base font-bold shadow">{dictionary.sections.secretHillNorth}</span>
             </div>
           </div>
           <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full mt-4 md:mt-0">
-            <Image src="/images/kemah.jpg" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" style={{ width: "auto", height: "auto" }} />
+            <Image src="/images/kemah.jpg" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" sizes="(max-width: 768px) 100vw, 50vw" />
             
           </div>
         </div>
@@ -167,11 +221,11 @@ export default function Home() {
           </div>
           <div className="relative flex flex-col items-center justify-center mt-6 md:mt-0 w-full">
             <div className="rounded-2xl overflow-hidden shadow-xl border-4 border-[#16A86E22] bg-glass w-full max-w-xs mx-auto">
-              <Image src="/images/brandman-transparant.png" alt="Expert" width={320} height={220} className="object-cover w-full h-56" style={{ width: "auto", height: "auto" }} />
+              <Image src="/images/brandman-transparant.png" alt="Expert" width={320} height={220} className="object-cover w-full h-56" sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
             <div className="absolute bottom-4 right-4 bg-[#16A86E] text-white px-4 md:px-5 py-2 rounded-full shadow font-bold text-sm md:text-base flex items-center gap-2">
               <span>{dictionary.sections.freeConsultation}</span>
-              <Image src="/svg/cursor-click.svg" alt="Pointer" width={24} height={24} style={{ width: "auto", height: "auto" }} />
+              <Image src="/svg/cursor-click.svg" alt="Pointer" width={24} height={24} />
             </div>
           </div>
         </div>
@@ -186,50 +240,20 @@ export default function Home() {
           </p>
         </div>
         
-        <MapDiagnostics destinations={destinations} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {loading ? (
-            <LoadingSkeleton type="map" />
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-              <div className="text-red-500 mb-4">
-                <span className="text-2xl">⚠️</span>
-              </div>
-              <h3 className="text-red-800 font-semibold mb-2">Failed to Load Map Data</h3>
-              <p className="text-red-600 text-sm mb-4">{error}</p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                <button
-                  onClick={refresh}
-                  disabled={loading}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-                >
-                  {loading ? 'Retrying...' : 'Try Again'}
-                </button>
-                {!isOnline && (
-                  <span className="text-red-500 text-sm self-center">
-                    📶 Check your internet connection
-                  </span>
-                )}
-              </div>
-              {retryCount > 0 && (
-                <p className="text-red-500 text-xs mt-2">
-                  Retry attempt: {retryCount}/3
-                </p>
-              )}
-            </div>
-          ) : (
-            <GemitraMap
-              destinations={destinations}
-              onDestinationClick={handleDestinationClick}
-              selectedDestination={selectedDestination}
-            />
-          )}
-          <DestinationDetail
-            destination={selectedDestination}
-            onClose={() => setSelectedDestination(null)}
-          />
-        </div>
+        <LazyMap
+          destinations={destinations}
+          onDestinationClick={handleDestinationClick}
+          selectedDestination={selectedDestination}
+          loading={loading}
+          error={error}
+          refresh={refresh}
+          isOnline={isOnline}
+          retryCount={retryCount}
+        />
+        <DestinationDetail
+          destination={selectedDestination}
+          onClose={() => setSelectedDestination(null)}
+        />
         <div className="text-center mt-6">
           <button
             onClick={() => router.push("/wisata")}
@@ -242,8 +266,7 @@ export default function Home() {
 
       {/* Feedback Form Section */}
       <section id="feedback" className="w-full max-w-5xl mt-14 md:mt-20 px-4 sm:px-6">
-        
-        <FeedbackForm />
+        <LazyFeedbackForm />
       </section>
 
       {/* Footer Slogan */}

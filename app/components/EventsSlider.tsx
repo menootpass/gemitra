@@ -200,7 +200,7 @@ export default function EventsSlider() {
                     width={isMobile ? 288 : 320}
                     height={isMobile ? 128 : 160}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    style={{ width: "auto", height: "auto" }}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     onError={(e) => {
                       // Fallback to placeholder if image fails to load
                       handleImageError(e as React.SyntheticEvent<HTMLImageElement>);

@@ -30,7 +30,7 @@ export default function HeaderNavigation() {
       <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-4 sm:px-6 md:px-16">
         <div className="flex items-center gap-3">
           <Link href="/">
-            <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={80} height={20} style={{ width: "200px", height: "80px" }} />
+            <Image src="/svg/gemitra-text.svg" alt="Gemitra" width={80} height={20} className="w-[200px] h-[80px]" priority />
           </Link>
         </div>
         

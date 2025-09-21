@@ -7,11 +7,70 @@ import VisitorTracker from "./components/VisitorTracker";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import ConnectionStatus from "./components/ConnectionStatus";
 import CacheCleanup from "./components/CacheCleanup";
+import ServiceWorker from "./components/ServiceWorker";
+import ResourcePreloader from "./components/ResourcePreloader";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "Gemitra Jogja- Hidden Gems Tourism",
   description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
+  keywords: ["wisata", "jogja", "yogyakarta", "destinasi", "hidden gems", "tourism", "travel"],
+  authors: [{ name: "Gemitra Tour & Travel" }],
+  creator: "Gemitra Tour & Travel",
+  publisher: "Gemitra Tour & Travel",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://gemitra.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Gemitra Jogja- Hidden Gems Tourism",
+    description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
+    url: 'https://gemitra.vercel.app',
+    siteName: 'Gemitra Tour & Travel',
+    images: [
+      {
+        url: '/images/brandman-transparant.png',
+        width: 1200,
+        height: 630,
+        alt: 'Gemitra Tour & Travel',
+      },
+    ],
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Gemitra Jogja- Hidden Gems Tourism",
+    description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
+    images: ['/images/brandman-transparant.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+  },
+  manifest: '/manifest.json',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#213DFF',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +93,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CacheCleanup />
           <ConnectionStatus />
           <VisitorTracker />
+          <ServiceWorker />
+          <ResourcePreloader />
           {children}
           <SpeedInsights />
         </LanguageProvider>
