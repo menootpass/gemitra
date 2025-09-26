@@ -43,23 +43,39 @@ async function getInvoiceData(kode: string): Promise<InvoiceData | null> {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => {
+      console.warn('⏰ Request timeout - aborting after 15 seconds');
+      controller.abort();
+    }, 15000); // Increased to 15 seconds
     
+    const startTime = Date.now();
     const response = await fetch(url, {
       method: 'GET',
       next: { revalidate: 10 },
-      signal: controller.signal
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
     });
     
     clearTimeout(timeoutId);
-
-    console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+    const duration = Date.now() - startTime;
+    console.log(`📡 Response received in ${duration}ms - Status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       console.error(`❌ HTTP error! status: ${response.status}`);
       const errorText = await response.text();
       console.error(`❌ Error details: ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      
+      // Provide more specific error messages
+      if (response.status === 404) {
+        throw new Error(`Invoice not found: ${kode}`);
+      } else if (response.status >= 500) {
+        throw new Error(`Server error: ${response.status}`);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     }
 
     const result = await response.json();
@@ -69,14 +85,20 @@ async function getInvoiceData(kode: string): Promise<InvoiceData | null> {
       console.log(`✅ Transaction found for kode: ${kode}`);
       return result.data as InvoiceData;
     } else {
-      console.warn(`⚠️ Transaction not found: ${result.message}`);
+      console.warn(`⚠️ Transaction not found: ${result.message || 'No message provided'}`);
       return null;
     }
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      console.error('❌ Request timed out after 10 seconds');
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('❌ Request timed out after 15 seconds - Google Apps Script may be slow or unresponsive');
+      } else if (error.message.includes('fetch')) {
+        console.error('❌ Network error - unable to reach Google Apps Script:', error.message);
+      } else {
+        console.error('❌ Failed to fetch invoice data:', error.message);
+      }
     } else {
-      console.error('❌ Failed to fetch invoice data:', error);
+      console.error('❌ Unknown error occurred:', error);
     }
     return null;
   }
@@ -95,25 +117,69 @@ export default async function InvoicePage({ params }: { params: Promise<{ kode: 
     console.error(`❌ Invoice not found for kode: ${kode}`);
     return (
       <div className="bg-gray-100 p-4 sm:p-8 font-sans min-h-screen">
-        <div className="max-w-sm mx-auto bg-white rounded-xl shadow-lg p-6">
-          <div className="text-center p-10">
+        <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-6">
+          <div className="text-center p-6">
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-bold text-red-600">Invoice Not Found</h2>
-            <p className="text-gray-500 mt-2">Invoice code &apos;{kode}&apos; is invalid or data not found.</p>
-            <div className="text-sm text-gray-400 mt-4">
-              <p>Debug Info:</p>
-              <ul className="list-disc list-inside mt-2 text-left">
-                <li>Code: {kode}</li>
-                <li>Environment Variable: {process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL ? '✅ Set' : '❌ Not Set'}</li>
-                <li>Script URL: {process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || 'Not configured'}</li>
+            <h2 className="text-xl font-bold text-red-600 mb-2">Invoice Not Found</h2>
+            <p className="text-gray-500 mb-4">Invoice code &apos;{kode}&apos; is invalid or data not found.</p>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-bold text-yellow-800 mb-2">🔧 Debug Information:</h3>
+              <div className="text-xs text-yellow-700 text-left space-y-1">
+                <div className="flex justify-between">
+                  <span>Invoice Code:</span>
+                  <span className="font-mono">{kode}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Environment Variable:</span>
+                  <span className={process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL ? 'text-green-600' : 'text-red-600'}>
+                    {process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL ? '✅ Set' : '❌ Not Set'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Script URL:</span>
+                  <span className="font-mono text-xs break-all">
+                    {process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL ? 
+                      process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL.substring(0, 50) + '...' : 
+                      'Not configured'
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Timestamp:</span>
+                  <span className="font-mono">{new Date().toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-bold text-blue-800 mb-2">📋 Possible Solutions:</h3>
+              <ul className="text-xs text-blue-700 text-left space-y-1">
+                <li>• Verify the invoice code is correct</li>
+                <li>• Check if the transaction exists in the database</li>
+                <li>• Ensure Google Apps Script is deployed and accessible</li>
+                <li>• Verify environment variable is configured correctly</li>
+                <li>• Check Google Apps Script execution logs</li>
+                <li>• Try refreshing the page after a few minutes</li>
               </ul>
-              <p className="mt-4">Please ensure:</p>
-              <ul className="list-disc list-inside mt-2 text-left">
-                <li>Invoice code is correct</li>
-                <li>Data exists in database</li>
-                <li>Google Apps Script is deployed</li>
-                <li>Environment variable is configured</li>
-              </ul>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-bold text-gray-800 mb-2">🔄 Troubleshooting Steps:</h3>
+              <div className="text-xs text-gray-600 text-left space-y-2">
+                <div>
+                  <strong>1. Check Console Logs:</strong>
+                  <p className="mt-1">Open browser developer tools (F12) and check the Console tab for detailed error messages.</p>
+                </div>
+                <div>
+                  <strong>2. Test API Directly:</strong>
+                  <p className="mt-1">Try accessing the Google Apps Script URL directly in your browser to see if it responds.</p>
+                </div>
+                <div>
+                  <strong>3. Contact Support:</strong>
+                  <p className="mt-1">If the issue persists, contact the development team with the debug information above.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

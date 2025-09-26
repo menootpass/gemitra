@@ -111,6 +111,7 @@ export async function monitoredFetch(
     const response = await fetch(url, options);
     const duration = Date.now() - startTime;
     
+    // Record successful request
     monitor.recordRequest({
       url,
       method: options.method || 'GET',
@@ -125,11 +126,12 @@ export async function monitoredFetch(
     let status: number | 'timeout' | 'network_error' = 'network_error';
     
     if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
+      if (error.message.includes('timeout') || error.name === 'AbortError') {
         status = 'timeout';
       }
     }
     
+    // Record failed request
     monitor.recordRequest({
       url,
       method: options.method || 'GET',
@@ -193,9 +195,13 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   
   // Auto-log stats every 2 minutes in development
   setInterval(() => {
-    const stats = performanceMonitor.getStats();
-    if (stats.totalRequests > 0) {
-      performanceMonitor.logStats();
+    try {
+      const stats = performanceMonitor.getStats();
+      if (stats.totalRequests > 0) {
+        performanceMonitor.logStats();
+      }
+    } catch (error) {
+      console.warn('Failed to log performance stats:', error);
     }
   }, 120000);
 }

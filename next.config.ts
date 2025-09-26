@@ -80,6 +80,18 @@ const nextConfig: NextConfig = {
     optimizeServerReact: true,
     serverMinification: true,
     serverSourceMaps: false,
+    // Turbopack specific optimizations
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+      resolveAlias: {
+        // Add any custom aliases here if needed
+      },
+    },
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

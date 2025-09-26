@@ -38,8 +38,14 @@ export default function DeploymentDebugPage() {
   };
 
   const updateStats = () => {
-    setPerformanceStats(performanceMonitor.getStats());
-    setCacheStats(robustApiService.getCacheStats());
+    try {
+      setPerformanceStats(performanceMonitor.getStats());
+      setCacheStats(robustApiService.getCacheStats());
+    } catch (error) {
+      console.warn('Failed to update stats:', error);
+      setPerformanceStats(null);
+      setCacheStats(null);
+    }
   };
 
   const testEventsEndpoint = async () => {
@@ -195,8 +201,13 @@ export default function DeploymentDebugPage() {
               )}
               <Button 
                 onClick={() => {
-                  performanceMonitor.logStats();
-                  updateStats();
+                  try {
+                    performanceMonitor.logStats();
+                    updateStats();
+                  } catch (error) {
+                    console.warn('Failed to log performance stats:', error);
+                    updateStats();
+                  }
                 }}
                 className="mt-4 w-full"
                 variant="outline"

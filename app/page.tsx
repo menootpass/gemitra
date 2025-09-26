@@ -241,19 +241,19 @@ export default function Home() {
         </div>
         
         <LazyMap
-          destinations={destinations}
-          onDestinationClick={handleDestinationClick}
-          selectedDestination={selectedDestination}
+              destinations={destinations}
+              onDestinationClick={handleDestinationClick}
+              selectedDestination={selectedDestination}
           loading={loading}
           error={error}
           refresh={refresh}
           isOnline={isOnline}
           retryCount={retryCount}
-        />
-        <DestinationDetail
-          destination={selectedDestination}
-          onClose={() => setSelectedDestination(null)}
-        />
+            />
+          <DestinationDetail
+            destination={selectedDestination}
+            onClose={() => setSelectedDestination(null)}
+          />
         <div className="text-center mt-6">
           <button
             onClick={() => router.push("/wisata")}
