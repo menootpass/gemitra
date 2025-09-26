@@ -1,5 +1,5 @@
 interface LoadingSkeletonProps {
-  type?: 'card' | 'list' | 'map' | 'detail';
+  type?: 'card' | 'list' | 'map' | 'detail' | 'events';
   count?: number;
   className?: string;
 }
@@ -91,6 +91,19 @@ export default function LoadingSkeleton({ type = 'card', count = 6, className = 
     </div>
   );
 
+  const renderEventsSkeleton = () => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+      <div className="flex justify-center gap-4">
+        {[...Array(count || 3)].map((_, i) => (
+          <div key={i} className="animate-pulse bg-gray-200 rounded-xl w-72 sm:w-80 h-40 sm:h-48"></div>
+        ))}
+      </div>
+    </div>
+  );
+
   switch (type) {
     case 'list':
       return renderListSkeleton();
@@ -98,6 +111,8 @@ export default function LoadingSkeleton({ type = 'card', count = 6, className = 
       return renderMapSkeleton();
     case 'detail':
       return renderDetailSkeleton();
+    case 'events':
+      return renderEventsSkeleton();
     case 'card':
     default:
       return (

@@ -2,18 +2,21 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import SidebarCart from "../components/SidebarCart";
-import GemitraMap from "../components/GemitraMap";
-import DestinationDetail from "../components/DestinationDetail";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import ImageSlider from "../components/ImageSlider";
-import EventsSlider from "../components/EventsSlider";
 import HeaderNavigation from "../components/HeaderNavigation";
 import StickySearchBar from "../components/StickySearchBar";
+import { 
+  LazyMapWrapper, 
+  LazyDestinationDetailWrapper, 
+  LazyEventsSliderWrapper,
+  LazyMapDiagnosticsWrapper 
+} from "../components/LazyComponents";
 import { Destination, CartItem } from "../types";
 import { ShoppingCartSimple } from "phosphor-react";
 import { useRobustDestinations } from "../hooks/useRobustDestinations";
 import { useLanguage } from "../contexts/LanguageContext";
-import MapDiagnostics from "../components/MapDiagnostics";
+import PerformanceOptimizer from "../components/PerformanceOptimizer";
 
 const NEW_CATEGORIES = [
   "Alam",
@@ -83,7 +86,7 @@ export default function WisataList() {
   const [visibleCount, setVisibleCount] = useState(9);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
-  // Use robust destinations hook
+  // Use robust destinations hook with optimized polling
   const { 
     destinations, 
     loading, 
@@ -93,7 +96,7 @@ export default function WisataList() {
     retryCount
   } = useRobustDestinations({
     enablePolling: true,
-    pollingInterval: 15000, // 15 seconds untuk wisata list
+    pollingInterval: 60000, // 60 seconds untuk wisata list (reduced frequency)
     enableRetry: true
   });
 
@@ -321,14 +324,15 @@ export default function WisataList() {
     });
   }, [destinations, searchTerm, selectedCategory, dictionary, getOriginalCategory]);
 
-  // Infinite scroll handler
+  // Optimized infinite scroll handler with throttling
   const loadMore = useCallback(() => {
     if (visibleCount < filteredData.length && !isLoadingMore) {
       setIsLoadingMore(true);
-      setTimeout(() => {
+      // Use requestAnimationFrame for better performance
+      requestAnimationFrame(() => {
         setVisibleCount(prev => Math.min(prev + 6, filteredData.length));
         setIsLoadingMore(false);
-      }, 250);
+      });
     }
   }, [visibleCount, filteredData.length, isLoadingMore]);
 
@@ -371,6 +375,7 @@ export default function WisataList() {
 
   return (
     <div className="min-h-screen w-full bg-white bg-gradient-indie flex flex-col md:flex-row items-center md:items-start font-sans px-4 pb-10 pt-24">
+      <PerformanceOptimizer />
       <HeaderNavigation />
       <StickySearchBar
         searchTerm={searchTerm}
@@ -387,7 +392,7 @@ export default function WisataList() {
       {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
         {/* Events Section */}
-        <EventsSlider />
+        <LazyEventsSliderWrapper />
         
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
@@ -537,13 +542,13 @@ export default function WisataList() {
           </>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MapDiagnostics destinations={filteredData} />
-            <GemitraMap
+            <LazyMapDiagnosticsWrapper destinations={filteredData} />
+            <LazyMapWrapper
               destinations={filteredData}
               onDestinationClick={handleDestinationClick}
               selectedDestination={selectedDestination}
             />
-            <DestinationDetail
+            <LazyDestinationDetailWrapper
               destination={selectedDestination}
               onClose={() => setSelectedDestination(null)}
             />

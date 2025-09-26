@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { normalizeImageUrls, handleImageError } from "../utils/imageUtils";
+import LazyImage from "./LazyImage";
 
 type ImageSliderProps = {
   images: string[];
@@ -38,23 +39,13 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
   return (
     <div className={`relative w-full h-full ${className}`}>
       {/* Main Image */}
-      <Image 
+      <LazyImage 
         src={normalized[currentIndex]} 
         alt={`${alt} ${currentIndex + 1}`}
-        fill 
-        priority={priority}
         className="object-cover"
-        onError={(e) => {
-          console.warn('Image failed to load:', normalized[currentIndex]);
-          // Try to load next image if available
-          if (normalized.length > 1) {
-            const nextIndex = (currentIndex + 1) % normalized.length;
-            setCurrentIndex(nextIndex);
-          } else {
-            // Fallback to placeholder image
-            handleImageError(e as React.SyntheticEvent<HTMLImageElement>);
-          }
-        }}
+        priority={priority}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        quality={85}
       />
       
       {/* Navigation Controls */}

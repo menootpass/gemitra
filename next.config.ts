@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    unoptimized: false,
+    loader: 'default',
     remotePatterns: [
       {
         protocol: 'https',
@@ -74,12 +76,14 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-sheet',
       '@radix-ui/react-switch',
       '@radix-ui/react-tabs',
-      '@radix-ui/react-tag'
+      '@radix-ui/react-tag',
+      'phosphor-react'
     ],
     webpackBuildWorker: true,
     optimizeServerReact: true,
     serverMinification: true,
     serverSourceMaps: false,
+    optimizeCss: true,
     // Turbopack specific optimizations
     turbo: {
       rules: {
@@ -106,6 +110,8 @@ const nextConfig: NextConfig = {
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
         cacheGroups: {
           default: {
             minChunks: 2,
@@ -127,6 +133,18 @@ const nextConfig: NextConfig = {
           radix: {
             test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
             name: 'radix',
+            priority: 10,
+            chunks: 'all',
+          },
+          phosphor: {
+            test: /[\\/]node_modules[\\/]phosphor-react[\\/]/,
+            name: 'phosphor',
+            priority: 10,
+            chunks: 'all',
+          },
+          swr: {
+            test: /[\\/]node_modules[\\/]swr[\\/]/,
+            name: 'swr',
             priority: 10,
             chunks: 'all',
           },
