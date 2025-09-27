@@ -13,7 +13,7 @@ interface UseEventsOptions {
 export function useRobustEvents(options: UseEventsOptions = {}) {
   const {
     enablePolling = false,
-    pollingInterval = 30000, // 30 seconds
+    pollingInterval = 60000, // 1 menit untuk mengurangi beban server
     enableRetry = true
   } = options;
 

@@ -50,9 +50,7 @@ export default function DeploymentDebugPage() {
 
   const testEventsEndpoint = async () => {
     try {
-      console.log('🧪 Testing events endpoint...');
       const events = await robustEventsApiService.fetchEvents();
-      console.log('✅ Events loaded successfully:', events.length, 'events');
       alert(`✅ Events loaded successfully: ${events.length} events`);
     } catch (error) {
       console.error('❌ Events test failed:', error);
@@ -62,9 +60,7 @@ export default function DeploymentDebugPage() {
 
   const testDestinationsEndpoint = async () => {
     try {
-      console.log('🧪 Testing destinations endpoint...');
       const destinations = await robustApiService.fetchDestinations();
-      console.log('✅ Destinations loaded successfully:', destinations.length, 'destinations');
       alert(`✅ Destinations loaded successfully: ${destinations.length} destinations`);
     } catch (error) {
       console.error('❌ Destinations test failed:', error);

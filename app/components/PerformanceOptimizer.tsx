@@ -16,6 +16,7 @@ export default function PerformanceOptimizer() {
         link.rel = 'preload';
         link.as = 'image';
         link.href = src;
+        link.fetchPriority = 'high';
         document.head.appendChild(link);
       });
     };

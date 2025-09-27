@@ -5,11 +5,6 @@ function getMainScriptUrl(): string {
   const url = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL;
   const finalUrl = url || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
   
-  // Debug logging untuk memastikan URL yang benar
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔗 [Original API] Environment URL:', url);
-    console.log('🔗 [Original API] Final URL:', finalUrl);
-  }
   
   // Return the URL from environment or fallback
   return finalUrl;
@@ -169,7 +164,6 @@ class EventsApiService {
     let lastError: Error;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        console.log(`🚀 [EventsAPI] Attempt ${attempt + 1}: ${url}`);
         
         const response = await fetch(url, {
           method: 'GET',
@@ -189,7 +183,6 @@ class EventsApiService {
           this.cache.set(url, { data, timestamp: Date.now() });
         }
         
-        console.log(`✅ [EventsAPI] Success: ${url}`);
         return data;
         
       } catch (error) {
@@ -198,7 +191,6 @@ class EventsApiService {
         
         if (attempt < 2) {
           const delay = 1000 * Math.pow(2, attempt);
-          console.log(`⏳ [EventsAPI] Retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -211,12 +203,6 @@ class EventsApiService {
     const url = getUrlWithEndpoint('events');
     const data = await this.fetchWithCache(url, true);
     
-    console.log('🔍 [API Service] fetchEvents response:', {
-      dataType: typeof data,
-      isArray: Array.isArray(data),
-      hasDataKey: 'data' in data,
-      length: Array.isArray(data) ? data.length : (data?.data ? data.data.length : 0)
-    });
     
     // Handle different response structures
     if (Array.isArray(data)) {
@@ -232,12 +218,6 @@ class EventsApiService {
     const url = `${getUrlWithEndpoint('events')}?slug=${encodeURIComponent(slug)}`;
     const data = await this.fetchWithCache(url, false);
     
-    console.log('🔍 [API Service] fetchEventBySlug response:', {
-      slug,
-      dataType: typeof data,
-      isArray: Array.isArray(data),
-      hasDataKey: 'data' in data
-    });
     
     // Handle different response structures
     if (Array.isArray(data)) {

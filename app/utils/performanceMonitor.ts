@@ -87,15 +87,7 @@ class PerformanceMonitor {
 
   // Debug helper untuk development
   logStats(): void {
-    const stats = this.getStats();
-    console.group('🔍 API Performance Stats');
-    console.log('Total Requests:', stats.totalRequests);
-    console.log('Average Duration:', `${stats.averageDuration}ms`);
-    console.log('Success Rate:', `${stats.successRate}%`);
-    console.log('Slow Requests (>3s):', stats.slowRequests);
-    console.log('Failed Requests:', stats.failedRequests);
-    console.log('Timeout Requests:', stats.timeoutRequests);
-    console.groupEnd();
+    // Performance stats logging removed for production optimization
   }
 }
 

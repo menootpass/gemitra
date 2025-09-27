@@ -19,14 +19,12 @@ export function clearAllCaches(): void {
       
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log('🗑️ Removed localStorage key:', key);
       });
     }
 
     // Clear sessionStorage
     if (typeof window !== 'undefined' && window.sessionStorage) {
       window.sessionStorage.clear();
-      console.log('🗑️ Cleared sessionStorage');
     }
 
     // Clear any service worker caches
@@ -34,12 +32,10 @@ export function clearAllCaches(): void {
       caches.keys().then(cacheNames => {
         cacheNames.forEach(cacheName => {
           caches.delete(cacheName);
-          console.log('🗑️ Removed cache:', cacheName);
         });
       });
     }
 
-    console.log('✅ All caches cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing caches:', error);
   }
@@ -50,15 +46,12 @@ export function clearApiCaches(): void {
     // Clear API service caches
     import('../services/robustApi').then(({ robustApiService, robustEventsApiService }) => {
       robustApiService.clearCache();
-      console.log('🗑️ Cleared robustApiService cache');
     });
 
     import('../services/api').then(({ apiService }) => {
       apiService.clearCache();
-      console.log('🗑️ Cleared apiService cache');
     });
 
-    console.log('✅ API caches cleared');
   } catch (error) {
     console.error('❌ Error clearing API caches:', error);
   }
@@ -80,12 +73,11 @@ export function debugCacheContents(): void {
   
   // Check localStorage
   if (typeof window !== 'undefined' && window.localStorage) {
-    console.log('📦 localStorage contents:');
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key) {
         const value = localStorage.getItem(key);
-        console.log(`  ${key}:`, value?.substring(0, 100) + (value && value.length > 100 ? '...' : ''));
+        // localStorage contents logging removed for production optimization
       }
     }
   }

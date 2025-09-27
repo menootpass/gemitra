@@ -20,8 +20,6 @@ export async function GET(request: NextRequest) {
       url += `&category=${encodeURIComponent(category)}`;
     }
     
-    console.log('🔗 [API Route] Fetching events from:', url);
-    console.log('📋 [API Route] Parameters:', { slug, category });
     
     const response = await fetch(url, {
       method: 'GET',
@@ -46,17 +44,9 @@ export async function GET(request: NextRequest) {
       eventsData = data;
     }
     
-    console.log('✅ [API Route] Events fetched successfully:', {
-      slug,
-      category,
-      totalEvents: Array.isArray(eventsData) ? eventsData.length : 0,
-      responseStructure: typeof data,
-      hasDataKey: 'data' in data
-    });
     
     // If requesting by slug and no events found, return 404
     if (slug && (!eventsData || (Array.isArray(eventsData) && eventsData.length === 0))) {
-      console.log('❌ [API Route] Event not found for slug:', slug);
       return NextResponse.json(
         { error: 'Event tidak ditemukan', slug },
         { 

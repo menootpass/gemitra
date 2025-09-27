@@ -17,6 +17,7 @@ import { ShoppingCartSimple } from "phosphor-react";
 import { useRobustDestinations } from "../hooks/useRobustDestinations";
 import { useLanguage } from "../contexts/LanguageContext";
 import PerformanceOptimizer from "../components/PerformanceOptimizer";
+import { getPriceByLanguage, formatPrice } from "../utils/priceUtils";
 
 const NEW_CATEGORIES = [
   "Alam",
@@ -63,7 +64,7 @@ function mapToNewCategory(destination: Destination): NewCategory | null {
 }
 
 export default function WisataList() {
-  const { dictionary } = useLanguage();
+  const { dictionary, locale } = useLanguage();
   
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -491,7 +492,7 @@ export default function WisataList() {
                   {item.harga && (
                     <div className="flex items-center gap-2">
                       <span className="text-[#16A86E] font-bold text-lg">
-                        Rp {item.harga.toLocaleString("id-ID")}
+                        {formatPrice(getPriceByLanguage(item, locale), locale)}
                       </span>
                       <span className="text-gray-500 text-sm">{dictionary.wisata.perPerson}</span>
                     </div>

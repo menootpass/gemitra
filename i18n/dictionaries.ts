@@ -124,8 +124,6 @@ export type Dictionary = {
     subtotal: string;
     subtotalDestinations: string;
     subtotalVehicle: string;
-    totalBeforeDiscount: string;
-    discount: string;
     totalToPay: string;
     paymentMethod: string;
     change: string;
@@ -319,8 +317,6 @@ const dictionaries = {
       subtotal: "Subtotal:",
       subtotalDestinations: "Subtotal Destinasi",
       subtotalVehicle: "Subtotal Kendaraan",
-      totalBeforeDiscount: "Total Sebelum Diskon",
-      discount: "Diskon Promo",
       totalToPay: "TOTAL BAYAR",
       paymentMethod: "QRIS / Transfer",
       change: "Kembalian",
@@ -512,8 +508,6 @@ const dictionaries = {
       subtotal: "Subtotal:",
       subtotalDestinations: "Destinations Subtotal",
       subtotalVehicle: "Vehicle Subtotal",
-      totalBeforeDiscount: "Total Before Discount",
-      discount: "Promo Discount",
       totalToPay: "TOTAL TO PAY",
       paymentMethod: "QRIS / Transfer",
       change: "Change",

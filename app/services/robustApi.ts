@@ -10,11 +10,6 @@ function getMainScriptUrl(): string {
   // Primary URL (fix-ids.gs deployment)
   const primaryUrl = url || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
   
-  // Debug logging untuk memastikan URL yang benar
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔗 [Robust API] Using Google Apps Script URL:', primaryUrl);
-    console.log('🔗 [Robust API] Environment variable NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL:', url);
-  }
   
   return primaryUrl;
 }
@@ -29,7 +24,9 @@ function getFallbackUrls(): string[] {
 
 function getUrlWithEndpoint(endpoint: string) {
   // Use internal API routes for all endpoints to avoid CORS issues in development
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+  const baseUrl = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : process.env.NEXT_PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
   
   let finalUrl: string;
   
@@ -57,10 +54,6 @@ function getUrlWithEndpoint(endpoint: string) {
       break;
   }
   
-  // Debug logging untuk memastikan URL yang benar
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🔗 [Robust API] Using internal API route for "${endpoint}":`, finalUrl);
-  }
   
   return finalUrl;
 }
@@ -164,8 +157,8 @@ interface CacheEntry {
 
 class RobustApiService {
   private cache = new Map<string, CacheEntry>();
-  private readonly CACHE_DURATION = 10 * 60 * 1000; // 10 menit untuk high traffic
-  private readonly STALE_WHILE_REVALIDATE_DURATION = 30 * 60 * 1000; // 30 menit stale
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit untuk performa lebih baik
+  private readonly STALE_WHILE_REVALIDATE_DURATION = 15 * 60 * 1000; // 15 menit stale
   private readonly REQUEST_TIMEOUT = 15000; // 15 detik timeout
   private requestQueue = new RequestQueue();
 
@@ -244,10 +237,6 @@ class RobustApiService {
   }
 
   private async performFetch(url: string): Promise<any> {
-    // Debug logging untuk tracking URL yang dipanggil
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 [Robust API] Making request to:', url);
-    }
     
     // Check rate limit
     const rateLimitKey = new URL(url).pathname + new URL(url).search;
@@ -305,12 +294,6 @@ class RobustApiService {
           
           const data = await response.json();
           
-          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Request successful:', currentUrl);
-            if (i > 0) {
-              console.log(`🔄 Used fallback URL #${i}`);
-            }
-          }
           
           return data;
         }, i === 0 ? 3 : 1, 1000); // Fewer retries for fallback URLs
@@ -344,7 +327,7 @@ class RobustApiService {
     }
     
     // Limit cache size to prevent memory issues
-    if (this.cache.size > 100) {
+    if (this.cache.size > 50) {
       const entries = Array.from(this.cache.entries());
       entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
       
@@ -385,10 +368,8 @@ class RobustApiService {
           console.error('❌ [Robust API] Fallback also failed:', fallbackError);
           
           // Last resort: return test data for development
-          console.log('🧪 [Robust API] Using test data as final fallback...');
           try {
             const { testDestinations } = await import('../data/testDestinations');
-            console.log('✅ [Robust API] Test data loaded successfully');
             return testDestinations;
           } catch (testError) {
             console.error('❌ [Robust API] Failed to load test data:', testError);
@@ -418,7 +399,31 @@ class RobustApiService {
       return data.data || null;
     } catch (error) {
       console.error(`Failed to fetch destination by slug ${slug}:`, error);
-      throw error;
+      
+      // Try fallback to Google Apps Script directly
+      try {
+        const fallbackUrl = `${getMainScriptUrl()}?endpoint=destinations&slug=${encodeURIComponent(slug)}`;
+        const fallbackData = await this.performFetch(fallbackUrl);
+        return fallbackData.data || null;
+      } catch (fallbackError) {
+        console.error(`Fallback also failed for slug ${slug}:`, fallbackError);
+        
+        // In development, try test data as last resort
+        if (process.env.NODE_ENV === 'development') {
+          try {
+            const { testDestinations } = await import('../data/testDestinations');
+            const testDestination = testDestinations.find(dest => dest.slug === slug);
+            if (testDestination) {
+              console.warn(`Using test data for slug: ${slug}`);
+              return testDestination;
+            }
+          } catch (testError) {
+            console.error('Failed to load test destinations:', testError);
+          }
+        }
+        
+        throw error;
+      }
     }
   }
 
@@ -526,8 +531,8 @@ class RobustApiService {
 
 class RobustEventsApiService {
   private cache = new Map<string, CacheEntry>();
-  private readonly CACHE_DURATION = 10 * 60 * 1000; // 10 menit
-  private readonly STALE_WHILE_REVALIDATE_DURATION = 30 * 60 * 1000; // 30 menit
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 menit
+  private readonly STALE_WHILE_REVALIDATE_DURATION = 15 * 60 * 1000; // 15 menit
   private readonly REQUEST_TIMEOUT = 15000; // 15 detik
   private requestQueue = new RequestQueue();
 
@@ -584,10 +589,6 @@ class RobustEventsApiService {
   }
 
   private async performFetch(url: string): Promise<any> {
-    // Debug logging untuk tracking URL yang dipanggil
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 [Events API] Making request to:', url);
-    }
     
     // Check rate limit
     const rateLimitKey = new URL(url).pathname + new URL(url).search;
@@ -639,12 +640,6 @@ class RobustEventsApiService {
           
           const data = await response.json();
           
-          if (process.env.NODE_ENV === 'development') {
-            console.log('✅ [Events API] Request successful:', currentUrl);
-            if (i > 0) {
-              console.log(`🔄 [Events API] Used fallback URL #${i}`);
-            }
-          }
           
           return data;
         }, i === 0 ? 3 : 1, 1000);
@@ -675,7 +670,7 @@ class RobustEventsApiService {
       }
     }
     
-    if (this.cache.size > 50) {
+    if (this.cache.size > 25) {
       const entries = Array.from(this.cache.entries());
       entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
       
@@ -709,13 +704,6 @@ class RobustEventsApiService {
       const url = `${getUrlWithEndpoint('events')}?slug=${encodeURIComponent(slug)}`;
       const data = await this.fetchWithAdvancedCache(url, true);
       
-      console.log('🔍 [Robust API] fetchEventBySlug response:', {
-        slug,
-        dataType: typeof data,
-        isArray: Array.isArray(data),
-        hasDataKey: 'data' in data,
-        dataKeys: typeof data === 'object' ? Object.keys(data) : 'not object'
-      });
       
       // Handle different response structures
       if (Array.isArray(data)) {
@@ -740,15 +728,11 @@ class RobustEventsApiService {
       
       // In development, try test data as fallback
       if (process.env.NODE_ENV === 'development') {
-        console.log('🧪 [Robust API] Trying test events data as fallback...');
         try {
           const { testEvents } = await import('../data/testEvents');
           const testEvent = testEvents.find(event => event.slug === slug);
           if (testEvent) {
-            console.log('✅ [Robust API] Test event found:', testEvent.title);
             return testEvent;
-          } else {
-            console.log('❌ [Robust API] Test event not found for slug:', slug);
           }
         } catch (testError) {
           console.error('❌ [Robust API] Failed to load test events:', testError);
@@ -812,13 +796,11 @@ class ConnectionMonitor {
       this.isOnline = navigator.onLine;
       
       window.addEventListener('online', () => {
-        console.log('🌐 [Connection Monitor] Connection restored');
         this.isOnline = true;
         this.notifyListeners(true);
       });
       
       window.addEventListener('offline', () => {
-        console.log('📵 [Connection Monitor] Connection lost');
         this.isOnline = false;
         this.notifyListeners(false);
       });

@@ -17,20 +17,24 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load saved language from localStorage
-    const savedLocale = localStorage.getItem('gemitra-locale') as Locale;
-    if (savedLocale && (savedLocale === 'id' || savedLocale === 'en')) {
-      setLocaleState(savedLocale);
-      setDictionary(getDictionary(savedLocale));
+    if (typeof window !== 'undefined') {
+      const savedLocale = localStorage.getItem('gemitra-locale') as Locale;
+      if (savedLocale && (savedLocale === 'id' || savedLocale === 'en')) {
+        setLocaleState(savedLocale);
+        setDictionary(getDictionary(savedLocale));
+      }
     }
   }, []);
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
     setDictionary(getDictionary(newLocale));
-    localStorage.setItem('gemitra-locale', newLocale);
     
-    // Update document language attribute
-    document.documentElement.lang = newLocale;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gemitra-locale', newLocale);
+      // Update document language attribute
+      document.documentElement.lang = newLocale;
+    }
   };
 
   return (
@@ -43,6 +47,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
+    // Fallback untuk development atau jika context tidak tersedia
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('useLanguage must be used within a LanguageProvider. Using fallback dictionary.');
+      return {
+        locale: 'id' as Locale,
+        dictionary: getDictionary('id'),
+        setLocale: () => {}
+      };
+    }
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;

@@ -105,7 +105,6 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
           });
 
           setGemitraIcon(icon);
-          console.log('✅ Gemitra "G" logo icon created successfully');
         }
       } else {
         console.warn('⚠️ Leaflet not available, retrying in 500ms...');
@@ -165,18 +164,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
     return false;
   });
   
-  console.log(`📍 Valid destinations with positions: ${validDestinations.length}/${destinations.length}`);
   
-  // Debug logging for component state
-  useEffect(() => {
-    console.log('🗺️ GemitraMap State:', {
-      isClient,
-      isMapReady,
-      hasIcon: !!gemitraIcon,
-      totalDestinations: destinations.length,
-      validDestinations: validDestinations.length
-    });
-  }, [isClient, isMapReady, gemitraIcon, destinations.length, validDestinations.length]);
 
   return (
     <MapErrorBoundary>
@@ -245,7 +233,6 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
                       icon={gemitraIcon}
                       eventHandlers={{
                         click: () => {
-                          console.log('📍 Marker clicked:', destination.nama);
                           onDestinationClick(destination);
                         },
                       }}
@@ -265,9 +252,9 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
                           <p className="text-xs text-gray-600 text-left">{destination.lokasi}</p>
                           <div className="flex items-center justify-between mt-1">
                             <p className="text-xs text-[#16A86E] font-bold">{destination.rating}★</p>
-                            {destination.pengunjung !== undefined && (
+                            {destination.dikunjungi !== undefined && (
                               <p className="text-xs text-[#213DFF] font-semibold">
-                                👥 {destination.pengunjung.toLocaleString()}
+                                👥 {destination.dikunjungi.toLocaleString()}
                               </p>
                             )}
                           </div>

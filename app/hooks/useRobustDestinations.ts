@@ -16,7 +16,7 @@ interface UseDestinationsOptions {
 export function useRobustDestinations(options: UseDestinationsOptions = {}) {
   const {
     enablePolling = false,
-    pollingInterval = 30000,
+    pollingInterval = 60000, // 1 menit untuk mengurangi beban server
     enableRetry = true,
     limit,
     category,
@@ -36,7 +36,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
       setIsOnline(online);
       
       if (online && error && enableRetry) {
-        console.log('Connection restored, retrying destinations fetch...');
         fetchDestinations();
       }
     });
@@ -45,11 +44,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
   }, [error, enableRetry]);
 
   const fetchDestinations = useCallback(async (showLoading = true) => {
-    console.log('🚀 [useRobustDestinations] Starting fetch...', {
-      isOnline,
-      showLoading,
-      lastFetchTime: new Date(lastFetchTime).toISOString()
-    });
 
     if (!isOnline) {
       console.warn('📵 [useRobustDestinations] No internet connection detected');
@@ -60,7 +54,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
 
     const now = Date.now();
     if (now - lastFetchTime < 2000) {
-      console.log('⏰ [useRobustDestinations] Skipping fetch - too soon since last fetch');
       return;
     }
 
@@ -70,7 +63,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
       }
       setError(null);
       
-      console.log('📡 [useRobustDestinations] Calling robustApiService.fetchDestinations...');
       
       let data: any[];
       
@@ -85,12 +77,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
         data = await robustApiService.fetchDestinations();
       }
       
-      console.log('✅ [useRobustDestinations] Data received:', {
-        dataLength: data?.length || 0,
-        firstItem: data?.[0]?.nama || 'No data',
-        dataType: typeof data,
-        isArray: Array.isArray(data)
-      });
       
       // Process destinations data with enhanced position handling
       const processedData = data.map((d: any) => ({
@@ -140,10 +126,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
         })() : null,
       }));
       
-      console.log('🔄 [useRobustDestinations] Processing completed:', {
-        processedLength: processedData.length,
-        validPositions: processedData.filter(d => d.posisi).length
-      });
       
       setDestinations(processedData);
       setLastFetchTime(now);
@@ -186,7 +168,6 @@ export function useRobustDestinations(options: UseDestinationsOptions = {}) {
   useEffect(() => {
     if (error && enableRetry && retryCount < 3 && isOnline) {
       const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-      console.log(`Auto-retrying destinations in ${delay}ms (attempt ${retryCount + 1}/3)...`);
       
       const timeoutId = setTimeout(() => {
         fetchDestinations(false);

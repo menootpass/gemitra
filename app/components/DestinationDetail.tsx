@@ -2,6 +2,8 @@
 import Link from "next/link";
 import ImageSlider from "./ImageSlider";
 import { Destination } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
+import { getPriceByLanguage, formatPrice } from "../utils/priceUtils";
 
 type DestinationDetailProps = {
   destination: Destination | null;
@@ -9,6 +11,8 @@ type DestinationDetailProps = {
 };
 
 export default function DestinationDetail({ destination, onClose }: DestinationDetailProps) {
+  const { locale } = useLanguage();
+  
   if (!destination) {
     return (
       <div className="w-full h-96 bg-glass rounded-xl flex items-center justify-center">
@@ -126,10 +130,10 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
           </div>
         </div>
         <span className="text-black/60 text-sm">{destination.lokasi} &middot; {destination.kategori}</span>
-        {destination.harga && (
+        {(destination.harga || destination.mancanegara) && (
           <div className="flex items-center gap-2">
             <span className="text-[#16A86E] font-bold text-base">
-              Rp {destination.harga.toLocaleString("id-ID")}
+              {formatPrice(getPriceByLanguage(destination, locale), locale)}
             </span>
             <span className="text-gray-500 text-xs">per destinasi</span>
           </div>
@@ -137,11 +141,11 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
         <p className="text-black/80 text-sm line-clamp-3">{destination.deskripsi}</p>
         
         {/* Informasi Pengunjung */}
-        {destination.pengunjung !== undefined && (
+        {destination.dikunjungi !== undefined && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-[#213DFF] font-semibold">👥</span>
             <span className="text-black/70">
-              {destination.pengunjung.toLocaleString()} pengunjung
+              {destination.dikunjungi.toLocaleString()} pengunjung
             </span>
           </div>
         )}

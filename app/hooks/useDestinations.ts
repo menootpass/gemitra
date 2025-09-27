@@ -176,26 +176,12 @@ export function useDestinations(options: UseDestinationsOptions = {}): UseDestin
       setLoading(true);
       setError(null);
       
-      console.log('Fetching destinations...');
       const data = await apiService.fetchDestinations();
-      console.log('Raw destinations data:', data);
-      console.log('Destinations data type:', typeof data);
-      console.log('Destinations is array:', Array.isArray(data));
-      console.log('Destinations length:', data?.length);
       
       if (data && Array.isArray(data)) {
-        console.log('✅ Destinations data is valid array');
-        console.log('First destination:', data[0]);
-        console.log('All destination names:', data.map(d => d.nama));
-        
         const processedData = processData(data);
-        console.log('Processed destinations:', processedData);
-        console.log('Processed destinations length:', processedData.length);
-        console.log('Processed destination names:', processedData.map(d => d.nama));
         setDestinations(processedData);
       } else {
-        console.log('❌ No destinations data or invalid format');
-        console.log('Data received:', data);
         setDestinations([]);
       }
       
@@ -258,8 +244,6 @@ export function useDestinationDetail(id: number | null) {
       const rawData = await apiService.fetchDestinationById(destinationId);
       
       if (rawData) {
-        // console.log('Raw data in useDestinationDetail:', rawData);
-        // console.log('Raw komentar data:', rawData.komentar, 'Type:', typeof rawData.komentar);
         const processedData = {
           ...rawData,
           img: (() => {

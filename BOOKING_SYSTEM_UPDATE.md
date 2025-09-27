@@ -123,8 +123,7 @@ The system sends data to Google Sheets with the following structure:
 ## Future Enhancements
 
 1. **Real-time pricing updates**: Dynamic pricing from Google Sheets
-2. **Discount system**: Support for promotional discounts
-3. **Payment integration**: Direct payment processing
+2. **Payment integration**: Direct payment processing
 4. **Email notifications**: Automated email confirmations
 5. **Admin dashboard**: Transaction management interface
 

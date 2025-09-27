@@ -8,10 +8,13 @@ import Link from "next/link";
 import { useMemo, useEffect } from "react";
 import type { SyntheticEvent } from "react";
 import type { Destination } from "../types";
+import { useLanguage } from "../contexts/LanguageContext";
+import { getPriceByLanguage, formatPrice } from "../utils/priceUtils";
 
 export default function EventDetailClient({ slug }: { slug: string }) {
   const { event, loading, error } = useEventBySlug(slug);
   const { destinations } = useDestinations();
+  const { locale } = useLanguage();
 
   // Increment totalPembaca once when event.id is available
   useEffect(() => {
@@ -372,7 +375,7 @@ export default function EventDetailClient({ slug }: { slug: string }) {
                   
                   {/* Price */}
                   <p className="text-green-600 font-semibold text-lg mb-4">
-                    Rp {dest.harga?.toLocaleString() || "0"}
+                    {formatPrice(getPriceByLanguage(dest, locale), locale)}
                   </p>
                   
                   {/* Action Buttons */}

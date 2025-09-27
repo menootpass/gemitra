@@ -52,7 +52,6 @@ export function clearProblematicUrlFromCache(): void {
       }
     }
 
-    console.log('✅ Cache cleanup completed');
   } catch (error) {
     console.error('❌ Error during cache cleanup:', error);
   }
@@ -68,7 +67,6 @@ export function createSafeFetch() {
     // Fix problematic URL if detected
     url = validateAndFixUrl(url);
     
-    console.log('🔍 Safe fetch to:', url);
     
     return originalFetch(url, init);
   };
@@ -78,7 +76,6 @@ export function createSafeFetch() {
 export function initUrlFixer(): void {
   if (typeof window === 'undefined') return;
   
-  console.log('🔧 Initializing URL fixer...');
   
   // Clear problematic URLs from cache
   clearProblematicUrlFromCache();
@@ -92,12 +89,9 @@ export function initUrlFixer(): void {
       
       // Log all Google Apps Script requests
       if (url.includes('script.google.com')) {
-        console.log('🔍 Intercepted Google Apps Script request:', url);
-        
         // Fix problematic URL
         const fixedUrl = validateAndFixUrl(url);
         if (fixedUrl !== url) {
-          console.log('🔄 Fixed URL to:', fixedUrl);
           url = fixedUrl;
         }
       }
@@ -106,5 +100,4 @@ export function initUrlFixer(): void {
     };
   }
   
-  console.log('✅ URL fixer initialized');
 }

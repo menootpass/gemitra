@@ -5,7 +5,7 @@ const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || 'https://sc
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes for destinations
-const REQUEST_TIMEOUT = 10000; // 10 seconds timeout
+const REQUEST_TIMEOUT = 15000; // 15 seconds timeout (increased from 10s)
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = REQUEST_TIMEOUT) {
@@ -75,15 +75,31 @@ export async function GET(request: Request) {
     const responseTime = Date.now() - startTime;
     console.error('Error di API route:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan server';
+    // Handle different types of errors
+    let errorMessage = 'Terjadi kesalahan server';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timeout') || error.message.includes('AbortError')) {
+        errorMessage = 'Request timeout - server tidak merespons';
+        statusCode = 408;
+      } else if (error.message.includes('fetch')) {
+        errorMessage = 'Network error - tidak dapat terhubung ke server';
+        statusCode = 503;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     const errorResponse = NextResponse.json(
       { 
         message: 'Terjadi kesalahan pada server', 
         error: errorMessage,
         timestamp: new Date().toISOString(),
-        responseTime: `${responseTime}ms`
+        responseTime: `${responseTime}ms`,
+        slug: searchParams.get('slug') || null
       },
-      { status: 500 }
+      { status: statusCode }
     );
     
     errorResponse.headers.set('X-Response-Time', `${responseTime}ms`);

@@ -6,6 +6,8 @@ import { robustApiService } from "../services/robustApi";
 import { mutate } from "swr";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "../contexts/LanguageContext";
+import { getCartItemPriceByLanguage, formatPrice, getVehiclePriceByLanguage } from "../utils/priceUtils";
 
 
 const packageOptions = [
@@ -13,6 +15,7 @@ const packageOptions = [
     key: "Brio",
     label: "Brio",
     harga: 747500,
+    mancanegara: 50,
     fasilitas: ["passengers4", "ac", "driver"],
     maxPassengers: 4,
     image: "/images/brio.jpg",
@@ -21,6 +24,7 @@ const packageOptions = [
     key: "Mobilio",
     label: "Mobilio",
     harga: 747500,
+    mancanegara: 50,
     fasilitas: ["passengers4", "ac", "driver", "superComfortable"],
     maxPassengers: 4,
     image: "/images/mobilio.png",
@@ -29,6 +33,7 @@ const packageOptions = [
     key: "Innova Reborn",
     label: "Mobil Innova Reborn",
     harga: 1035000,
+    mancanegara: 70,
     fasilitas: ["passengers7", "ac", "driver", "moreComfortable"],
     maxPassengers: 7,
     image: "/images/innova.png",
@@ -37,6 +42,7 @@ const packageOptions = [
     key: "HIACE",
     label: "HIACE",
     harga: 1380000,
+    mancanegara: 90,
     fasilitas: ["passengers15", "ac", "driver", "superComfortable"],
     maxPassengers: 15,
     image: "/images/hiace.png",
@@ -45,6 +51,7 @@ const packageOptions = [
     key: "Alphard",
     label: "Alphard",
     harga: 3795000,
+    mancanegara: 250,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/alphard.jpg",
@@ -53,6 +60,7 @@ const packageOptions = [
     key: "Pajero",
     label: "Pajero",
     harga: 1725000,
+    mancanegara: 115,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/pajero.jpg",
@@ -61,6 +69,7 @@ const packageOptions = [
     key: "Fortuner",
     label: "Fortuner",
     harga: 1610000,
+    mancanegara: 110,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/fortuner.jpg",
@@ -69,6 +78,7 @@ const packageOptions = [
     key: "Avanza",
     label: "Avanza",
     harga: 805000,
+    mancanegara: 55,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/avanza.jpg",
@@ -77,6 +87,7 @@ const packageOptions = [
     key: "Elf Lonng",
     label: "Elf Long",
     harga: 1380000,
+    mancanegara: 90,
     fasilitas: ["passengers15", "ac", "driver", "superComfortable"],
     maxPassengers: 15,
     image: "/images/elfLong.jpg",
@@ -85,6 +96,7 @@ const packageOptions = [
     key: "Bus Medium & Long",
     label: "Bus Medium & Big Bus",
     harga: 2070000,
+    mancanegara: 140,
     fasilitas: ["passengers20", "ac", "driver", "superComfortable"],
     maxPassengers: 20,
     image: "/images/busMedLong.jpg",
@@ -268,6 +280,7 @@ export default function SidebarCart({
 }: SidebarCartProps) {
 
   const router = useRouter();
+  const { locale } = useLanguage();
   const [nama, setNama] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -275,11 +288,10 @@ export default function SidebarCart({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showLoadingPopup, setShowLoadingPopup] = useState(false);
-  const [language, setLanguage] = useState<'id' | 'en'>('id');
 
   // Translation function
   const t = (key: string) => {
-    return translations[language][key as keyof typeof translations.id] || key;
+    return translations[locale][key as keyof typeof translations.id] || key;
   };
 
   // Min booking datetime: now + 3 days
@@ -291,8 +303,11 @@ export default function SidebarCart({
   const minBookingTime = formatTime(minDateTime);
   const isOnMinDate = tanggalBooking === minBookingDate;
   
-  // Calculate destination prices (price × number of passengers)
-  const destinationTotal = cart.reduce((sum, item) => sum + ((item.harga || 0) * jumlahPenumpang), 0);
+  // Calculate destination prices (price × number of passengers) based on language
+  const destinationTotal = cart.reduce((sum, item) => {
+    const itemPrice = getCartItemPriceByLanguage(item, locale);
+    return sum + (itemPrice * jumlahPenumpang);
+  }, 0);
   
   // Filter cars based on passenger capacity
   const availableCars = packageOptions.filter(car => car.maxPassengers >= jumlahPenumpang);
@@ -304,7 +319,7 @@ export default function SidebarCart({
   // Use selected car if valid, otherwise use first available
   const finalSelectedPackage = currentCarIsValid ? selectedPackage : (availableCars[0] || packageOptions[0]);
   
-  const carPrice = finalSelectedPackage.harga;
+  const carPrice = getVehiclePriceByLanguage(finalSelectedPackage, locale);
   const totalBiaya = destinationTotal + carPrice;
   const maxPassengers = finalSelectedPackage.maxPassengers;
 
@@ -338,8 +353,6 @@ export default function SidebarCart({
       cart: cart, // Include detailed cart data for JSON pricing
     };
 
-    console.log('Sending transaction data:', transactionData);
-    console.log('Cart items:', cart);
 
     try {
       // Single API call - transaction data includes destination names for visitor increment
@@ -426,19 +439,19 @@ export default function SidebarCart({
           <div className="flex items-center gap-2">
             <button
               className="text-[#213DFF] hover:text-[#16A86E] p-2 rounded-lg hover:bg-[#213DFF11] transition"
-              onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+              onClick={() => {/* Language toggle handled by parent component */}}
               aria-label="Toggle Language"
-              title={language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
+              title={locale === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
             >
               <Translate size={20} />
             </button>
-            <button
-              className="text-[#213DFF] hover:text-[#16A86E] p-2 rounded-lg hover:bg-[#213DFF11] transition"
-              onClick={onClose}
+          <button
+            className="text-[#213DFF] hover:text-[#16A86E] p-2 rounded-lg hover:bg-[#213DFF11] transition"
+            onClick={onClose}
               aria-label={t('hideCart')}
-            >
-              <XSquare size={24} />
-            </button>
+          >
+            <XSquare size={24} />
+          </button>
           </div>
         </header>
 
@@ -447,19 +460,31 @@ export default function SidebarCart({
             <h3 className="font-bold text-lg mb-2 text-gray-800">{t('destinations')} ({cart.length}/3)</h3>
             {cart.length > 0 ? (
               <ul className="space-y-2">
-                {cart.map(item => (
-                  <li key={item.id} className="flex items-center justify-between bg-[#213DFF11] rounded-xl px-3 py-2 text-sm">
-                    <div className="flex-1">
-                      <span className="font-medium">{item.nama}</span>
-                      {item.harga && (
-                        <span className="block text-xs text-gray-600">
-                          Rp {item.harga.toLocaleString("id-ID")}
-                        </span>
-                      )}
-                    </div>
-                    <button className="text-red-500 font-bold ml-2 hover:text-red-700" onClick={() => onRemoveFromCart(item.id)}>{t('remove')}</button>
-                  </li>
-                ))}
+                {cart.map(item => {
+                  // Debug: log cart item data
+                  console.log('Cart item debug:', {
+                    id: item.id,
+                    nama: item.nama,
+                    harga: item.harga,
+                    mancanegara: item.mancanegara,
+                    locale: locale,
+                    priceByLanguage: getCartItemPriceByLanguage(item, locale)
+                  });
+                  
+                  return (
+                    <li key={item.id} className="flex items-center justify-between bg-[#213DFF11] rounded-xl px-3 py-2 text-sm">
+                      <div className="flex-1">
+                        <span className="font-medium">{item.nama}</span>
+                        {(item.harga || item.mancanegara) && (
+                          <span className="block text-xs text-gray-600">
+                            {formatPrice(getCartItemPriceByLanguage(item, locale), locale)}
+                          </span>
+                        )}
+                      </div>
+                      <button className="text-red-500 font-bold ml-2 hover:text-red-700" onClick={() => onRemoveFromCart(item.id)}>{t('remove')}</button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-gray-500 text-sm">{t('emptyCart')}</p>
@@ -562,7 +587,7 @@ export default function SidebarCart({
                           />
                           <span className="font-bold text-sm md:text-base text-[#213DFF]">{pkg.label}</span>
                         </div>
-                        <span className="font-bold text-sm md:text-base text-[#16A86E]">Rp {pkg.harga.toLocaleString("id-ID")}</span>
+                        <span className="font-bold text-sm md:text-base text-[#16A86E]">{formatPrice(getVehiclePriceByLanguage(pkg, locale), locale)}</span>
                       </div>
                       <ul className="flex flex-wrap gap-1 mt-1">
                         {pkg.fasilitas.map(f => (
@@ -797,7 +822,7 @@ export default function SidebarCart({
                       <p className="mb-2"><strong>Website:</strong> https://gemitra.vercel.app/</p>
                       <p className="mb-2"><strong>Instagram:</strong> @gemitra_jogja</p>
                     </div>
-
+                  
                     <p className="mt-6 text-sm text-gray-600">
                       <strong>Tanggal Efektif:</strong> Dokumen ini berlaku efektif sejak tanggal diterbitkan.
                     </p>
@@ -822,17 +847,17 @@ export default function SidebarCart({
             {cart.length > 0 && destinationTotal > 0 && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600">{t('destinationsCost')} ({cart.length})</span>
-                <span className="text-gray-800">Rp {destinationTotal.toLocaleString("id-ID")}</span>
+                <span className="text-gray-800">{formatPrice(destinationTotal, locale)}</span>
               </div>
             )}
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">{t('vehicleCost')} ({selectedPackage.label})</span>
-              <span className="text-gray-800">Rp {carPrice.toLocaleString("id-ID")}</span>
+              <span className="text-gray-800">{formatPrice(carPrice, locale)}</span>
             </div>
             <div className="border-t pt-2 flex justify-between items-center">
               <span className="text-lg font-bold text-gray-800">{t('totalCost')}</span>
               <span className="text-xl font-extrabold text-[#213DFF]">
-                Rp {totalBiaya.toLocaleString("id-ID")}
+                {formatPrice(totalBiaya, locale)}
               </span>
             </div>
           </div>

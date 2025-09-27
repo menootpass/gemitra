@@ -5,7 +5,6 @@ const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || "https://sc
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received transaction data:', body);
     
     const { 
       nama, 
@@ -30,19 +29,14 @@ export async function POST(request: NextRequest) {
 
     // Create detailed pricing JSON for destinations
     let rincianDestinasi = "{}";
-    console.log('Cart data received:', cart);
     if (cart && Array.isArray(cart) && cart.length > 0) {
       const destinationPricing: Record<string, string> = {};
       cart.forEach((item: any) => {
-        console.log('Processing cart item:', item);
         if (item.slug && item.harga) {
           destinationPricing[item.slug] = item.harga.toString();
         }
       });
       rincianDestinasi = JSON.stringify(destinationPricing);
-      console.log('Generated rincianDestinasi:', rincianDestinasi);
-    } else {
-      console.log('No cart data or empty cart');
     }
 
     // Generate unique transaction code
@@ -69,7 +63,6 @@ export async function POST(request: NextRequest) {
       timestamp: timestamp.toISOString(),
     };
 
-    console.log('Sending payload to Google Apps Script:', payload);
 
     const response = await fetch(SCRIPT_URL, {
       method: "POST",
@@ -79,7 +72,6 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(payload),
     });
 
-    console.log('Google Apps Script response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -88,7 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Google Apps Script response data:', data);
 
     if (data.success) {
       return NextResponse.json({

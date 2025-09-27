@@ -18,7 +18,7 @@ export default function LazyImage({
   className = "", 
   priority = false,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
-  quality = 85
+  quality = 75
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -40,7 +40,7 @@ export default function LazyImage({
       },
       {
         threshold: 0.1,
-        rootMargin: '50px'
+        rootMargin: '100px'
       }
     );
 
