@@ -2,25 +2,10 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import WisataDetailClient from './WisataDetailClient';
 import { robustApiService } from '../../services/robustApi';
-
-// Types
-interface Destination {
-  id: number;
-  nama: string;
-  lokasi: string;
-  kategori: string;
-  deskripsi: string;
-  img: string | string[];
-  harga?: number;
-  rating: number;
-  pengunjung?: number;
-  fasilitas?: string | string[];
-  komentar?: any[];
-  slug?: string;
-}
+import { Destination } from '../../types';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // Generate static params for popular destinations
@@ -32,7 +17,7 @@ export async function generateStaticParams() {
     // Generate static params for first 50 most popular destinations
     // This will pre-generate the most visited pages
     const popularDestinations = destinations
-      .sort((a: any, b: any) => (b.pengunjung || 0) - (a.pengunjung || 0))
+      .sort((a: any, b: any) => (b.dikunjungi || 0) - (a.dikunjungi || 0))
       .slice(0, 50);
     
     return popularDestinations.map((destination: any) => ({
@@ -48,7 +33,8 @@ export async function generateStaticParams() {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
-    const destination = await robustApiService.fetchDestinationBySlug(params.id);
+    const resolvedParams = await params;
+    const destination = await robustApiService.fetchDestinationBySlug(resolvedParams.id);
     
     if (!destination) {
       return {
@@ -97,7 +83,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: images.length > 0 ? [images[0]] : [],
       },
       alternates: {
-        canonical: `https://gemitra.vercel.app/wisata/${params.id}`,
+        canonical: `https://gemitra.vercel.app/wisata/${resolvedParams.id}`,
       },
     };
   } catch (error) {
@@ -113,7 +99,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function WisataDetailPage({ params }: PageProps) {
   try {
     // Fetch destination data at build time
-    const destination = await robustApiService.fetchDestinationBySlug(params.id);
+    const resolvedParams = await params;
+    const destination = await robustApiService.fetchDestinationBySlug(resolvedParams.id);
     
     if (!destination) {
       notFound();

@@ -35,10 +35,10 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
 
 export async function GET(request: Request) {
   const startTime = Date.now();
+  const { searchParams } = new URL(request.url);
+  const slug = searchParams.get('slug');
   
   try {
-    const { searchParams } = new URL(request.url);
-    const slug = searchParams.get('slug');
     
     let response;
     

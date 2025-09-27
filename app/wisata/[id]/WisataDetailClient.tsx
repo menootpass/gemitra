@@ -4,26 +4,10 @@ import SidebarCart from "../../components/SidebarCart";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
 import CommentForm from "../../components/CommentForm";
 import OptimizedImageSlider from "../../components/OptimizedImageSlider";
-import { CartItem } from "../../types";
+import { CartItem, Destination } from "../../types";
 import { ShoppingCartSimple } from "phosphor-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { getPriceByLanguage, formatPrice, createCartItemWithPricing } from "../../utils/priceUtils";
-
-interface Destination {
-  id: number;
-  nama: string;
-  lokasi: string;
-  kategori: string;
-  deskripsi: string;
-  img: string | string[];
-  harga?: number;
-  mancanegara?: number;
-  rating: number;
-  pengunjung?: number;
-  fasilitas?: string | string[];
-  komentar?: any[];
-  slug?: string;
-}
 
 interface WisataDetailClientProps {
   destination: Destination;
@@ -333,11 +317,11 @@ export default function WisataDetailClient({ destination: data }: WisataDetailCl
             <p className="text-black/80 text-base mb-2">{data.deskripsi}</p>
             
             {/* Informasi Pengunjung */}
-            {data.pengunjung !== undefined && (
+            {data.dikunjungi !== undefined && (
               <div className="flex items-center gap-2 text-sm mb-2">
                 <span className="text-[#213DFF] font-semibold">👥</span>
                 <span className="text-black/70">
-                  {data.pengunjung.toLocaleString()} {dictionary.wisataDetail.visitors}
+                  {data.dikunjungi.toLocaleString()} {dictionary.wisataDetail.visitors}
                 </span>
               </div>
             )}

@@ -713,7 +713,7 @@ export default function SidebarCart({
                     <h2 className="text-lg font-bold text-[#213DFF] mb-4">Syarat dan Ketentuan Layanan Gemitra Jogja</h2>
                     
                     <p className="mb-4">
-                      Dokumen Syarat dan Ketentuan ini ("Ketentuan") merupakan perjanjian yang mengikat secara hukum antara Anda ("Pengguna") dengan Gemitra Jogja ("Kami"). Dengan mengakses platform, menggunakan informasi, dan/atau melakukan pemesanan Layanan yang disediakan oleh Gemitra Jogja, Pengguna menyatakan telah membaca, memahami, menyetujui, dan terikat pada seluruh isi Ketentuan ini. Apabila Pengguna tidak menyetujui salah satu, sebagian, atau seluruh isi Ketentuan ini, maka Pengguna tidak diperkenankan untuk menggunakan Layanan kami.
+                      Dokumen Syarat dan Ketentuan ini (&quot;Ketentuan&quot;) merupakan perjanjian yang mengikat secara hukum antara Anda (&quot;Pengguna&quot;) dengan Gemitra Jogja (&quot;Kami&quot;). Dengan mengakses platform, menggunakan informasi, dan/atau melakukan pemesanan Layanan yang disediakan oleh Gemitra Jogja, Pengguna menyatakan telah membaca, memahami, menyetujui, dan terikat pada seluruh isi Ketentuan ini. Apabila Pengguna tidak menyetujui salah satu, sebagian, atau seluruh isi Ketentuan ini, maka Pengguna tidak diperkenankan untuk menggunakan Layanan kami.
                     </p>
 
                     <h3 className="text-md font-bold text-[#16A86E] mb-3">Definisi dan Interpretasi</h3>
@@ -745,13 +745,13 @@ export default function SidebarCart({
 
                     <h3 className="text-md font-bold text-[#16A86E] mb-3">Ruang Lingkup Layanan</h3>
                     <p className="mb-4">
-                      Gemitra Jogja memposisikan diri sebagai "perusahaan digital yang menjembatani jasa pariwisata". Ruang lingkup layanan kami secara fundamental adalah sebagai platform agregator dan penyelenggara tur yang mengintegrasikan berbagai layanan dari Mitra Pihak Ketiga untuk menciptakan pengalaman wisata yang unik dan terkurasi.
+                      Gemitra Jogja memposisikan diri sebagai &quot;perusahaan digital yang menjembatani jasa pariwisata&quot;. Ruang lingkup layanan kami secara fundamental adalah sebagai platform agregator dan penyelenggara tur yang mengintegrasikan berbagai layanan dari Mitra Pihak Ketiga untuk menciptakan pengalaman wisata yang unik dan terkurasi.
                     </p>
                     <p className="mb-4">
                       Layanan utama yang disediakan oleh Gemitra Jogja mencakup:
                     </p>
                     <ul className="list-disc list-inside space-y-1 mb-6">
-                      <li><strong>Kurasi dan Promosi:</strong> Melakukan riset, seleksi, dan promosi destinasi "Hidden Gems" di Daerah Istimewa Yogyakarta</li>
+                      <li><strong>Kurasi dan Promosi:</strong> Melakukan riset, seleksi, dan promosi destinasi &quot;Hidden Gems&quot; di Daerah Istimewa Yogyakarta</li>
                       <li><strong>Penyediaan Paket Wisata:</strong> Merancang dan menawarkan paket perjalanan yang terstruktur (Paket Basic, Lite, dan Premium)</li>
                       <li><strong>Fasilitasi Pemesanan:</strong> Menyediakan sistem pemesanan dan pembayaran yang terpusat melalui situs web resmi</li>
                     </ul>
