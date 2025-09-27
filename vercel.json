@@ -61,11 +61,5 @@
       "destination": "/api/robots"
     }
   ],
-  "redirects": [
-    {
-      "source": "/:path*",
-      "destination": "https://gemitra.com/:path",
-      "permanent": true
-    }
-  ]
+  "redirects": []
 }
