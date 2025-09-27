@@ -88,8 +88,8 @@
   ],
   "redirects": [
     {
-      "source": "/:path*",
-      "destination": "https://gemitra.com/:path*",
+      "source": "/(.*)",
+      "destination": "https://gemitra.com/$1",
       "permanent": true
     }
   ]
