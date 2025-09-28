@@ -15,7 +15,7 @@ const packageOptions = [
     key: "Brio",
     label: "Brio",
     harga: 747500,
-    mancanegara: 50,
+    mancanegara: 44.69,
     fasilitas: ["passengers4", "ac", "driver"],
     maxPassengers: 4,
     image: "/images/brio.jpg",
@@ -24,7 +24,7 @@ const packageOptions = [
     key: "Mobilio",
     label: "Mobilio",
     harga: 747500,
-    mancanegara: 50,
+    mancanegara: 44.69,
     fasilitas: ["passengers4", "ac", "driver", "superComfortable"],
     maxPassengers: 4,
     image: "/images/mobilio.png",
@@ -33,7 +33,7 @@ const packageOptions = [
     key: "Innova Reborn",
     label: "Mobil Innova Reborn",
     harga: 1035000,
-    mancanegara: 70,
+    mancanegara: 61.88,
     fasilitas: ["passengers7", "ac", "driver", "moreComfortable"],
     maxPassengers: 7,
     image: "/images/innova.png",
@@ -42,7 +42,7 @@ const packageOptions = [
     key: "HIACE",
     label: "HIACE",
     harga: 1380000,
-    mancanegara: 90,
+    mancanegara: 82.51,
     fasilitas: ["passengers15", "ac", "driver", "superComfortable"],
     maxPassengers: 15,
     image: "/images/hiace.png",
@@ -51,7 +51,7 @@ const packageOptions = [
     key: "Alphard",
     label: "Alphard",
     harga: 3795000,
-    mancanegara: 250,
+    mancanegara: 226.91,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/alphard.jpg",
@@ -60,7 +60,7 @@ const packageOptions = [
     key: "Pajero",
     label: "Pajero",
     harga: 1725000,
-    mancanegara: 115,
+    mancanegara: 103.14,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/pajero.jpg",
@@ -69,7 +69,7 @@ const packageOptions = [
     key: "Fortuner",
     label: "Fortuner",
     harga: 1610000,
-    mancanegara: 110,
+    mancanegara: 96.26,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/fortuner.jpg",
@@ -78,25 +78,25 @@ const packageOptions = [
     key: "Avanza",
     label: "Avanza",
     harga: 805000,
-    mancanegara: 55,
+    mancanegara: 48.13,
     fasilitas: ["passengers6", "ac", "driver", "superComfortable"],
     maxPassengers: 6,
     image: "/images/avanza.jpg",
   },
   {
-    key: "Elf Lonng",
+    key: "Elf Long",
     label: "Elf Long",
     harga: 1380000,
-    mancanegara: 90,
+    mancanegara: 82.51,
     fasilitas: ["passengers15", "ac", "driver", "superComfortable"],
     maxPassengers: 15,
     image: "/images/elfLong.jpg",
   },
   {
-    key: "Bus Medium & Long",
+    key: "Bus Medium & Big Bus",
     label: "Bus Medium & Big Bus",
     harga: 2070000,
-    mancanegara: 140,
+    mancanegara: 123.77,
     fasilitas: ["passengers20", "ac", "driver", "superComfortable"],
     maxPassengers: 20,
     image: "/images/busMedLong.jpg",
@@ -461,15 +461,8 @@ export default function SidebarCart({
             {cart.length > 0 ? (
               <ul className="space-y-2">
                 {cart.map(item => {
-                  // Debug: log cart item data
-                  console.log('Cart item debug:', {
-                    id: item.id,
-                    nama: item.nama,
-                    harga: item.harga,
-                    mancanegara: item.mancanegara,
-                    locale: locale,
-                    priceByLanguage: getCartItemPriceByLanguage(item, locale)
-                  });
+                  const itemPrice = getCartItemPriceByLanguage(item, locale);
+                  const totalItemPrice = itemPrice * jumlahPenumpang;
                   
                   return (
                     <li key={item.id} className="flex items-center justify-between bg-[#213DFF11] rounded-xl px-3 py-2 text-sm">
@@ -477,7 +470,7 @@ export default function SidebarCart({
                         <span className="font-medium">{item.nama}</span>
                         {(item.harga || item.mancanegara) && (
                           <span className="block text-xs text-gray-600">
-                            {formatPrice(getCartItemPriceByLanguage(item, locale), locale)}
+                            {formatPrice(itemPrice, locale)} × {jumlahPenumpang} = {formatPrice(totalItemPrice, locale)}
                           </span>
                         )}
                       </div>

@@ -49,8 +49,8 @@ export async function GET(request: Request) {
       });
     } else {
       // Jika tidak ada slug, fetch semua destinasi
-      response = await fetchWithTimeout(`${SCRIPT_URL}?endpoint=destinations`, {
-        next: { revalidate: CACHE_TTL },
+      response = await fetchWithTimeout(`${SCRIPT_URL}?endpoint=destinations&_t=${Date.now()}`, {
+        next: { revalidate: 0 }, // Disable cache temporarily
       });
     }
 

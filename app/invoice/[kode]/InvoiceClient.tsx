@@ -309,10 +309,10 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
               Tour & Travel Service
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Jl. Malioboro No. 123, Yogyakarta
+              gemitra.com
             </p>
             <p className="text-xs text-gray-500">
-              Telp: (0274) 123456
+              Telp: +62 857-0183-4668
             </p>
           </div>
           
