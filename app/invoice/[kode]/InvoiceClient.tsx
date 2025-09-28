@@ -300,88 +300,189 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
     <div className="min-h-screen bg-gray-100 py-4 px-4">
       <div className="max-w-sm mx-auto">
         {/* Struk Header */}
-        <div className="bg-white shadow-lg p-4 mb-3">
-          <div className="text-center border-b-2 border-dashed border-gray-300 pb-3 mb-3">
-            <h1 className="text-xl font-bold text-gray-800 mb-1">
-              GEMITRA TOUR
-            </h1>
-            <p className="text-xs text-gray-600">
-              Tour & Travel Service
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 shadow-lg p-4 mb-3 border border-green-200">
+          <div className="text-center border-b-2 border-dashed border-green-300 pb-3 mb-3">
+            {/* Logo dengan ikon */}
+            <div className="flex items-center justify-center mb-2">
+              <div className="bg-green-100 rounded-full p-2 mr-2">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h1 className="text-xl font-bold text-gray-800">
+                GEMITRA TOUR
+              </h1>
+            </div>
+            
+            <p className="text-xs text-gray-600 mb-1">
+              🧳 Tour & Travel Service
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              gemitra.com
+            <p className="text-xs text-gray-500 mb-1">
+              🌐 gemitra.com
             </p>
             <p className="text-xs text-gray-500">
-              Telp: +62 857-0183-4668
+              📞 +62 857-0183-4668
             </p>
           </div>
           
           <div className="text-center">
-            <div className="text-sm font-bold text-gray-800 mb-1">
-              INVOICE
+            {/* Invoice dengan ikon */}
+            <div className="flex items-center justify-center mb-2">
+              <div className="bg-blue-100 rounded-full p-1 mr-2">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="text-sm font-bold text-gray-800">
+                INVOICE
+              </div>
             </div>
+            
             <div className="text-xs font-semibold text-[#16A86E] mb-2">
               #{invoice.kode}
             </div>
-            <div className={`inline-block px-2 py-1 text-xs font-semibold border ${getStatusStyle(normalizedStatus)}`}>
+            
+            {/* Status dengan ikon */}
+            <div className={`inline-flex items-center px-3 py-1 text-xs font-semibold border rounded-full ${getStatusStyle(normalizedStatus)}`}>
+              {normalizedStatus === 'paid' && (
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {normalizedStatus === 'pending' && (
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {normalizedStatus === 'cancelled' && (
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
               {getStatusText(normalizedStatus)}
             </div>
           </div>
         </div>
 
         {/* Struk Detail */}
-        <div className="bg-white shadow-lg p-4 mb-3">
-          <div className="border-b border-gray-200 pb-2 mb-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Tanggal:</span>
+        <div className="bg-white shadow-lg p-4 mb-3 border border-gray-200">
+          {/* Header dengan ikon */}
+          <div className="flex items-center mb-3 pb-2 border-b border-gray-200">
+            <div className="bg-blue-100 rounded-full p-1 mr-2">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-xs font-semibold text-gray-800">INFORMASI TRANSAKSI</div>
+          </div>
+
+          {/* Tanggal dan waktu dengan ikon */}
+          <div className="bg-gray-50 rounded-lg p-2 mb-3">
+            <div className="flex justify-between text-xs mb-1">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-gray-600">Tanggal:</span>
+              </div>
               <span className="font-semibold">{formatDate(invoice.tanggal_transaksi)}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-gray-600">Waktu:</span>
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-gray-600">Waktu:</span>
+              </div>
               <span className="font-semibold">{invoice.waktu_transaksi}</span>
             </div>
           </div>
 
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Nama:</span>
+          {/* Detail pesanan dengan ikon */}
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-gray-600">Nama:</span>
+              </div>
               <span className="font-semibold text-right max-w-[60%] break-words">{invoice.nama}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Penumpang:</span>
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="text-gray-600">Penumpang:</span>
+              </div>
               <span className="font-semibold">{invoice.penumpang} org</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Destinasi:</span>
+            <div className="flex justify-between items-start">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-gray-600">Destinasi:</span>
+              </div>
               <span className="font-semibold text-right max-w-[60%] break-words">{invoice.destinasi}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tanggal Tour:</span>
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-gray-600">Tanggal Tour:</span>
+              </div>
               <span className="font-semibold">{formatDate(invoice.tanggal_berangkat)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Waktu Berangkat:</span>
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-gray-600">Waktu Berangkat:</span>
+              </div>
               <span className="font-semibold">{formatTime(invoice.waktu_berangkat)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Kendaraan:</span>
+            <div className="flex justify-between items-start">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span className="text-gray-600">Kendaraan:</span>
+              </div>
               <span className="font-semibold text-right max-w-[60%] break-words">{invoice.kendaraan}</span>
             </div>
           </div>
         </div>
 
         {/* Struk Item */}
-        <div className="bg-white shadow-lg p-4 mb-3">
-          <div className="border-b border-gray-200 pb-2 mb-2">
+        <div className="bg-white shadow-lg p-4 mb-3 border border-gray-200">
+          {/* Header dengan ikon */}
+          <div className="flex items-center mb-3 pb-2 border-b border-gray-200">
+            <div className="bg-green-100 rounded-full p-1 mr-2">
+              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
             <div className="text-xs font-semibold text-gray-800">RINCIAN PEMBAYARAN</div>
           </div>
           
-          <div className="space-y-1 text-xs">
-            {/* Destinations */}
+          <div className="space-y-2 text-xs">
+            {/* Destinations dengan ikon */}
             {destinasiItems.map((item, index) => (
-              <div key={index} className="flex justify-between">
-                <span className="text-gray-600 break-words max-w-[60%]">{item.nama}</span>
-                <span className="font-semibold">
+              <div key={index} className="flex justify-between items-center py-1">
+                <div className="flex items-center max-w-[60%]">
+                  <svg className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-gray-600 break-words">{item.nama}</span>
+                </div>
+                <span className="font-semibold text-green-600">
                   {formatPrice(
                     locale === 'en' ? getDestinationInternationalPrice(item.slug) : item.harga,
                     locale
@@ -390,10 +491,15 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
               </div>
             ))}
             
-            {/* Vehicle */}
-            <div className="flex justify-between">
-              <span className="text-gray-600">Kendaraan</span>
-              <span className="font-semibold">
+            {/* Vehicle dengan ikon */}
+            <div className="flex justify-between items-center py-1 border-t border-gray-100 pt-2">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span className="text-gray-600">Kendaraan</span>
+              </div>
+              <span className="font-semibold text-blue-600">
                 {formatPrice(
                   locale === 'en' ? getVehicleInternationalPrice(invoice.kendaraan, hargaMobil) : hargaMobil,
                   locale
@@ -402,10 +508,16 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
             </div>
           </div>
           
-          <div className="border-t border-gray-200 pt-2 mt-2">
-            <div className="flex justify-between text-sm font-bold">
-              <span>TOTAL:</span>
-              <span className="text-[#16A86E]">
+          {/* Total dengan styling yang lebih menarik */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3 mt-3 border border-green-200">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                <span className="text-sm font-bold text-gray-800">TOTAL:</span>
+              </div>
+              <span className="text-lg font-bold text-[#16A86E]">
                 {formatPrice(totalByLanguage, locale)}
               </span>
             </div>
@@ -413,55 +525,167 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
         </div>
 
         {/* Struk Payment */}
-        <div className="bg-white shadow-lg p-4 mb-3">
-          <div className="border-b border-gray-200 pb-2 mb-2">
+        <div className="bg-white shadow-lg p-4 mb-3 border border-gray-200">
+          {/* Header dengan ikon */}
+          <div className="flex items-center mb-3 pb-2 border-b border-gray-200">
+            <div className="bg-purple-100 rounded-full p-1 mr-2">
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
             <div className="text-xs font-semibold text-gray-800">METODE PEMBAYARAN</div>
           </div>
           
-          <div className="space-y-1 text-xs">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total:</span>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center py-1">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                <span className="text-gray-600">Total:</span>
+              </div>
               <span className="font-semibold">
                 {formatPrice(totalByLanguage, locale)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Bayar:</span>
-              <span className="font-semibold">
+            <div className="flex justify-between items-center py-1">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-gray-600">Bayar:</span>
+              </div>
+              <span className="font-semibold text-green-600">
                 {formatPrice(totalByLanguage, locale)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Kembalian:</span>
-              <span className="font-semibold">
+            <div className="flex justify-between items-center py-1">
+              <div className="flex items-center">
+                <svg className="w-3 h-3 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                <span className="text-gray-600">Kembalian:</span>
+              </div>
+              <span className="font-semibold text-blue-600">
                 {formatPrice(0, locale)}
+              </span>
+            </div>
+          </div>
+          
+          {/* Status pembayaran */}
+          <div className="mt-3 bg-gray-50 rounded-lg p-2 border border-gray-200">
+            <div className="flex items-center justify-center">
+              <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs text-gray-600 font-medium">
+                Pembayaran {normalizedStatus === 'paid' ? 'Lunas' : 'Menunggu Konfirmasi'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Struk Contact */}
-        <div className="bg-white shadow-lg p-4 mb-3">
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 shadow-lg p-4 mb-3 border border-green-200">
           <div className="text-center">
-            <div className="text-xs font-semibold text-gray-800 mb-2">KONFIRMASI PEMBAYARAN</div>
-            <QRCodeGenerator message={whatsappMessage} />
-            <p className="text-xs text-gray-600 mt-2">
-              Scan QR Code untuk konfirmasi pembayaran
-            </p>
+            {/* Header dengan ikon */}
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-green-100 rounded-full p-2 mr-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="text-sm font-bold text-gray-800">KONFIRMASI PEMBAYARAN</div>
+            </div>
+            
+            {/* QR Code dengan border yang lebih menarik */}
+            <div className="bg-white rounded-xl p-3 shadow-inner border-2 border-green-200 mb-3">
+              <QRCodeGenerator message={whatsappMessage} />
+            </div>
+            
+            {/* Instruksi dengan ikon */}
+            <div className="bg-white rounded-lg p-3 border border-green-200">
+              <div className="flex items-center justify-center mb-2">
+                <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs font-semibold text-gray-700">Cara Konfirmasi:</span>
+              </div>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">1.</span>
+                  <span>Scan QR Code di atas</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">2.</span>
+                  <span>WhatsApp akan terbuka otomatis</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">3.</span>
+                  <span>Kirim pesan konfirmasi</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Info tambahan */}
+            <div className="mt-3 bg-blue-50 rounded-lg p-2 border border-blue-200">
+              <div className="flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-blue-700 font-medium">
+                  Konfirmasi dalam 24 jam untuk memproses pesanan
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Struk Footer */}
-        <div className="bg-white shadow-lg p-4">
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 shadow-lg p-4 border border-green-200">
           <div className="text-center">
-            <p className="text-xs font-semibold text-gray-800 mb-1">TERIMA KASIH</p>
-            <p className="text-xs text-gray-500">
-              Sampai jumpa di petualangan berikutnya
+            {/* Thank you dengan ikon */}
+            <div className="flex items-center justify-center mb-2">
+              <div className="bg-green-100 rounded-full p-2 mr-2">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <p className="text-sm font-bold text-gray-800">TERIMA KASIH</p>
+            </div>
+            
+            <p className="text-xs text-gray-600 mb-3">
+              Sampai jumpa di petualangan berikutnya! 🌟
             </p>
-            <div className="border-t border-gray-200 mt-2 pt-2">
-              <p className="text-xs text-gray-400">
-                Powered by Gemitra Tour
-              </p>
+            
+            {/* Contact info dengan ikon */}
+            <div className="bg-white rounded-lg p-3 border border-green-200 mb-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-xs text-gray-700 font-medium">Hubungi Kami:</span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  📞 +62 857-0183-4668
+                </div>
+                <div className="text-xs text-gray-600">
+                  🌐 gemitra.com
+                </div>
+              </div>
+            </div>
+            
+            {/* Powered by dengan ikon */}
+            <div className="border-t border-gray-200 pt-2">
+              <div className="flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="text-xs text-gray-400">
+                  Powered by Gemitra Tour
+                </p>
+              </div>
             </div>
           </div>
         </div>
