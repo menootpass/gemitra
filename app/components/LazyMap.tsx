@@ -68,51 +68,53 @@ export default function LazyMap({
   }, [hasLoaded]);
 
   return (
-    <div id="map-container" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {!isVisible ? (
-        <div className="bg-gray-100 rounded-xl p-6 text-center min-h-[400px] flex items-center justify-center">
-          <div className="text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#213DFF] mx-auto mb-4"></div>
-            <p>Loading map...</p>
+    <div id="map-container" className="flex flex-col gap-6">
+      <div className="w-full">
+        {!isVisible ? (
+          <div className="bg-gray-100 rounded-xl p-6 text-center min-h-[400px] flex items-center justify-center">
+            <div className="text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#213DFF] mx-auto mb-4"></div>
+              <p>Loading map...</p>
+            </div>
           </div>
-        </div>
-      ) : loading ? (
-        <LoadingSkeleton type="map" />
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <div className="text-red-500 mb-4">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h3 className="text-red-800 font-semibold mb-2">Failed to Load Map Data</h3>
-          <p className="text-red-600 text-sm mb-4">{error}</p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <button
-              onClick={refresh}
-              disabled={loading}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-            >
-              {loading ? 'Retrying...' : 'Try Again'}
-            </button>
-            {!isOnline && (
-              <span className="text-red-500 text-sm self-center">
-                📶 Check your internet connection
-              </span>
+        ) : loading ? (
+          <LoadingSkeleton type="map" />
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <div className="text-red-500 mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-red-800 font-semibold mb-2">Failed to Load Map Data</h3>
+            <p className="text-red-600 text-sm mb-4">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <button
+                onClick={refresh}
+                disabled={loading}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {loading ? 'Retrying...' : 'Try Again'}
+              </button>
+              {!isOnline && (
+                <span className="text-red-500 text-sm self-center">
+                  📶 Check your internet connection
+                </span>
+              )}
+            </div>
+            {retryCount && retryCount > 0 && (
+              <p className="text-red-500 text-xs mt-2">
+                Retry attempt: {retryCount}/3
+              </p>
             )}
           </div>
-          {retryCount && retryCount > 0 && (
-            <p className="text-red-500 text-xs mt-2">
-              Retry attempt: {retryCount}/3
-            </p>
-          )}
-        </div>
-      ) : (
-        <GemitraMap
-          destinations={destinations}
-          onDestinationClick={onDestinationClick}
-          selectedDestination={selectedDestination}
-        />
-      )}
-      
+        ) : (
+          <GemitraMap
+            destinations={destinations}
+            onDestinationClick={onDestinationClick}
+            selectedDestination={selectedDestination}
+          />
+        )}
+      </div>
+
       {/* MapDiagnostics hanya load setelah map ter-load */}
       {isVisible && destinations.length > 0 && (
         <MapDiagnostics destinations={destinations} />

@@ -47,6 +47,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
   const [gemitraIcon, setGemitraIcon] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
   const mapRef = useRef<any>(null);
+  const mapContainerKeyRef = useRef<string>(`gemitra-map-${Date.now()}`);
 
   // Handle map ready event
   const handleMapReady = () => {
@@ -73,6 +74,13 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
     return () => {
       setIsMapReady(false);
       setGemitraIcon(null);
+      if (mapRef.current && typeof mapRef.current.off === 'function') {
+        mapRef.current.off();
+      }
+      if (mapRef.current && typeof mapRef.current.remove === 'function') {
+        mapRef.current.remove();
+      }
+      mapRef.current = null;
     };
   }, []);
 
@@ -184,7 +192,10 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
               </div>
             )}
             <MapContainer
-              ref={mapRef}
+              key={mapContainerKeyRef.current}
+              whenCreated={(mapInstance) => {
+                mapRef.current = mapInstance;
+              }}
               center={yogyakartaCenter}
               zoom={10}
               style={{ height: "100%", width: "100%" }}

@@ -13,7 +13,7 @@ type InvoiceData = {
   tanggal_berangkat: string;
   waktu_berangkat: string;
   kendaraan: string;
-  total: number;
+  total: number | string;
   status: 'Lunas' | 'Pending' | 'Batal' | 'pending' | 'lunas' | 'batal' | 'success' | 'cancel';
   kode: string;
   waktu_transaksi: string;
@@ -29,6 +29,20 @@ type DestinationItem = {
   nama: string;
   mancanegara?: number;
 };
+
+function parseNumericValue(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'string') {
+    const digitsOnly = value.replace(/[^\d]/g, '');
+    if (!digitsOnly) return null;
+    const parsed = Number(digitsOnly);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
 
 // --- Fungsi untuk Normalisasi Status ---
 function normalizeStatus(status: string): 'paid' | 'pending' | 'cancelled' {
@@ -215,31 +229,31 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
     return 1.20;
   };
 
-  // Hitung total berdasarkan bahasa
-  const calculateTotalByLanguage = () => {
+  const fallbackTotalIDR = React.useMemo(() => {
     let totalDestinations = 0;
-    let totalVehicle = 0;
-    
-    // Hitung total destinasi
     destinasiItems.forEach(item => {
-      if (locale === 'en') {
-        totalDestinations += getDestinationInternationalPrice(item.slug);
-      } else {
-        totalDestinations += item.harga;
-      }
+      totalDestinations += item.harga || 0;
     });
-    
-    // Hitung total kendaraan
-    if (locale === 'en') {
-      totalVehicle = getVehicleInternationalPrice(invoice.kendaraan, hargaMobil);
-    } else {
-      totalVehicle = hargaMobil;
-    }
-    
-    return totalDestinations + totalVehicle;
-  };
+    return totalDestinations + hargaMobil;
+  }, [destinasiItems, hargaMobil]);
 
-  const totalByLanguage = calculateTotalByLanguage();
+  const invoiceTotalIDR = React.useMemo(() => {
+    const parsed = parseNumericValue(invoice.total);
+    return parsed !== null ? parsed : fallbackTotalIDR;
+  }, [invoice.total, fallbackTotalIDR]);
+
+  const totalInternational = React.useMemo(() => {
+    let totalDestinations = 0;
+    destinasiItems.forEach(item => {
+      totalDestinations += getDestinationInternationalPrice(item.slug);
+    });
+    const vehicleTotal = getVehicleInternationalPrice(invoice.kendaraan, hargaMobil);
+    return Number((totalDestinations + vehicleTotal).toFixed(2));
+  }, [destinasiItems, invoice.kendaraan, hargaMobil]);
+
+  const totalDisplay = React.useMemo(() => {
+    return locale === 'en' ? totalInternational : invoiceTotalIDR;
+  }, [locale, totalInternational, invoiceTotalIDR]);
 
   // Format tanggal
   const formatDate = (dateString: string) => {
@@ -483,10 +497,10 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                   <span className="text-gray-600 break-words">{item.nama}</span>
                 </div>
                 <span className="font-semibold text-green-600">
-                  {formatPrice(
-                    locale === 'en' ? getDestinationInternationalPrice(item.slug) : item.harga,
-                    locale
-                  )}
+                {formatPrice(
+                  locale === 'en' ? getDestinationInternationalPrice(item.slug) : item.harga,
+                  locale
+                )}
                 </span>
               </div>
             ))}
@@ -518,7 +532,7 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                 <span className="text-sm font-bold text-gray-800">TOTAL:</span>
               </div>
               <span className="text-lg font-bold text-[#16A86E]">
-                {formatPrice(totalByLanguage, locale)}
+                {formatPrice(totalDisplay, locale)}
               </span>
             </div>
           </div>
@@ -545,7 +559,7 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                 <span className="text-gray-600">Total:</span>
               </div>
               <span className="font-semibold">
-                {formatPrice(totalByLanguage, locale)}
+                {formatPrice(totalDisplay, locale)}
               </span>
             </div>
             <div className="flex justify-between items-center py-1">
@@ -556,7 +570,7 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                 <span className="text-gray-600">Bayar:</span>
               </div>
               <span className="font-semibold text-green-600">
-                {formatPrice(totalByLanguage, locale)}
+                {formatPrice(totalDisplay, locale)}
               </span>
             </div>
             <div className="flex justify-between items-center py-1">

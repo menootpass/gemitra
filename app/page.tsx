@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Destination } from "./types";
 import HeaderNavigation from "./components/HeaderNavigation";
@@ -70,6 +70,30 @@ const Camera = dynamic(() => import("lucide-react").then(mod => ({ default: mod.
 const Compass = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Compass })), {
   loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
 });
+
+const PhoneIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Phone })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const MailIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Mail })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const GlobeIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Globe })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const InstagramIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Instagram })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const FacebookIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Facebook })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
+
+const MusicIcon = dynamic(() => import("lucide-react").then(mod => ({ default: mod.Music4 })), {
+  loading: () => <div className="animate-pulse bg-gray-300 rounded h-4 w-4"></div>,
+});
 import { useLanguage } from "./contexts/LanguageContext";
 import { useRobustDestinations } from "./hooks/useRobustDestinations";
 
@@ -105,6 +129,127 @@ export default function Home() {
       const handleWhatsapp = () => {
         window.open(whatsappUrl, '_blank');
       }
+
+  // Helper untuk memproses data gambar destinasi
+  const extractImageUrls = (img: Destination["img"]): string[] => {
+    if (!img) return [];
+
+    if (Array.isArray(img)) {
+      return img
+        .map((url) => (typeof url === "string" ? url.trim() : ""))
+        .filter((url) => url && url.startsWith("http"));
+    }
+
+    if (typeof img === "string") {
+      const trimmed = img.trim();
+      if (!trimmed) return [];
+
+      // Coba parse sebagai JSON
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((url) => (typeof url === "string" ? url.trim() : ""))
+            .filter((url) => url && url.startsWith("http"));
+        }
+      } catch {
+        try {
+          const cleaned = trimmed.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .map((url) => (typeof url === "string" ? url.trim() : ""))
+              .filter((url) => url && url.startsWith("http"));
+          }
+        } catch {
+          // abaikan, lanjutkan parsing manual
+        }
+      }
+
+      // Jika string array seperti [url1, url2]
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        const content = trimmed.slice(1, -1);
+        const urls = content
+          .split(",")
+          .map((url) => url.trim().replace(/^["']|["']$/g, ""))
+          .filter((url) => url.startsWith("http"));
+        if (urls.length) return urls;
+      }
+
+      if (trimmed.startsWith("http")) {
+        return [trimmed];
+      }
+    }
+
+    return [];
+  };
+
+  const getCoverImage = (destination: Destination): string => {
+    const urls = extractImageUrls(destination.img);
+    return urls[0] || "/images/klangon.jpg";
+  };
+
+  const masterpieceDestinations = useMemo(() => {
+    if (!destinations || destinations.length === 0) return [];
+
+    const sorted = [...destinations].sort((a, b) => {
+      const ratingA = Number(a.rating) || 0;
+      const ratingB = Number(b.rating) || 0;
+      return ratingB - ratingA;
+    });
+
+    return sorted.slice(0, 8);
+  }, [destinations]);
+
+  const displayedMasterpieces = useMemo(() => {
+    if (masterpieceDestinations.length > 0) {
+      return masterpieceDestinations;
+    }
+    return destinations.slice(0, 5);
+  }, [masterpieceDestinations, destinations]);
+
+  const masterpiecesRef = useRef<HTMLDivElement | null>(null);
+  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const container = masterpiecesRef.current;
+    if (!container || displayedMasterpieces.length <= 1) return;
+
+    const scrollStep = () => {
+      if (!container) return;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const nextScroll = container.scrollLeft + container.clientWidth * 0.8;
+
+      if (nextScroll >= maxScroll) {
+        container.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        container.scrollTo({ left: nextScroll, behavior: "smooth" });
+      }
+    };
+
+    const stopAutoplay = (_evt?: Event) => {
+      if (autoplayRef.current) {
+        clearInterval(autoplayRef.current);
+        autoplayRef.current = null;
+      }
+    };
+
+    const startAutoplay = (_evt?: Event) => {
+      stopAutoplay();
+      autoplayRef.current = setInterval(scrollStep, 4000);
+    };
+
+    startAutoplay();
+
+    container.addEventListener("mouseenter", stopAutoplay);
+    container.addEventListener("mouseleave", startAutoplay);
+
+    return () => {
+      stopAutoplay();
+      container.removeEventListener("mouseenter", stopAutoplay);
+      container.removeEventListener("mouseleave", startAutoplay);
+    };
+  }, [displayedMasterpieces.length]);
 
   return (
     
@@ -171,18 +316,48 @@ export default function Home() {
 
       {/* Masterpieces Section */}
       <section className="w-full max-w-5xl mt-12 md:mt-16 px-4 sm:px-6">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#213DFF] mb-6 md:mb-8 text-center md:text-left">{dictionary.sections.exploreHiddenBeauty}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full">
-            <Image src="/images/klangon.jpg" alt="Secret Beach" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" sizes="(max-width: 768px) 100vw, 50vw" />
-            <div className="relative z-10 p-4 md:p-6">
-              <span className="bg-[#16A86E] text-white px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-base font-bold shadow">{dictionary.sections.secretHillNorth}</span>
-            </div>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#213DFF] mb-6 md:mb-8 text-center md:text-left">
+          {dictionary.sections.exploreHiddenBeauty}
+        </h2>
+
+        <div className="relative">
+          <div
+            id="masterpieces-carousel"
+            ref={masterpiecesRef}
+            className="flex overflow-x-auto gap-6 md:gap-8 pb-6 snap-x snap-mandatory"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {displayedMasterpieces.map(
+              (destination) => (
+                <div
+                  key={`masterpiece-${destination.id}-${destination.slug}`}
+                  className="group relative min-w-[220px] sm:min-w-[260px] lg:min-w-[280px] snap-center"
+                >
+                  <div className="relative h-72 sm:h-80 rounded-3xl overflow-hidden shadow-xl transition-transform duration-500 ease-out group-hover:scale-105 group-hover:shadow-2xl">
+                    <Image
+                      src={getCoverImage(destination)}
+                      alt={destination.nama}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 75vw, 320px"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                      <h3 className="text-lg font-extrabold drop-shadow-lg">{destination.nama}</h3>
+                      <p className="text-sm text-white/80">
+                        {destination.lokasi || destination.kategori || "Yogyakarta, Indonesia"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
           </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-xl bg-glass flex items-end min-h-[200px] md:min-h-[240px] w-full mt-4 md:mt-0">
-            <Image src="/images/kemah.jpg" alt="Desa Tradisional" width={400} height={240} className="object-cover w-full h-full absolute inset-0 z-0" sizes="(max-width: 768px) 100vw, 50vw" />
-            
-          </div>
+          <style jsx>{`
+            #masterpieces-carousel::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
         </div>
       </section>
 
@@ -269,14 +444,111 @@ export default function Home() {
         <LazyFeedbackForm />
       </section>
 
-      {/* Footer Slogan */}
-      <footer className="w-full mt-14 md:mt-20 py-8 md:py-10 bg-white bg-gradient-indie flex flex-col items-center rounded-t-3xl shadow-xl px-4">
-        <div className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-[#213DFF] flex flex-wrap gap-2 sm:gap-6 items-center tracking-tight justify-center">
-          <span>{dictionary.footer.explore}</span>
-          <span className="text-[#16A86E]">+</span>
-          <span>{dictionary.footer.discover}</span>
-          <span className="text-[#213DFF]">+</span>
-          <span className="text-black">{dictionary.footer.newStories}</span>
+      {/* Footer */}
+      <footer className="w-full mt-14 md:mt-20 bg-gradient-to-r from-[#0F8F5C] via-[#16A86E] to-[#1FBF7A] text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+            <div>
+              <Image
+                src="/svg/gemitra-text-white.svg"
+                alt="Gemitra Tour logo"
+                width={140}
+                height={160}
+                className="h-14 w-auto mb-3"
+                priority
+              />
+              <h3 className="text-2xl sm:text-3xl font-extrabold mt-2 leading-tight">
+                Explore Hidden Paradise with Local Experts
+              </h3>
+              <p className="text-white/80 text-sm mt-3">
+                Travel agency profesional yang menghadirkan pengalaman berwisata personalized di seluruh Indonesia,
+                khususnya Yogyakarta dan sekitarnya.
+              </p>
+              <div className="mt-4 flex items-center gap-2 bg-white/10 border border-white/20 rounded-xl px-3 py-2 backdrop-blur-sm w-fit">
+                <GlobeIcon className="w-4 h-4 text-white" />
+                <Link href="https://gemitra.com" target="_blank" className="text-sm font-semibold underline-offset-4 hover:underline">
+                  gemitra.com
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold mb-3 uppercase tracking-wide">Kontak</h4>
+              <ul className="space-y-3 text-sm text-white/80">
+                <li className="flex items-center gap-3">
+                  <PhoneIcon className="w-4 h-4" />
+                  <a href="tel:+6285701834668" className="hover:text-white transition">+62 857-0183-4668</a>
+                </li>
+                <li className="flex items-center gap-3">
+                  <MailIcon className="w-4 h-4" />
+                  <a href="mailto:gemitrayogyakarta@gemitra.com" className="hover:text-white transition">gemitrayogyakarta@gemitra.com</a>
+                </li>
+                <li className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4" />
+                  <span>Babadan Girikerto Turi Sleman Yogyakarta, Indonesia</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <MessageCircle className="w-4 h-4" />
+                  <a href="https://wa.me/6285701834668" target="_blank" className="hover:text-white transition">
+                    WhatsApp Support
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold mb-3 uppercase tracking-wide">Navigasi</h4>
+              <ul className="space-y-2 text-sm text-white/80">
+                <li><Link href="/" className="hover:text-white transition">Beranda</Link></li>
+                <li><Link href="/wisata" className="hover:text-white transition">Destinasi Wisata</Link></li>
+                <li><Link href="/paket" className="hover:text-white transition">Paket Liburan</Link></li>
+                <li><Link href="/sewa-mobil" className="hover:text-white transition">Sewa Kendaraan</Link></li>
+                <li><Link href="/artikel" className="hover:text-white transition">Inspirasi & Artikel</Link></li>
+                <li><Link href="/kontak" className="hover:text-white transition">Hubungi Kami</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold mb-3 uppercase tracking-wide">Sosial Media</h4>
+              <p className="text-sm text-white/80 mb-4">
+                Ikuti perjalanan terbaru dan promo eksklusif Gemitra Tour di setiap platform favorit Anda.
+              </p>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <a href="https://instagram.com/gemitra" target="_blank" className="flex items-center gap-3 hover:text-white transition">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/20">
+                      <InstagramIcon className="w-4 h-4" />
+                    </span>
+                    <span>@gemitra</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://facebook.com/gemitratravel" target="_blank" className="flex items-center gap-3 hover:text-white transition">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/20">
+                      <FacebookIcon className="w-4 h-4" />
+                    </span>
+                    <span>Gemitra Travel</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.tiktok.com/@gemitra" target="_blank" className="flex items-center gap-3 hover:text-white transition">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 border border-white/20">
+                      <MusicIcon className="w-4 h-4" />
+                    </span>
+                    <span>@gemitra</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-white/20 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/70">
+            <p>© {new Date().getFullYear()} Gemitra Tour. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-white transition">Kebijakan Privasi</Link>
+              <Link href="/terms" className="hover:text-white transition">Syarat & Ketentuan</Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
