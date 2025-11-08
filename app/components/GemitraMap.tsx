@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Destination } from "../types";
 import MapErrorBoundary from "./MapErrorBoundary";
+import type { Map as LeafletMap } from "leaflet";
 
 // Add Leaflet CSS
 import "leaflet/dist/leaflet.css";
@@ -46,7 +47,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
   const [isMapReady, setIsMapReady] = useState(false);
   const [gemitraIcon, setGemitraIcon] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
   const mapContainerKeyRef = useRef<string>(`gemitra-map-${Date.now()}`);
 
   // Handle map ready event
@@ -74,10 +75,8 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
     return () => {
       setIsMapReady(false);
       setGemitraIcon(null);
-      if (mapRef.current && typeof mapRef.current.off === 'function') {
+      if (mapRef.current) {
         mapRef.current.off();
-      }
-      if (mapRef.current && typeof mapRef.current.remove === 'function') {
         mapRef.current.remove();
       }
       mapRef.current = null;
@@ -193,9 +192,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
             )}
             <MapContainer
               key={mapContainerKeyRef.current}
-              whenCreated={(mapInstance) => {
-                mapRef.current = mapInstance;
-              }}
+              ref={mapRef}
               center={yogyakartaCenter}
               zoom={10}
               style={{ height: "100%", width: "100%" }}
