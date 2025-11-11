@@ -101,14 +101,14 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
   };
 
   return (
-    <div className="w-full h-96 bg-glass rounded-xl overflow-hidden shadow-xl">
-              <div className="relative w-full h-48">
-          <ImageSlider 
-            images={processImageData(destination.img)}
-            alt={destination.nama}
-            className="w-full h-full"
-            priority={false}
-          />
+    <div className="w-full bg-glass rounded-3xl overflow-hidden shadow-xl">
+      <div className="relative w-full h-64 sm:h-80">
+        <ImageSlider 
+          images={processImageData(destination.img)}
+          alt={destination.nama}
+          className="w-full h-full object-cover"
+          priority={false}
+        />
           <button
             onClick={onClose}
             className="absolute top-2 right-2 bg-white/90 text-[#213DFF] font-bold px-2 py-1 rounded-full text-xs hover:bg-white transition z-10"
@@ -116,20 +116,22 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
             ✕
           </button>
         </div>
-      <div className="p-4 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-[#213DFF] flex-1">{destination.nama}</h3>
+      <div className="p-5 sm:p-6 flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-xl font-extrabold text-[#213DFF] flex-1">{destination.nama}</h3>
           <div className="flex items-center gap-2">
             <Link
               href={`/wisata/${destination.slug}`}
-              className="bg-[#16A86E] text-white text-xs px-3 py-1 rounded-md hover:bg-[#213DFF] transition-colors whitespace-nowrap"
+              className="bg-[#16A86E] text-white text-xs px-3 py-1 rounded-md hover:bg-[#213DFF] transition-colors whitespace-nowrap shadow"
             >
               Detail
             </Link>
-            <span className="text-[#16A86E] font-bold">{destination.rating}★</span>
+            <span className="text-[#16A86E] font-bold text-base">{destination.rating}★</span>
           </div>
         </div>
-        <span className="text-black/60 text-sm">{destination.lokasi} &middot; {destination.kategori}</span>
+        <span className="text-black/60 text-sm">
+          {destination.lokasi} &middot; {destination.kategori}
+        </span>
         {(destination.harga || destination.mancanegara) && (
           <div className="flex items-center gap-2">
             <span className="text-[#16A86E] font-bold text-base">
@@ -138,7 +140,11 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
             <span className="text-gray-500 text-xs">per destinasi</span>
           </div>
         )}
-        <p className="text-black/80 text-sm line-clamp-3">{destination.deskripsi}</p>
+        {destination.deskripsi && (
+          <p className="text-black/80 text-sm leading-relaxed line-clamp-4">
+            {destination.deskripsi}
+          </p>
+        )}
         
         {/* Informasi Pengunjung */}
         {destination.dikunjungi !== undefined && (
@@ -155,18 +161,25 @@ export default function DestinationDetail({ destination, onClose }: DestinationD
             Array.isArray(destination.fasilitas)
               ? destination.fasilitas
               : String(destination.fasilitas || "").split(",")
-          ).slice(0, 3).map((f: string, idx: number) => (
-            <span key={f + idx} className="px-2 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">
-              {f}
-            </span>
-          ))}
-          {((Array.isArray(destination.fasilitas)
+          )
+            .filter((f: string) => f.trim().length > 0)
+            .slice(0, 4)
+            .map((f: string, idx: number) => (
+              <span key={f + idx} className="px-2 py-1 rounded-full bg-[#213DFF11] text-[#213DFF] text-xs font-semibold">
+                {f.trim()}
+              </span>
+            ))}
+          {(
+            Array.isArray(destination.fasilitas)
               ? destination.fasilitas.length
-              : String(destination.fasilitas || "").split(",").length) > 3) && (
+              : String(destination.fasilitas || "").split(",").filter((f) => f.trim().length > 0).length
+          ) > 4 && (
             <span className="px-2 py-1 rounded-full bg-[#16A86E11] text-[#16A86E] text-xs font-semibold">
-              +{(Array.isArray(destination.fasilitas)
+              +{(
+                Array.isArray(destination.fasilitas)
                   ? destination.fasilitas.length
-                  : String(destination.fasilitas || "").split(",").length) - 3} lagi
+                  : String(destination.fasilitas || "").split(",").filter((f) => f.trim().length > 0).length
+              ) - 4} lagi
             </span>
           )}
         </div>

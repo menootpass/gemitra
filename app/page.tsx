@@ -208,48 +208,88 @@ export default function Home() {
     return destinations.slice(0, 5);
   }, [masterpieceDestinations, destinations]);
 
-  const masterpiecesRef = useRef<HTMLDivElement | null>(null);
-  const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const frameRef = useRef<number | null>(null);
+
+  // Duplicate items untuk infinite scroll yang seamless
+  const loopedMasterpieces = useMemo(() => {
+    if (displayedMasterpieces.length === 0) return [];
+    // Duplicate 3x untuk memastikan infinite scroll yang smooth
+    return [...displayedMasterpieces, ...displayedMasterpieces, ...displayedMasterpieces];
+  }, [displayedMasterpieces]);
 
   useEffect(() => {
-    const container = masterpiecesRef.current;
-    if (!container || displayedMasterpieces.length <= 1) return;
+    const container = carouselRef.current;
+    if (!container || loopedMasterpieces.length <= 1) return;
 
-    const scrollStep = () => {
-      if (!container) return;
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      const nextScroll = container.scrollLeft + container.clientWidth * 0.8;
+    // Hitung lebar satu set item (setelah duplicate)
+    const singleSetWidth = container.scrollWidth / 3;
+    const SPEED_PX_PER_MS = 0.15; // Kecepatan scroll (bisa disesuaikan)
+    let lastTimestamp: number | null = null;
+    let isHover = false;
+    let isPaused = false;
 
-      if (nextScroll >= maxScroll) {
-        container.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        container.scrollTo({ left: nextScroll, behavior: "smooth" });
+    const handleMouseEnter = () => {
+      isHover = true;
+    };
+
+    const handleMouseLeave = () => {
+      isHover = false;
+    };
+
+    const handleMouseDown = () => {
+      isPaused = true;
+    };
+
+    const handleMouseUp = () => {
+      isPaused = false;
+    };
+
+    const animate = (timestamp: number) => {
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
       }
-    };
+      const delta = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
 
-    const stopAutoplay = (_evt?: Event) => {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-        autoplayRef.current = null;
+      if (!isHover && !isPaused) {
+        container.scrollLeft += SPEED_PX_PER_MS * delta;
+
+        // Reset ke posisi awal ketika mencapai akhir set pertama
+        // Ini membuat infinite scroll yang seamless
+        if (container.scrollLeft >= singleSetWidth) {
+          container.scrollLeft -= singleSetWidth;
+        }
       }
+
+      frameRef.current = requestAnimationFrame(animate);
     };
 
-    const startAutoplay = (_evt?: Event) => {
-      stopAutoplay();
-      autoplayRef.current = setInterval(scrollStep, 4000);
-    };
+    container.addEventListener("mouseenter", handleMouseEnter);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("touchstart", handleMouseDown);
+    container.addEventListener("touchend", handleMouseUp);
 
-    startAutoplay();
+    // Start dari set kedua untuk memastikan ada ruang untuk scroll ke belakang
+    container.scrollLeft = singleSetWidth;
 
-    container.addEventListener("mouseenter", stopAutoplay);
-    container.addEventListener("mouseleave", startAutoplay);
+    frameRef.current = requestAnimationFrame(animate);
 
     return () => {
-      stopAutoplay();
-      container.removeEventListener("mouseenter", stopAutoplay);
-      container.removeEventListener("mouseleave", startAutoplay);
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      container.removeEventListener("mouseenter", handleMouseEnter);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("touchstart", handleMouseDown);
+      container.removeEventListener("touchend", handleMouseUp);
     };
-  }, [displayedMasterpieces.length]);
+  }, [loopedMasterpieces.length]);
 
   return (
     
@@ -323,35 +363,33 @@ export default function Home() {
         <div className="relative">
           <div
             id="masterpieces-carousel"
-            ref={masterpiecesRef}
+            ref={carouselRef}
             className="flex overflow-x-auto gap-6 md:gap-8 pb-6 snap-x snap-mandatory"
             style={{ scrollbarWidth: "none" }}
           >
-            {displayedMasterpieces.map(
-              (destination) => (
-                <div
-                  key={`masterpiece-${destination.id}-${destination.slug}`}
-                  className="group relative min-w-[220px] sm:min-w-[260px] lg:min-w-[280px] snap-center"
-                >
-                  <div className="relative h-72 sm:h-80 rounded-3xl overflow-hidden shadow-xl transition-transform duration-500 ease-out group-hover:scale-105 group-hover:shadow-2xl">
-                    <Image
-                      src={getCoverImage(destination)}
-                      alt={destination.nama}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 75vw, 320px"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                      <h3 className="text-lg font-extrabold drop-shadow-lg">{destination.nama}</h3>
-                      <p className="text-sm text-white/80">
-                        {destination.lokasi || destination.kategori || "Yogyakarta, Indonesia"}
-                      </p>
-                    </div>
+            {loopedMasterpieces.map((destination, index) => (
+              <div
+                key={`masterpiece-${destination.id}-${destination.slug}-${index}`}
+                className="group relative min-w-[220px] sm:min-w-[260px] lg:min-w-[280px] snap-center"
+              >
+                <div className="relative h-72 sm:h-80 rounded-3xl overflow-hidden shadow-xl transition-transform duration-500 ease-out group-hover:scale-105 group-hover:shadow-2xl">
+                  <Image
+                    src={getCoverImage(destination)}
+                    alt={destination.nama}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 75vw, 320px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                    <h3 className="text-lg font-extrabold drop-shadow-lg">{destination.nama}</h3>
+                    <p className="text-sm text-white/80">
+                      {destination.lokasi || destination.kategori || "Yogyakarta, Indonesia"}
+                    </p>
                   </div>
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
           <style jsx>{`
             #masterpieces-carousel::-webkit-scrollbar {
@@ -398,10 +436,15 @@ export default function Home() {
             <div className="rounded-2xl overflow-hidden shadow-xl border-4 border-[#16A86E22] bg-glass w-full max-w-xs mx-auto">
               <Image src="/images/brandman-transparant.png" alt="Expert" width={320} height={220} className="object-cover w-full h-56" sizes="(max-width: 768px) 100vw, 50vw" />
             </div>
-            <div className="absolute bottom-4 right-4 bg-[#16A86E] text-white px-4 md:px-5 py-2 rounded-full shadow font-bold text-sm md:text-base flex items-center gap-2">
+            <Link
+              href="https://wa.me/6285701834668?text=Halo%20Gemitra!%20Saya%20ingin%20konsultasi%20trip%20gratis."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-4 right-4 bg-[#16A86E] text-white px-4 md:px-5 py-2 rounded-full shadow font-bold text-sm md:text-base flex items-center gap-2 hover:bg-[#213DFF] transition-colors"
+            >
               <span>{dictionary.sections.freeConsultation}</span>
               <Image src="/svg/cursor-click.svg" alt="Pointer" width={24} height={24} />
-            </div>
+            </Link>
           </div>
         </div>
       </section>

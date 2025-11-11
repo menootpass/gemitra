@@ -263,11 +263,11 @@ export default function WisataDetailClient({ destination: data }: WisataDetailCl
       {/* Main Content */}
       <div className="w-full max-w-6xl mx-auto mt-8 mb-6 flex-1">
         <div className="rounded-3xl overflow-hidden shadow-xl bg-glass">
-          <div className="relative w-full h-60 sm:h-80">
+          <div className="relative w-full h-72 sm:h-[26rem] lg:h-[30rem]">
             <OptimizedImageSlider 
               images={processImageData}
               alt={data.nama}
-              className="w-full h-full"
+              className="w-full h-full object-cover"
               priority={true}
               sizes="(max-width: 768px) 100vw, 80vw"
             />

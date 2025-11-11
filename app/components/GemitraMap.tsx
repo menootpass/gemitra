@@ -48,7 +48,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
   const [gemitraIcon, setGemitraIcon] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
-  const mapContainerKeyRef = useRef<string>(`gemitra-map-${Date.now()}`);
+  const mapContainerKeyRef = useRef<string | null>(null);
 
   // Handle map ready event
   const handleMapReady = () => {
@@ -80,6 +80,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
         mapRef.current.remove();
       }
       mapRef.current = null;
+      mapContainerKeyRef.current = null;
     };
   }, []);
 
@@ -191,7 +192,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
               </div>
             )}
             <MapContainer
-              key={mapContainerKeyRef.current}
+              key={mapContainerKeyRef.current ?? (mapContainerKeyRef.current = `gemitra-map-${Date.now()}`)}
               ref={mapRef}
               center={yogyakartaCenter}
               zoom={10}
@@ -246,7 +247,7 @@ export default function GemitraMap({ destinations, onDestinationClick, selectedD
                       }}
                     >
                       <Popup>
-                        <div className="text-center p-3 min-w-[200px]">
+                        <div className="text-center p-4 w-64 min-h-[170px] max-w-[260px]">
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-bold text-[#213DFF] text-sm flex-1 text-left">{destination.nama}</h3>
                             <Link
