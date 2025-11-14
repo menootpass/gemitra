@@ -5,7 +5,7 @@ const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || 'https://sc
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes for destinations
-const REQUEST_TIMEOUT = 15000; // 15 seconds timeout (increased from 10s)
+const REQUEST_TIMEOUT = 15000; // 15 seconds timeout
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = REQUEST_TIMEOUT) {
@@ -35,77 +35,71 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
 
 export async function GET(request: Request) {
   const startTime = Date.now();
-  const { searchParams } = new URL(request.url);
-  const slug = searchParams.get('slug');
   
   try {
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('slug');
     
-    let response;
-    
-    // Jika ada slug, fetch destinasi berdasarkan slug
+    let url = `${SCRIPT_URL}?endpoint=destinations`;
     if (slug) {
-      response = await fetchWithTimeout(`${SCRIPT_URL}?endpoint=destinations&slug=${encodeURIComponent(slug)}`, {
-        next: { revalidate: CACHE_TTL },
-      });
+      url += `&slug=${encodeURIComponent(slug)}`;
     } else {
-      // Jika tidak ada slug, fetch semua destinasi
-      response = await fetchWithTimeout(`${SCRIPT_URL}?endpoint=destinations&_t=${Date.now()}`, {
-        next: { revalidate: 0 }, // Disable cache temporarily
-      });
+      url += `&_t=${Date.now()}`;
     }
 
+    const response = await fetchWithTimeout(url, {
+      next: { revalidate: slug ? CACHE_TTL : 0 },
+    });
+
     if (!response.ok) {
-      throw new Error(`Gagal mengambil data: ${response.statusText}`);
+      console.error(`Google Apps Script error: ${response.status} ${response.statusText}`);
+      return NextResponse.json(
+        { 
+          message: 'Gagal mengambil data', 
+          error: `${response.status} ${response.statusText}`,
+          timestamp: new Date().toISOString()
+        },
+        { status: response.status >= 500 ? 502 : response.status }
+      );
     }
 
     const data = await response.json();
-    
-    // Add performance headers
     const responseTime = Date.now() - startTime;
-    const nextResponse = NextResponse.json(data);
     
-    // Add cache headers for better performance
+    const nextResponse = NextResponse.json(data);
     nextResponse.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
     nextResponse.headers.set('X-Response-Time', `${responseTime}ms`);
-    nextResponse.headers.set('X-Cache', 'HIT');
     
     return nextResponse;
 
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error('Error di API route:', error);
+    console.error('API route error:', error);
     
-    // Handle different types of errors
-    let errorMessage = 'Terjadi kesalahan server';
     let statusCode = 500;
+    let errorMessage = 'Terjadi kesalahan server';
     
     if (error instanceof Error) {
       if (error.message.includes('timeout') || error.message.includes('AbortError')) {
-        errorMessage = 'Request timeout - server tidak merespons';
         statusCode = 408;
-      } else if (error.message.includes('fetch')) {
-        errorMessage = 'Network error - tidak dapat terhubung ke server';
+        errorMessage = 'Request timeout';
+      } else if (error.message.includes('fetch') || error.message.includes('network')) {
         statusCode = 503;
+        errorMessage = 'Network error';
       } else {
         errorMessage = error.message;
       }
     }
     
-    const errorResponse = NextResponse.json(
+    return NextResponse.json(
       { 
         message: 'Terjadi kesalahan pada server', 
         error: errorMessage,
         timestamp: new Date().toISOString(),
-        responseTime: `${responseTime}ms`,
-        slug: searchParams.get('slug') || null
+        responseTime: `${responseTime}ms`
       },
       { status: statusCode }
     );
-    
-    errorResponse.headers.set('X-Response-Time', `${responseTime}ms`);
-    errorResponse.headers.set('X-Cache', 'MISS');
-    
-    return errorResponse;
   }
 }
 
@@ -113,19 +107,16 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     
-    // Validasi data yang diperlukan
     if (!body.destinasi_id || !body.action) {
       return NextResponse.json({ message: 'Data tidak lengkap' }, { status: 400 });
     }
 
-    // Siapkan payload untuk update pengunjung
     const payload = {
       destinasi_id: body.destinasi_id,
-      action: body.action, // 'increment' atau 'decrement'
+      action: body.action,
       timestamp: new Date().toISOString(),
     };
 
-    // Kirim data ke Google Apps Script untuk update pengunjung
     const response = await fetch(SCRIPT_URL, {
       method: 'PATCH',
       headers: {
@@ -135,9 +126,12 @@ export async function PATCH(request: Request) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = await response.text().catch(() => 'Unknown error');
       console.error('Google Apps Script Error:', errorText);
-      throw new Error(`Gagal mengupdate data destinasi: ${response.statusText}`);
+      return NextResponse.json(
+        { message: 'Gagal mengupdate data destinasi', error: response.statusText },
+        { status: response.status >= 500 ? 502 : response.status }
+      );
     }
 
     const data = await response.json();
@@ -151,4 +145,4 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

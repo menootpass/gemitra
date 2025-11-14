@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import LoadingSkeleton from './LoadingSkeleton';
 
 // Lazy load GemitraMap component
+// Note: GemitraMap uses direct imports for react-leaflet to avoid nested dynamic import issues
 const GemitraMap = dynamic(() => import('./GemitraMap'), {
   loading: () => <LoadingSkeleton type="map" />,
   ssr: false, // Disable SSR for map component to improve initial load

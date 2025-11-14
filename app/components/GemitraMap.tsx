@@ -9,33 +9,9 @@ import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
 
-// Dynamic import untuk komponen Leaflet
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-96 bg-gray-200 rounded-xl animate-pulse flex items-center justify-center">
-        <div className="text-gray-500">Loading map...</div>
-      </div>
-    )
-  }
-);
-
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
-);
-
-const Popup = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Popup),
-  { ssr: false }
-);
+// Import react-leaflet directly since GemitraMap is already dynamically loaded
+// This prevents nested dynamic import issues
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 
 type GemitraMapProps = {
   destinations: Destination[];
