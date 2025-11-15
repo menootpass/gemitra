@@ -16,17 +16,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     
     // Validasi data yang diperlukan
-    if (!body.nama || !body.email || !body.pesan) {
+    if (!body.nama || !body.pesan) {
       return NextResponse.json({ 
-        message: 'Data tidak lengkap. Nama, email, dan pesan wajib diisi.' 
-      }, { status: 400 });
-    }
-
-    // Validasi email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      return NextResponse.json({ 
-        message: 'Format email tidak valid' 
+        message: 'Data tidak lengkap. Nama dan pesan wajib diisi.' 
       }, { status: 400 });
     }
 
@@ -34,7 +26,7 @@ export async function POST(request: Request) {
     const payload = {
       action: 'createFeedback',
       nama: body.nama,
-      email: body.email,
+      email: body.email || '',
       telepon: body.telepon || '',
       kategori: body.kategori || 'umum',
       rating: body.rating || 0,

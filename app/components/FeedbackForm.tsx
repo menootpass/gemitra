@@ -1,13 +1,11 @@
 "use client";
 import { useState } from "react";
-import { ChatCircle, Star, User, Envelope, Phone, ChatText } from "phosphor-react";
+import { ChatCircle, Star, User, ChatText } from "phosphor-react";
 import { robustApiService } from "../services/robustApi";
 import { useLanguage } from "../contexts/LanguageContext";
 
 interface FeedbackFormData {
   nama: string;
-  email: string;
-  telepon: string;
   kategori: string;
   rating: number;
   pesan: string;
@@ -17,8 +15,6 @@ export default function FeedbackForm() {
   const { dictionary } = useLanguage();
   const [formData, setFormData] = useState<FeedbackFormData>({
     nama: "",
-    email: "",
-    telepon: "",
     kategori: "umum",
     rating: 0,
     pesan: "",
@@ -39,7 +35,7 @@ export default function FeedbackForm() {
     e.preventDefault();
     
     // Validasi form
-    if (!formData.nama.trim() || !formData.email.trim() || !formData.pesan.trim()) {
+    if (!formData.nama.trim() || !formData.pesan.trim()) {
       setMessage({ type: "error", text: dictionary.feedback.errorRequired });
       return;
     }
@@ -59,8 +55,6 @@ export default function FeedbackForm() {
         setMessage({ type: "success", text: dictionary.feedback.successMessage });
         setFormData({
           nama: "",
-          email: "",
-          telepon: "",
           kategori: "umum",
           rating: 0,
           pesan: "",
@@ -114,41 +108,6 @@ export default function FeedbackForm() {
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#213DFF] focus:border-transparent transition text-lg"
             placeholder={dictionary.feedback.namePlaceholder}
             required
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-            <Envelope size={16} className="text-[#16A86E]" />
-            {dictionary.feedback.email} *
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#213DFF] focus:border-transparent transition text-lg"
-            placeholder={dictionary.feedback.emailPlaceholder}
-            required
-          />
-        </div>
-
-        {/* Telepon */}
-        <div>
-          <label htmlFor="telepon" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-            <Phone size={16} className="text-[#16A86E]" />
-            {dictionary.feedback.phone}
-          </label>
-          <input
-            type="tel"
-            id="telepon"
-            name="telepon"
-            value={formData.telepon}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#213DFF] focus:border-transparent transition text-lg"
-            placeholder={dictionary.feedback.phonePlaceholder}
           />
         </div>
 
