@@ -38,14 +38,16 @@ export default function ImageSlider({ images, alt, className = "", priority = fa
 
   return (
     <div className={`relative w-full h-full ${className}`}>
-      {/* Main Image */}
+      {/* Main Image - Optimized for LCP */}
       <LazyImage 
         src={normalized[currentIndex]} 
         alt={`${alt} ${currentIndex + 1}`}
         className="object-cover"
         priority={priority}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        quality={75}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        quality={priority ? 85 : 75}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
       />
       
       {/* Navigation Controls */}

@@ -491,7 +491,7 @@ export default function Home() {
             <div>
               <Image
                 src="/svg/gemitra-text-white.svg"
-                alt="Gemitra Tour logo"
+                alt="Gemitra Jogja logo"
                 width={140}
                 height={160}
                 className="h-14 w-auto mb-3"
@@ -551,7 +551,7 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-semibold mb-3 uppercase tracking-wide">Sosial Media</h4>
               <p className="text-sm text-white/80 mb-4">
-                Ikuti perjalanan terbaru dan promo eksklusif Gemitra Tour di setiap platform favorit Anda.
+                Ikuti perjalanan terbaru dan promo eksklusif Gemitra Jogja di setiap platform favorit Anda.
               </p>
               <ul className="space-y-3 text-sm">
                 <li>
@@ -585,7 +585,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-white/20 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/70">
-            <p>© {new Date().getFullYear()} Gemitra Tour. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Gemitra Jogja. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-white transition">Kebijakan Privasi</Link>
               <Link href="/terms" className="hover:text-white transition">Syarat & Ketentuan</Link>

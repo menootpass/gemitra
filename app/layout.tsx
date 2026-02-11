@@ -15,9 +15,9 @@ export const metadata: Metadata = {
   title: "Gemitra Jogja- Hidden Gems Tourism",
   description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
   keywords: ["wisata", "jogja", "yogyakarta", "destinasi", "hidden gems", "tourism", "travel"],
-  authors: [{ name: "Gemitra Tour & Travel" }],
-  creator: "Gemitra Tour & Travel",
-  publisher: "Gemitra Tour & Travel",
+  authors: [{ name: "Gemitra Jogja & Travel" }],
+  creator: "Gemitra Jogja & Travel",
+  publisher: "Gemitra Jogja & Travel",
   formatDetection: {
     email: false,
     address: false,
@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     title: "Gemitra Jogja- Hidden Gems Tourism",
     description: "Temukan destinasi wisata tersembunyi terbaik di Indonesia bersama Gemitra Jogja",
     url: 'https://gemitra.vercel.app',
-    siteName: 'Gemitra Tour & Travel',
+    siteName: 'Gemitra Jogja & Travel',
     images: [
       {
         url: '/images/brandman-transparant.png',
         width: 1200,
         height: 630,
-        alt: 'Gemitra Tour & Travel',
+        alt: 'Gemitra Jogja & Travel',
       },
     ],
     locale: 'id_ID',

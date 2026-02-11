@@ -10,6 +10,8 @@ interface LazyImageProps {
   priority?: boolean;
   sizes?: string;
   quality?: number;
+  loading?: "lazy" | "eager";
+  fetchPriority?: "high" | "low" | "auto";
 }
 
 export default function LazyImage({ 
@@ -18,7 +20,9 @@ export default function LazyImage({
   className = "", 
   priority = false,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
-  quality = 75
+  quality = 75,
+  loading,
+  fetchPriority
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -72,6 +76,9 @@ export default function LazyImage({
           className="object-cover"
           sizes={sizes}
           quality={quality}
+          priority={priority}
+          loading={loading || (priority ? "eager" : "lazy")}
+          fetchPriority={fetchPriority || (priority ? "high" : "auto")}
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           onLoad={() => setIsLoaded(true)}

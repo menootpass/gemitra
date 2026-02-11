@@ -13,6 +13,7 @@ type InvoiceData = {
   waktu_berangkat: string;
   kendaraan: string;
   total: number | string;
+  
   status: 'Lunas' | 'Pending' | 'Batal' | 'pending' | 'lunas' | 'batal';
   kode: string;
   waktu_transaksi: string;

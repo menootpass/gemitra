@@ -301,7 +301,7 @@ const dictionaries = {
     },
     invoice: {
       title: "e-Receipt",
-      companyName: "Gemitra Tour & Travel",
+      companyName: "Gemitra Jogja & Travel",
       website: "gemitra.vercel.app",
       phone: "+62 857-0183-4668",
       orderNumber: "No. Pesanan:",
@@ -492,7 +492,7 @@ const dictionaries = {
     },
     invoice: {
       title: "e-Receipt",
-      companyName: "Gemitra Tour & Travel",
+      companyName: "Gemitra Jogja & Travel",
       website: "gemitra.vercel.app",
       phone: "+62 857-0183-4668",
       orderNumber: "Order No.:",

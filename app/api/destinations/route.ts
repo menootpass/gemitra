@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 // Unified Google Apps Script URL
 const SCRIPT_URL = process.env.NEXT_PUBLIC_GEMITRA_APP_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxCT82LhQVB0sCVt-XH2dhBsbd-bQ2b8nW4oWIL5tlEgMydSGna8BOAOPS0_LY-5hzApQ/exec';
 
-// Cache configuration
-const CACHE_TTL = 300; // 5 minutes for destinations
-const REQUEST_TIMEOUT = 15000; // 15 seconds timeout
+// Cache configuration - optimized for performance
+const CACHE_TTL = 600; // 10 minutes for destinations (increased for better caching)
+const REQUEST_TIMEOUT = 8000; // 8 seconds timeout (reduced from 15s for faster failure)
 
 // Helper function to fetch with timeout
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = REQUEST_TIMEOUT) {
@@ -44,11 +44,16 @@ export async function GET(request: Request) {
     if (slug) {
       url += `&slug=${encodeURIComponent(slug)}`;
     } else {
-      url += `&_t=${Date.now()}`;
+      // Use cache-friendly timestamp (round to nearest minute for better cache hits)
+      const cacheKey = Math.floor(Date.now() / 60000);
+      url += `&_t=${cacheKey}`;
     }
 
     const response = await fetchWithTimeout(url, {
-      next: { revalidate: slug ? CACHE_TTL : 0 },
+      next: { 
+        revalidate: slug ? CACHE_TTL : CACHE_TTL, // Enable caching for list too
+        tags: ['destinations'] 
+      },
     });
 
     if (!response.ok) {
@@ -67,8 +72,10 @@ export async function GET(request: Request) {
     const responseTime = Date.now() - startTime;
     
     const nextResponse = NextResponse.json(data);
-    nextResponse.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+    // Optimized cache headers for better performance
+    nextResponse.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
     nextResponse.headers.set('X-Response-Time', `${responseTime}ms`);
+    nextResponse.headers.set('X-Cache-Status', 'MISS'); // Will be HIT if served from cache
     
     return nextResponse;
 

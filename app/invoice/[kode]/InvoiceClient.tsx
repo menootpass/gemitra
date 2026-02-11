@@ -325,7 +325,7 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                 </svg>
               </div>
               <h1 className="text-xl font-bold text-gray-800">
-                GEMITRA TOUR
+                GEMITRA JOGJA
               </h1>
             </div>
             
@@ -697,7 +697,7 @@ export default function InvoiceClient({ invoice }: { invoice: InvoiceData }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <p className="text-xs text-gray-400">
-                  Powered by Gemitra Tour
+                  Powered by Gemitra Jogja
                 </p>
               </div>
             </div>

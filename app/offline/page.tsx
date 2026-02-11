@@ -41,7 +41,7 @@ export default function OfflinePage() {
         </div>
         
         <div className="mt-8 text-sm text-gray-500">
-          <p>Gemitra Tour & Travel</p>
+          <p>Gemitra Jogja & Travel</p>
           <p>Hidden Gems Tourism</p>
         </div>
       </div>
